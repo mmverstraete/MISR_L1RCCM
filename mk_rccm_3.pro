@@ -154,6 +154,8 @@ FUNCTION mk_rccm_3, $
    ;
    ;  *   2019–01–30: Version 2.00 — Systematic update of all routines to
    ;      implement stricter coding standards and improve documentation.
+   ;
+   ;  *   2019–02–02: Version 2.01 — Delete unused variable pob_str.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -301,7 +303,6 @@ FUNCTION mk_rccm_3, $
          ': ' + excpt_cond
       RETURN, error_code
    ENDIF
-   pob_str = misr_path_str + '_' + misr_orbit_str + '_' + misr_block_str
 
    ;  Define and initialize rccm_3 with rccm_2:
    rccm_3 = rccm_2

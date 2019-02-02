@@ -14,9 +14,9 @@ FUNCTION mk_rccm_1, $
    ;  standard MISR RCCM array rccm_0.
    ;
    ;  ALGORITHM: This function reads the 9 MISR L1B2 data product files
-   ;  and extracts the geographical locations containing unobserved vales,
-   ;  either because they fall outside of the instrument swath width
-   ;  (‘edge’) or because they are unobservable due to the local
+   ;  and extracts the geographical locations containing unobserved
+   ;  values, either because they fall outside of the instrument swath
+   ;  width (‘edge’) or because they are unobservable due to the local
    ;  topography, and ports the corresponding flags into the MISR RCCM
    ;  array rccm_0.
    ;
@@ -194,6 +194,10 @@ FUNCTION mk_rccm_1, $
    ;
    ;  *   2019–01–30: Version 2.00 — Systematic update of all routines to
    ;      implement stricter coding standards and improve documentation.
+   ;
+   ;  *   2019–02–02: Version 2.01 — Delete unused variable pob_str and
+   ;      use the Radiance rather than the Radiance/RDQI field in L1B2
+   ;      files.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -353,7 +357,6 @@ FUNCTION mk_rccm_1, $
          ': ' + excpt_cond
       RETURN, error_code
    ENDIF
-   pob_str = misr_path_str + '_' + misr_orbit_str + '_' + misr_block_str
 
    ;  Define and initialize rccm_1 with rccm_0:
    rccm_1 = rccm_0

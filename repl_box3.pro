@@ -190,6 +190,8 @@ FUNCTION repl_box3, $
    ;
    ;  *   2019–01–30: Version 2.00 — Systematic update of all routines to
    ;      implement stricter coding standards and improve documentation.
+   ;
+   ;  *   2019–02–02: Version 2.01 — Minor code update.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -303,10 +305,10 @@ FUNCTION repl_box3, $
    sz = SIZE(array, /DIMENSIONS)
    box_inc = 1
    left3 = sample - MIN([box_inc, sample])
-   right3 = sample + MIN([box_inc, sz[0] - 1 - sample])
+   right3 = sample + MIN([box_inc, (sz[0] - 1) - sample])
 
    top3 = line - MIN([box_inc, line])
-   bottom3 = line + MIN([box_inc, sz[1] - 1 - line])
+   bottom3 = line + MIN([box_inc, (sz[1] - 1) - line])
 
    pixcut3 = array[left3:right3, top3:bottom3]
 

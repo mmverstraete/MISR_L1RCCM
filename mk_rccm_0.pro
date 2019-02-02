@@ -163,6 +163,8 @@ FUNCTION mk_rccm_0, $
    ;
    ;  *   2019–01–30: Version 2.00 — Systematic update of all routines to
    ;      implement stricter coding standards and improve documentation.
+   ;
+   ;  *   2019–02–02: Version 2.01 — Delete unused variable pob_str.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -294,7 +296,6 @@ FUNCTION mk_rccm_0, $
          ': ' + excpt_cond
       RETURN, error_code
    ENDIF
-   pob_str = misr_path_str + '_' + misr_orbit_str + '_' + misr_block_str
 
    ;  Set the dimensions of the RCCM cloud masks:
    mask_col = 512
