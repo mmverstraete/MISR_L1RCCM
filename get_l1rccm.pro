@@ -13,6 +13,7 @@ FUNCTION get_l1rccm, $
    SAVE_FOLDER = save_folder, $
    MAP_IT = map_it, $
    MAP_FOLDER = map_folder, $
+   VERBOSE = verbose, $
    DEBUG = debug, $
    EXCPT_COND = excpt_cond
 
@@ -35,7 +36,7 @@ FUNCTION get_l1rccm, $
    ;  LOG_IT = log_it, LOG_FOLDER = log_folder, $
    ;  SAVE_IT = save_it, SAVE_FOLDER = save_folder, $
    ;  MAP_IT = map_it, MAP_FOLDER = map_folder, $
-   ;  DEBUG = debug, EXCPT_COND = excpt_cond)
+   ;  VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
    ;
    ;  POSITIONAL PARAMETERS [INPUT/OUTPUT]:
    ;
@@ -83,6 +84,9 @@ FUNCTION get_l1rccm, $
    ;
    ;  *   MAP_FOLDER = map_folder {STRING} [I] (Default value: Set by ’set_roots_vers.pro’):
    ;      The directory address of the output folder containing the maps.
+   ;
+   ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to
+   ;      enable (1) or skip (0) reporting progress on the console.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -379,6 +383,7 @@ FUNCTION get_l1rccm, $
    IF (KEYWORD_SET(log_it)) THEN log_it = 1 ELSE log_it = 0
    IF (KEYWORD_SET(sav_it)) THEN sav_it = 1 ELSE sav_it = 0
    IF (KEYWORD_SET(map_it)) THEN map_it = 1 ELSE map_it = 0
+   IF (KEYWORD_SET(verbose)) THEN verbose = 1 ELSE verbose = 0
    IF (KEYWORD_SET(debug)) THEN debug = 1 ELSE debug = 0
    excpt_cond = ''
 
@@ -939,10 +944,9 @@ FUNCTION get_l1rccm, $
    ENDIF
 
    ;  Call 'mk_rccm_2' if there are missing values in 'rccm_1':
-print, 'in get_l1rccm, calling mk_rccm_2'
    IF (MAX(n_miss_1) GT 0) THEN BEGIN
       rc = mk_rccm_2(rccm_1, misr_path, misr_orbit, misr_block, rccm_2, $
-         n_miss_2, DEBUG = debug, EXCPT_COND = excpt_cond)
+         n_miss_2, VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
       IF (rc NE 0) THEN BEGIN
          error_code = 320
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $

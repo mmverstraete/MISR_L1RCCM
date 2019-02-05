@@ -17,7 +17,7 @@
 <code>LOG_IT = log_it, LOG_FOLDER = log_folder, $</code><br />
 <code>SAVE_IT = save_it, SAVE_FOLDER = save_folder, $</code><br />
 <code>MAP_IT = map_it, MAP_FOLDER = map_folder, $</code><br />
-<code>DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
 <li><p><strong>Positional parameters [Input/Output]:</strong></p>
 <ul>
 <li><p><code>misr_path {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
@@ -37,6 +37,7 @@
 <li><p><code>SAVE_FOLDER = save_folder {STRING} [I] (Default value: Set by &#8217;set_roots_vers.pro&#8217;):</code> The directory address of the output folder containing the savefile.</p></li>
 <li><p><code>MAP_IT = map_it {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) generating maps of the numerical results.</p></li>
 <li><p><code>MAP_FOLDER = map_folder {STRING} [I] (Default value: Set by &#8217;set_roots_vers.pro&#8217;):</code> The directory address of the output folder containing the maps.</p></li>
+<li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to enable (1) or skip (0) reporting progress on the console.</p></li>
 <li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
 <li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
 </ul></li>
@@ -333,7 +334,7 @@ rc =            0</code></pre></li>
 <li><p><strong>Algorithm:</strong> This function uses square sub-windows of various sizes, within the input array <code>rccm_1</code> and centered on each successive missing pixel, to compute basic non-parametric statistics on the frequencies of neighboring values and propose a reasonable replacement value.</p></li>
 <li><p><strong>Syntax:</strong> <code>rc = mk_rccm_2(rccm_1, misr_path, misr_orbit, $</code><br />
 <code>misr_block, rccm_2, n_miss_2, $</code><br />
-<code>DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
 <li><p><strong>Positional parameters [Input/Output]:</strong></p>
 <ul>
 <li><p><code>rccm_1 {BYTE array} [I]:</code> An array containing the updated <span class="smallcaps">RCCM</span> product for the 9 camera files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>, i.e., with non zero values for edge and obscured pixels.</p></li>
@@ -345,6 +346,7 @@ rc =            0</code></pre></li>
 </ul></li>
 <li><p><strong>Keyword parameters [Input/Output]:</strong></p>
 <ul>
+<li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to enable (1) or skip (0) reporting progress on the console.</p></li>
 <li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
 <li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
 </ul></li>

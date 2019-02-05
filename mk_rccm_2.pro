@@ -5,6 +5,7 @@ FUNCTION mk_rccm_2, $
    misr_block, $
    rccm_2, $
    n_miss_2, $
+   VERBOSE = verbose, $
    DEBUG = debug, $
    EXCPT_COND = excpt_cond
 
@@ -21,7 +22,7 @@ FUNCTION mk_rccm_2, $
    ;
    ;  SYNTAX: rc = mk_rccm_2(rccm_1, misr_path, misr_orbit, $
    ;  misr_block, rccm_2, n_miss_2, $
-   ;  DEBUG = debug, EXCPT_COND = excpt_cond)
+   ;  VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
    ;
    ;  POSITIONAL PARAMETERS [INPUT/OUTPUT]:
    ;
@@ -45,6 +46,9 @@ FUNCTION mk_rccm_2, $
    ;      values (0B) remain in each of these 9 cloud masks.
    ;
    ;  KEYWORD PARAMETERS [INPUT/OUTPUT]:
+   ;
+   ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to
+   ;      enable (1) or skip (0) reporting progress on the console.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -211,6 +215,7 @@ FUNCTION mk_rccm_2, $
 
    ;  Set the default values of flags and essential output keyword parameters:
    IF (KEYWORD_SET(debug)) THEN debug = 1 ELSE debug = 0
+   IF (KEYWORD_SET(verbose)) THEN verbose = 1 ELSE verbose = 0
    excpt_cond = ''
 
    IF (debug) THEN BEGIN
@@ -324,7 +329,8 @@ FUNCTION mk_rccm_2, $
    ;  If there are no missing values, proceed to the next camera:
       IF (count EQ 0) THEN CONTINUE
 
-print, 'cam = ' + cams[cam] + ': initial # miss vals = ' + strstr(count)
+      IF (verbose) THEN PRINT, 'cam = ' + cams[cam] + $
+         ': initial # miss vals = ' + strstr(count)
 
    ;  =========================================================================
    ;  Step 1: Repeatedly scan the cloud mask to replace missing values
@@ -378,17 +384,16 @@ print, 'cam = ' + cams[cam] + ': initial # miss vals = ' + strstr(count)
    ;  Check whether there are any remaining missing pixels in this camera
    ;  cloud mask:
          iter++
-;         kdx = WHERE(cld_msk EQ 0B, cnt)
          idx = WHERE(cld_msk EQ 0B, count)
-;         n_miss_2[cam] = cnt
          n_miss_2[cam] = count
          IF (count EQ 0) THEN CONTINUE
 
    ;  Proceed to the next iteration:
-ENDREP UNTIL ((n_proc EQ 0) OR (iter GT 40))
+      ENDREP UNTIL ((n_proc EQ 0) OR (iter GT 40))
 
-print, 'cam = ' + cams[cam] + ': after step 1, iter = ' + $
-   strstr(iter), ' # miss vals = ' + strstr(count)
+      IF (verbose) THEN PRINT, 'cam = ' + cams[cam] + $
+         ': after step 1, iter = ' + $
+         strstr(iter), ' # miss vals = ' + strstr(count)
 
    ;  =========================================================================
    ;  Step 2: Repeatedly scan the cloud mask to replace missing values
@@ -442,17 +447,16 @@ print, 'cam = ' + cams[cam] + ': after step 1, iter = ' + $
    ;  Check whether there are any remaining missing pixels in this camera
    ;  cloud mask:
          iter++
-;         kdx = WHERE(cld_msk EQ 0B, cnt)
          idx = WHERE(cld_msk EQ 0B, count)
-;         n_miss_2[cam] = cnt
          n_miss_2[cam] = count
          IF (count EQ 0) THEN CONTINUE
 
    ;  Proceed to the next iteration:
-ENDREP UNTIL ((n_proc EQ 0) OR (iter GT 40))
+      ENDREP UNTIL ((n_proc EQ 0) OR (iter GT 40))
 
-print, 'cam = ' + cams[cam] + ': after step 2, iter = ' + $
-   strstr(iter), ' # miss vals = ' + strstr(count)
+      IF (verbose) THEN PRINT, 'cam = ' + cams[cam] + $
+         ': after step 2, iter = ' + $
+         strstr(iter), ' # miss vals = ' + strstr(count)
 
    ;  =========================================================================
    ;  Step 3: Repeatedly scan the cloud mask to replace missing values
@@ -505,9 +509,7 @@ print, 'cam = ' + cams[cam] + ': after step 2, iter = ' + $
 
    ;  Check whether there are any remaining missing pixels in this camera
    ;  cloud mask:
-;         kdx = WHERE(cld_msk EQ 0B, cnt)
          idx = WHERE(cld_msk EQ 0B, count)
-;         n_miss_2[cam] = cnt
          n_miss_2[cam] = count
          IF (count EQ 0) THEN CONTINUE
 
@@ -515,10 +517,12 @@ print, 'cam = ' + cams[cam] + ': after step 2, iter = ' + $
          iter++
       ENDREP UNTIL ((n_proc EQ 0) OR (iter GT 20))
 
-print, 'cam = ' + cams[cam] + ': after step 3, iter = ' + $
-   strstr(iter), ' # miss vals = ' + strstr(count)
-print
-
+      IF (verbose) THEN BEGIN
+         PRINT, 'cam = ' + cams[cam] + $
+            ': after step 3, iter = ' + $
+            strstr(iter), ' # miss vals = ' + strstr(count)
+         PRINT
+      ENDIF
    ENDFOR   ;  End of loop on cameras.
 
    RETURN, return_code
