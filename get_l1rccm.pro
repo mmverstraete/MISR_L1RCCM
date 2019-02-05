@@ -238,15 +238,13 @@ FUNCTION get_l1rccm, $
    ;
    ;  *   mk_rccm_2.pro
    ;
-   ;  *   mk_rccm_3.pro
-   ;
-   ;  *   set_misr_specs.pro
-   ;
    ;  *   orbit2date.pro
    ;
    ;  *   orbit2str.pro
    ;
    ;  *   path2str.pro
+   ;
+   ;  *   set_misr_specs.pro
    ;
    ;  *   set_roots_vers.pro
    ;
@@ -325,6 +323,10 @@ FUNCTION get_l1rccm, $
    ;
    ;  *   2019–02–02: Version 2.01 — Add further diagnostic information in
    ;      the log file, update the code and the documentation.
+   ;
+   ;  *   2019–02–05: Version 2.10 — Implement new algorithm (multiple
+   ;      scans of the input cloud mask) to minimize artifacts in the
+   ;      filled areas.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -711,7 +713,7 @@ FUNCTION get_l1rccm, $
       PRINTF, log_unit
    ENDIF
 
-   ;  Map this product if required:
+   ;  Map the rccm_0 product if required:
    IF (KEYWORD_SET(map_it)) THEN BEGIN
       IF (KEYWORD_SET(map_folder)) THEN BEGIN
          map_path = map_folder
@@ -884,7 +886,7 @@ FUNCTION get_l1rccm, $
       PRINTF, log_unit
    ENDIF
 
-   ;  Map this product if required:
+   ;  Map the rccm_1 product if required:
    IF (KEYWORD_SET(map_it)) THEN BEGIN
       IF (KEYWORD_SET(map_folder)) THEN BEGIN
          map_path = map_folder
@@ -937,6 +939,7 @@ FUNCTION get_l1rccm, $
    ENDIF
 
    ;  Call 'mk_rccm_2' if there are missing values in 'rccm_1':
+print, 'in get_l1rccm, calling mk_rccm_2'
    IF (MAX(n_miss_1) GT 0) THEN BEGIN
       rc = mk_rccm_2(rccm_1, misr_path, misr_orbit, misr_block, rccm_2, $
          n_miss_2, DEBUG = debug, EXCPT_COND = excpt_cond)
@@ -973,7 +976,7 @@ FUNCTION get_l1rccm, $
       PRINTF, log_unit
    ENDIF
 
-   ;  Map this product if required:
+   ;  Map the rccm_2 product if required:
    IF (KEYWORD_SET(map_it)) THEN BEGIN
       IF (KEYWORD_SET(map_folder)) THEN BEGIN
          map_path = map_folder
@@ -1027,95 +1030,6 @@ FUNCTION get_l1rccm, $
    ENDIF ELSE BEGIN
       l1rccm = rccm_2
    ENDELSE
-
-   ;  Call 'mk_rccm_3' if there are still missing values in 'rccm_2':
-   IF (MAX(n_miss_2) GT 0) THEN BEGIN
-      rc = mk_rccm_3(rccm_2, misr_path, misr_orbit, misr_block, rccm_3, $
-         n_miss_3, DEBUG = debug, EXCPT_COND = excpt_cond)
-      IF (rc NE 0) THEN BEGIN
-         error_code = 330
-         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-            ': ' + excpt_cond
-         RETURN, error_code
-      ENDIF
-      l1rccm = rccm_3
-   ENDIF
-
-   ;  Record the outcome in the log if required:
-   IF (log_it) THEN BEGIN
-      PRINTF, log_unit, 'Outcome of mk_rccm_3: ', '', FORMAT = fmt1
-      PRINTF, log_unit, '', 'Miss (0B)', 'Cld-Hi (1B)', $
-         'Cld-Lo (2B)', 'Clr-Lo (3B)', 'Clr-Hi (4B)', 'Obsc (253B)', $
-         'Edge (254B)', 'Fill (255B)', 'Total', FORMAT = fmt2
-      FOR cam = 0, n_cams - 1 DO BEGIN
-         idx_0 = WHERE(rccm_3[cam, *, *] EQ 0B, count_0)
-         idx_1 = WHERE(rccm_3[cam, *, *] EQ 1B, count_1)
-         idx_2 = WHERE(rccm_3[cam, *, *] EQ 2B, count_2)
-         idx_3 = WHERE(rccm_3[cam, *, *] EQ 3B, count_3)
-         idx_4 = WHERE(rccm_3[cam, *, *] EQ 4B, count_4)
-         idx_253 = WHERE(rccm_3[cam, *, *] EQ 253B, count_253)
-         idx_254 = WHERE(rccm_3[cam, *, *] EQ 254B, count_254)
-         idx_255 = WHERE(rccm_3[cam, *, *] EQ 255B, count_255)
-         totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + $
-            count_253 + count_254 + count_255
-         PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
-            count_4, count_253, count_254, count_255, totcnt, FORMAT = fmt3
-      ENDFOR
-      PRINTF, log_unit
-   ENDIF
-
-   ;  Map this product if required:
-   IF (KEYWORD_SET(map_it)) THEN BEGIN
-      IF (KEYWORD_SET(map_folder)) THEN BEGIN
-         map_path = map_folder
-         map_path = force_path_sep(map_path, DEBUG = debug, $
-            EXCPT_COND = excpt_cond)
-      ENDIF ELSE BEGIN
-         map_path = root_dirs[3] + mpob_str + '/RCCM' + PATH_SEP()
-      ENDELSE
-      good_vals = [0B, 1B, 2B, 3B, 4B, 253B, 254B, 255B]
-      good_vals_cols = ['red', 'white', 'gray', 'aqua', 'blue', 'gold', $
-         'black', 'red']
-      FOR cam = 0, n_cams - 1 DO BEGIN
-         map_name = 'Map_RCCM_rccm_3_' + mpob_str + '_' + cams[cam] + '_' + $
-            acquis_date + '_' + date + '.png'
-         map_spec = map_path + map_name
-         map = lr2hr(REFORM(rccm_3[cam, *, *]))
-         rc = make_bytemap(map, good_vals, good_vals_cols, map_spec, $
-            DEBUG = debug, EXCPT_COND = excpt_cond)
-
-   ;  Also save the legend for this map in the same folder:
-         map_legend_name = 'Legend-map_RCCM_rccm_3_' + mpob_str + '_' + $
-            cams[cam] + '_' + acquis_date + '_' + date + '.txt'
-         map_legend_spec = map_path + map_legend_name
-         map_legend_txt = 'Map of the corrected MISR Radiometric ' + $
-            'Camera-by-camera Cloud Mask (RCCM) for ' + $
-            'Path ' + strstr(misr_path) + $
-            ', Orbit ' + strstr(misr_orbit) + $
-            ', Block ' + strstr(misr_block) + $
-            ' and Camera ' + cams[cam] + $
-            ', where most if not all missing pixels have been replaced by ' + $
-            'estimates of the cloud or clear status of the observed areas, ' + $
-            'based on the cloudiness level of neighboring pixels within a ' + $
-            '5x5 subwindow. All RCCM products are generated at the spatial '+ $
-            'resolution of 1100 m and provided as arrays of 512 by 128 ' + $
-            'pixels. This map has been enlarged (4x in each direction) by ' + $
-            'duplication for viewing convenience and to facilitate ' + $
-            'comparisons with other maps. Color coding: ' + $
-            good_vals_cols[0] + ': missing or fill value; ' + $
-            good_vals_cols[1] + ': cloud with high confidence; ' + $
-            good_vals_cols[2] + ': cloud with low confidence; ' + $
-            good_vals_cols[3] + ': clear with low confidence; ' + $
-            good_vals_cols[4] + ': clear with high confidence; ' + $
-            good_vals_cols[5] + ': pixels obscured by topography; and ' + $
-            good_vals_cols[6] + ': pixels in the edges of the instrument swath.'
-         OPENW, legend_unit, map_legend_spec, /GET_LUN
-         PRINTF, legend_unit, 'Legend for the map with the same filename:'
-         PRINTF, legend_unit, map_legend_txt
-         CLOSE, legend_unit
-         FREE_LUN, legend_unit
-      ENDFOR
-   ENDIF
 
    IF (log_it) THEN BEGIN
       CLOSE, log_unit

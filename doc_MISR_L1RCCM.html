@@ -106,11 +106,10 @@
 <li><p><code>mk_rccm_0.pro</code></p></li>
 <li><p><code>mk_rccm_1.pro</code></p></li>
 <li><p><code>mk_rccm_2.pro</code></p></li>
-<li><p><code>mk_rccm_3.pro</code></p></li>
-<li><p><code>set_misr_specs.pro</code></p></li>
 <li><p><code>orbit2date.pro</code></p></li>
 <li><p><code>orbit2str.pro</code></p></li>
 <li><p><code>path2str.pro</code></p></li>
+<li><p><code>set_misr_specs.pro</code></p></li>
 <li><p><code>set_roots_vers.pro</code></p></li>
 <li><p><code>strstr.pro</code></p></li>
 <li><p><code>today.pro</code></p></li>
@@ -150,6 +149,7 @@ rc =            0</code></pre></li>
 <li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
 <li><p>2019&#8211;01&#8211;30: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
 <li><p>2019&#8211;02&#8211;02: Version 2.01 &#8212; Add further diagnostic information in the log file, update the code and the documentation.</p></li>
+<li><p>2019&#8211;02&#8211;05: Version 2.10 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm_0</h2>
@@ -231,6 +231,7 @@ rc =            0</code></pre></li>
 <li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
 <li><p>2019&#8211;01&#8211;30: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
 <li><p>2019&#8211;02&#8211;02: Version 2.01 &#8212; Delete unused variable <code>pob_str</code>.</p></li>
+<li><p>2019&#8211;02&#8211;05: Version 2.10 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm_1</h2>
@@ -323,12 +324,13 @@ rc =            0</code></pre></li>
 <li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
 <li><p>2019&#8211;01&#8211;30: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
 <li><p>2019&#8211;02&#8211;02: Version 2.01 &#8212; Delete unused variable <code>pob_str</code> and use the Radiance rather than the Radiance/RDQI field in <span class="smallcaps">L1B2</span> files.</p></li>
+<li><p>2019&#8211;02&#8211;05: Version 2.10 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm_2</h2>
 <ul>
-<li><p><strong>Purpose:</strong> This function attempts to replace missing values in the <code>rccm_1</code> cloud mask by a reasonable value determined on the basis of its 8 immediate neighbors.</p></li>
-<li><p><strong>Algorithm:</strong> This function defines a small <span class="math inline">3&#8197;&#215;&#8197;3</span> subwindow within the input array <code>rccm_1</code>, centered on each successive missing pixel and computes basic non-parametric statistics on the frequencies of neighboraing values.</p></li>
+<li><p><strong>Purpose:</strong> This function attempts to replace missing values in the <code>rccm_1</code> cloud mask by reasonable estimates determined on the basis of the values of its immediate neighbors.</p></li>
+<li><p><strong>Algorithm:</strong> This function uses square sub-windows of various sizes, within the input array <code>rccm_1</code> and centered on each successive missing pixel, to compute basic non-parametric statistics on the frequencies of neighboring values and propose a reasonable replacement value.</p></li>
 <li><p><strong>Syntax:</strong> <code>rc = mk_rccm_2(rccm_1, misr_path, misr_orbit, $</code><br />
 <code>misr_block, rccm_2, n_miss_2, $</code><br />
 <code>DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
@@ -338,7 +340,7 @@ rc =            0</code></pre></li>
 <li><p><code>misr_path {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
 <li><p><code>misr_orbit {LONG} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Orbit</span> number.</p></li>
 <li><p><code>misr_block {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Block</span> number.</p></li>
-<li><p><code>rccm_2 {BYTE array} [O]:</code> An array containing the upgraded <span class="smallcaps">RCCM</span> product for the 9 camera files where many of the missing values are replaced by reasonable estimates of the local cloudiness.</p></li>
+<li><p><code>rccm_2 {BYTE array} [O]:</code> An array containing the upgraded <span class="smallcaps">RCCM</span> product for the 9 camera files where most if not all of the missing values are replaced by reasonable estimates of the local cloudiness.</p></li>
 <li><p><code>n_miss_2 {LONG array} [O]:</code> An array reporting how many missing values (<code>0B</code>) remain in each of these 9 cloud masks.</p></li>
 </ul></li>
 <li><p><strong>Keyword parameters [Input/Output]:</strong></p>
@@ -372,7 +374,7 @@ rc =            0</code></pre></li>
 <li><p>Error 200: An exception condition occurred in the function <code>path2str.pro</code>.</p></li>
 <li><p>Error 210: An exception condition occurred in the function <code>orbit2str.peo</code>.</p></li>
 <li><p>Error 220: An exception condition occurred in the function <code>block2str.pro</code>.</p></li>
-<li><p>Error 400: An exception condition occurred in the function <code>repl_box3.pro</code>.</p></li>
+<li><p>Error 400: An exception condition occurred in the function <code>repl_box.pro</code>.</p></li>
 </ul></li>
 <li><p><strong>Dependencies:</strong></p>
 <ul>
@@ -382,7 +384,7 @@ rc =            0</code></pre></li>
 <li><p><code>chk_misr_path.pro</code></p></li>
 <li><p><code>orbit2str.pro</code></p></li>
 <li><p><code>path2str.pro</code></p></li>
-<li><p><code>repl_box3.pro</code></p></li>
+<li><p><code>repl_box.pro</code></p></li>
 <li><p><code>set_misr_specs.pro</code></p></li>
 <li><p><code>strstr.pro</code></p></li>
 </ul></li>
@@ -397,91 +399,19 @@ rc =            0</code></pre></li>
 <li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
 <li><p>2019&#8211;01&#8211;30: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
 <li><p>2019&#8211;02&#8211;02: Version 2.01 &#8212; Delete unused variable <code>pob_str</code>.</p></li>
+<li><p>2019&#8211;02&#8211;05: Version 2.10 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 </ul></li>
 </ul>
-<h2>mk_rccm_3</h2>
+<h2>repl_box</h2>
 <ul>
-<li><p><strong>Purpose:</strong> This function attempts to replace the remaining missing values in the <code>rccm_2</code> cloud mask by a reasonable value determined on the basis of its 24 immediate neighbors.</p></li>
-<li><p><strong>Algorithm:</strong> This function defines a small <span class="math inline">5&#8197;&#215;&#8197;5</span> subwindow within the input array <code>rccm_2</code>, centered on each successive missing pixel and computes basic non-parametric statistics on the frequencies of neighboraing values.</p></li>
-<li><p><strong>Syntax:</strong> <code>rc = mk_rccm_3(rccm_2, misr_path, misr_orbit, $</code><br />
-<code>misr_block, rccm_3, n_miss_3, $</code><br />
-<code>DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
-<li><p><strong>Positional parameters [Input/Output]:</strong></p>
-<ul>
-<li><p><code>rccm_2 {BYTE array} [I]:</code> An array containing the partially filled <span class="smallcaps">RCCM</span> product for the 9 camera files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>, i.e., with most missing values replaced by reasonable estimates.</p></li>
-<li><p><code>misr_path {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
-<li><p><code>misr_orbit {LONG} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Orbit</span> number.</p></li>
-<li><p><code>misr_block {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Block</span> number.</p></li>
-<li><p><code>rccm_3 {BYTE array} [O]:</code> An array containing the definitive <span class="smallcaps">RCCM</span> product for the 9 camera files where most or all of the missing values are replaced by reasonable estimates of the local cloudiness.</p></li>
-<li><p><code>n_miss_3 {LONG array} [O]:</code> An array reporting how many missing values (<code>0B</code>), if any, remain in each of these 9 cloud masks.</p></li>
-</ul></li>
-<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
-<ul>
-<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
-<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
-</ul></li>
-<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
-<li><p><strong>Outcome:</strong></p>
-<ul>
-<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameters <code>rccm_3</code> and <code>n_miss_3</code> contain the upgraded cloud masks and the number of remaining missing values in each of them, respectively. The meaning of pixel values is as follows:</p>
-<ul>
-<li><p><code>0B</code>: Missing.</p></li>
-<li><p><code>1B</code>: Cloud with high confidence.</p></li>
-<li><p><code>2B</code>: Cloud with low confidence.</p></li>
-<li><p><code>3B</code>: Clear with low confidence.</p></li>
-<li><p><code>4B</code>: Clear with high confidence.</p></li>
-<li><p><code>253B</code>: Obscured.</p></li>
-<li><p><code>254B</code>: Edge.</p></li>
-<li><p><code>255B</code>: Fill.</p></li>
-</ul></li>
-<li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameters <code>rccm_3</code> and <code>n_miss_3</code> may be inexistent, incomplete or incorrect.</p></li>
-</ul></li>
-<li><p><strong>Exception conditions:</strong></p>
-<ul>
-<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
-<li><p>Error 110: Input positional parameter <code>rccm_2</code> is invalid.</p></li>
-<li><p>Error 120: Input positional parameter <code>misr_path</code> is invalid.</p></li>
-<li><p>Error 130: Input positional parameter <code>misr_orbit</code> is invalid.</p></li>
-<li><p>Error 140: Input positional parameter <code>misr_block</code> is invalid.</p></li>
-<li><p>Error 200: An exception condition occurred in the function <code>path2str.pro</code>.</p></li>
-<li><p>Error 210: An exception condition occurred in the function <code>orbit2str.peo</code>.</p></li>
-<li><p>Error 220: An exception condition occurred in the function <code>block2str.pro</code>.</p></li>
-<li><p>Error 400: An exception condition occurred in the function <code>repl_box5.pro</code>.</p></li>
-</ul></li>
-<li><p><strong>Dependencies:</strong></p>
-<ul>
-<li><p><code>block2str.pro</code></p></li>
-<li><p><code>chk_misr_block.pro</code></p></li>
-<li><p><code>chk_misr_orbit.pro</code></p></li>
-<li><p><code>chk_misr_path.pro</code></p></li>
-<li><p><code>orbit2str.pro</code></p></li>
-<li><p><code>path2str.pro</code></p></li>
-<li><p><code>repl_box3.pro</code></p></li>
-<li><p><code>set_misr_specs.pro</code></p></li>
-<li><p><code>strstr.pro</code></p></li>
-</ul></li>
-<li><p><strong>Remarks:</strong> None.</p></li>
-<li><p><strong>Examples:</strong></p>
-<pre><code>[See the outcome(s) generated by get_l1rccm.pro]</code></pre></li>
-<li><p><strong>References:</strong> None.</p></li>
-<li><p><strong>Versioning:</strong></p>
-<ul>
-<li><p>2018&#8211;08&#8211;08: Version 0.8 &#8212; Original routines to manipulate <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products provided by Linda Hunt.</p></li>
-<li><p>2018&#8211;12&#8211;23: Version 0.9 &#8212; Initial release: This function and those it depends on supersede all previous routines dealing with <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products.</p></li>
-<li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
-<li><p>2019&#8211;01&#8211;30: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
-<li><p>2019&#8211;02&#8211;02: Version 2.01 &#8212; Delete unused variable <code>pob_str</code>.</p></li>
-</ul></li>
-</ul>
-<h2>repl_box3</h2>
-<ul>
-<li><p><strong>Purpose:</strong> This function suggests to replace the missing value (<code>0B</code>) at coordinates <code>[sample, line]</code> within the 2-D input <code>array</code> by a suitable value established from an analysis of its up to 8 valid neighbors within a box of <span class="math inline">3&#8197;&#215;&#8197;3</span> pixels; the return value of the function indicates which rule has been applied.</p></li>
+<li><p><strong>Purpose:</strong> This function suggests to replace the missing value (<code>0B</code>) at coordinates <code>[sample, line]</code> within the 2-D input positional parameter <code>array</code> by a suitable value established from an analysis of its valid neighbors within a square sub-window of <code>(2 \times box_inc) + 1</code> pixels on the side.</p></li>
 <li><p><strong>Algorithm:</strong> This function assumes that the input positional parameter <code>array</code> is of type <code>BYTE</code>, is dimensioned <code>[512, 128]</code>, and contains <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data, where individual element values can be <code>0B</code> (indicating missing data), lie within the range <code>[1B, 4B]</code> (indicating valid data: <code>1B</code> = cloudy with high confidence, <code>2B</code> = cloudy with low confidence, <code>3B</code> = clear with low confidence, and <code>4B</code> = clear with high confidence), or take on values larger than <code>250</code> (indicating unobservable pixels, e.g., obscured by topography or outside the swath of the instrument).<br />
-The function (1) inspects a subwindow of <span class="math inline">3&#8197;&#215;&#8197;3</span> values centred on the presumed missing pixel, thus containing up to 8 values (not counting those lying outside the bounds of the main <code>array</code>), (2) computes basic non-parametric statistics on the frequencies of appearance among these up to 8 valid neighbors, and (3) proposes a reasonable non-null replacement value if at least <span class="math inline">1/4</span> of the neighbors are valid (i.e., are themselves not missing and not flagged with values larger than <code>250</code>). The suggested replacement value for the missing pixel depends on the statistics derived from the valid (i.e., lying within the <code>array</code>, non-missing and non-flagged) neighbors, and the numeric code <code>rc</code> returned by the function is smaller than <code>99</code> to indicate which decision rule has been applied to suggest the replacement value.<br />
-Let <code>min</code>, <code>med</code> and <code>max</code> be the minimum, the median and the maximum values of the up to 8 valid neighbors of the presumed missing value:</p>
+The function (1) inspects a sub-window of <code>(2 \times box_inc) + 1</code> by <code>(2 \times box_inc) + 1</code> values, centred on the presumed missing pixel, and possibly trimmed to exclude elements lying outside the bounds of the <code>array</code>, (2) computes statistics on the values of the valid neighbors within that sub-window, and (3) proposes a reasonable non-null replacement value if at least <code>min_num_required</code> of those neighbors are valid (i.e., are themselves not missing and not flagged with values larger than <code>250</code>).<br />
+The return code of the function indicates which decision rule has been applied, and the suggested replacement value for the missing pixel depends upon basic non-parametric statistics on the frequencies of appearance among valid neighbors of the missing value. Negative return codes refer to situations in which no replacement value for the missing pixel is proposed. Let <code>min</code>, <code>med</code> and <code>max</code> be the minimum, the median and the maximum values of the valid neighbors of the presumed missing value within the sub-window:</p>
 <ul>
-<li><p>If <code>rc = -2</code>: The pixel at the specified line and sample position within the input positional parameter <code>array</code> is not a missing value (<code>0B</code>); the suggested replacement <code>value</code> is the original value of that pixel.</p></li>
-<li><p>If <code>rc = -1</code>: Less than <span class="math inline">1/4</span> of the neighboring values (not counting those that might fall outside the <code>array</code>) are available for analysis; the suggested replacement value remains <code>0B</code> (a better estimate could be obtained using a larger window).</p></li>
+<li><p>If <code>rc = -3</code>: No replacement value is suggested because the pixel at the specified line and sample position within the input positional parameter <code>array</code> is not a missing value (<code>0B</code>).</p></li>
+<li><p>If <code>rc = -2</code>: No replacement value is suggested because fewer than <code>min_num_required</code> valid neighboring values (not counting those that might fall outside the <code>array</code>) are available for analysis.</p></li>
+<li><p>If <code>rc = -1</code>: No replacement value is suggested because the optional keyword parameter <code>HOMOGENEOUS</code> is set and the neighbors of the missing pixels in the current sub-window are not homogeneous.</p></li>
 <li><p>If <code>rc = 0</code>: All valid neighbors of the missing pixel have the same value; then <code>value</code> is that same value.</p></li>
 <li><p>If <code>rc = 1</code>: <code>min = 1B</code>, <code>max = 2B</code>, and <code>med &lt; 1.5</code>; then <code>value = 1B</code>.</p></li>
 <li><p>If <code>rc = 2</code>: <code>min = 1B</code>, <code>max = 2B</code>, and <code>1.5 \leq med</code>; then <code>value = 2B</code>.</p></li>
@@ -499,25 +429,29 @@ Let <code>min</code>, <code>med</code> and <code>max</code> be the minimum, the 
 <li><p>If <code>rc = 14</code>: <code>min = 1B</code>, <code>max = 4B</code>, and <code>1.5 \leq med &lt; 2.5</code>; then <code>value = 2B</code>.</p></li>
 <li><p>If <code>rc = 15</code>: <code>min = 1B</code>, <code>max = 4B</code>, and <code>2.5 \leq med &lt; 3.5</code>; then <code>value = 3B</code>.</p></li>
 <li><p>If <code>rc = 16</code>: <code>min = 1B</code>, <code>max = 4B</code>, and <code>3.5 \leq med</code>; then <code>value = 4B</code>.</p></li>
+<li><p>If <code>rc &gt; 99</code>: An exception condition has been detected while executing this function.</p></li>
 </ul></li>
-<li><p><strong>Syntax:</strong> <code>rc = repl_box3(array, sample, line, value, $</code><br />
-<code>DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Syntax:</strong> <code>rc = repl_box(array, sample, line, box_inc, min_num_required, $</code><br />
+<code>value, HOMOGENEOUS = homogeneous, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
 <li><p><strong>Positional parameters [Input/Output]:</strong></p>
 <ul>
 <li><p><code>array {BYTE array} [I]:</code> The 2-D input array containing missing values.</p></li>
 <li><p><code>sample {INT} [I]:</code> The sample coordinate of the missing value in the 2-D <code>array</code>.</p></li>
 <li><p><code>line {INT} [I]:</code> The line coordinate of the missing value in the 2-D <code>array</code>.</p></li>
+<li><p><code>box_inc {INT} [I]:</code> The parameter controlling the size of the sub-window to consider (e.g., <code>1</code> for a <span class="math inline">3&#8197;&#215;&#8197;3</span> sub-window, <code>2</code> for a <span class="math inline">5&#8197;&#215;&#8197;5</span> sub-window), etc.</p></li>
+<li><p><code>min_num_required {INT} [I]:</code> The minimum number of valid neighbors needed to choose the replacement value.</p></li>
 <li><p><code>value {BYTE} [O]:</code> The proposed replacement value for the missing value.</p></li>
 </ul></li>
 <li><p><strong>Keyword parameters [Input/Output]:</strong></p>
 <ul>
+<li><p><code>HOMOGENEOUS = homogeneous {INT} [I]:</code> Flag to enable (1) or skip (0) considering only cases where all neighbors take on identical values.</p></li>
 <li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
 <li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
 </ul></li>
 <li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
 <li><p><strong>Outcome:</strong></p>
 <ul>
-<li><p>If no exception condition has been detected, this function returns a numeric code <code>rc</code> smaller than <code>99</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameter <code>value</code> contains the suggested replacement value for the missing value and the returned code <code>rc</code> indicates which decision rule has been applied to suggest the replacement value.</p></li>
+<li><p>If no exception condition has been detected, this function returns a value in the range <code>[0, 16]</code>, indicating which decision rule has been applied, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameter <code>value</code> contains the suggested replacement value for the missing pixel, if one could be determined. Negative return codes indicate that no replacement value can be suggested.</p></li>
 <li><p>If an exception condition has been detected, this function returns a non-zero error code larger than <code>99</code>, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameter <code>value</code> may be inexistent, incomplete or incorrect.</p></li>
 </ul></li>
 <li><p><strong>Exception conditions:</strong></p>
@@ -526,10 +460,15 @@ Let <code>min</code>, <code>med</code> and <code>max</code> be the minimum, the 
 <li><p>Error 110: Input positional parameter <code>array</code> is invalid.</p></li>
 <li><p>Error 120: Input positional parameter <code>sample</code> is invalid.</p></li>
 <li><p>Error 130: Input positional parameter <code>line</code> is invalid.</p></li>
+<li><p>Error 140: Input positional parameter <code>box_inc</code> must be an <code>INTEGER</code>.</p></li>
+<li><p>Error 150: Input positional parameter <code>box_inc</code> must be smaller than half the smallest dimension of <code>array</code>.</p></li>
+<li><p>Error 160: Input positional parameter <code>min_num_required</code> must be an <code>INTEGER</code>.</p></li>
+<li><p>Error 200: An unforeseen condition occurred in function <code>repl_box.pro</code>.</p></li>
 </ul></li>
 <li><p><strong>Dependencies:</strong></p>
 <ul>
 <li><p><code>is_array.pro</code></p></li>
+<li><p><code>is_integer.pro</code></p></li>
 <li><p><code>is_numeric.pro</code></p></li>
 <li><p><code>percentile.pro</code></p></li>
 <li><p><code>strstr.pro</code></p></li>
@@ -543,88 +482,8 @@ Let <code>min</code>, <code>med</code> and <code>max</code> be the minimum, the 
 <li><p><strong>References:</strong> None.</p></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
-<li><p>2018&#8211;08&#8211;08: Version 0.8 &#8212; Original routines to manipulate <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products provided by Linda Hunt.</p></li>
-<li><p>2018&#8211;12&#8211;23: Version 0.9 &#8212; Initial release: This function and those it depends on supersede all previous routines dealing with <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products.</p></li>
-<li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
-<li><p>2019&#8211;01&#8211;30: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
-<li><p>2019&#8211;02&#8211;02: Version 2.01 &#8212; Minor code update.</p></li>
-</ul></li>
-</ul>
-<h2>repl_box5</h2>
-<ul>
-<li><p><strong>Purpose:</strong> This function suggests to replace the missing value (<code>0B</code>) at coordinates <code>[sample, line]</code> within the 2-D input <code>array</code> by a suitable value established from an analysis of its up to 24 valid neighbors within a box of <span class="math inline">5&#8197;&#215;&#8197;5</span> pixels; the return value of the function indicates which rule has been applied.</p></li>
-<li><p><strong>Algorithm:</strong> This function assumes that the input positional parameter <code>array</code> is of type <code>BYTE</code>, is dimensioned <code>[512, 128]</code>, and contains <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data, where individual element values can be <code>0B</code> (indicating missing data), lie within the range <code>[1B, 4B]</code> (indicating valid data: <code>1B</code> = cloudy with high confidence, <code>2B</code> = cloudy with low confidence, <code>3B</code> = clear with low confidence, and <code>4B</code> = clear with high confidence), or take on values larger than <code>250</code> (indicating unobservable pixels, e.g., obscured by topography or outside the swath of the instrument).<br />
-The function (1) inspects a subwindow of <span class="math inline">5&#8197;&#215;&#8197;5</span> values centred on the presumed missing pixel, thus containing up to 24 values (not counting those lying outside the bounds of the main <code>array</code>), (2) computes basic non-parametric statistics on the frequencies of appearance among these up to 24 valid neighbors, and (3) proposes a reasonable non-null replacement value if at least <span class="math inline">1/4</span> of the neighbors are valid (i.e., are themselves not missing and not flagged with values larger than <code>250</code>). The suggested replacement value for the missing pixel depends on the statistics derived from the valid (i.e., lying within the <code>array</code>, non-missing and non-flagged) neighbors, and the numeric code <code>rc</code> returned by the function is smaller than <code>99</code> to indicate which decision rule has been applied to suggest the replacement value.<br />
-Let <code>min</code>, <code>med</code> and <code>max</code> be the minimum, the median and the maximum values of the up to 24 valid neighbors of the presumed missing value:</p>
-<ul>
-<li><p>If <code>rc = -2</code>: The pixel at the specified line and sample position within the input positional parameter <code>array</code> is not a missing value (<code>0B</code>); the suggested replacement <code>value</code> is the original value of that pixel.</p></li>
-<li><p>If <code>rc = -1</code>: Less than <span class="math inline">1/4</span> of the neighboring values (not counting those that might fall outside the <code>array</code>) are available for analysis; the suggested replacement value remains <code>0B</code> (a better estimate could be obtained using a larger window).</p></li>
-<li><p>If <code>rc = 0</code>: All valid neighbors of the missing pixel have the same value; then <code>value</code> is that same value.</p></li>
-<li><p>If <code>rc = 1</code>: <code>min = 1B</code>, <code>max = 2B</code>, and <code>med &lt; 1.5</code>; then <code>value = 1B</code>.</p></li>
-<li><p>If <code>rc = 2</code>: <code>min = 1B</code>, <code>max = 2B</code>, and <code>1.5 \leq med</code>; then <code>value = 2B</code>.</p></li>
-<li><p>If <code>rc = 3</code>: <code>min = 2B</code>, <code>max = 3B</code>, and <code>med &lt; 2.5</code>; then <code>value = 2B</code>.</p></li>
-<li><p>If <code>rc = 4</code>: <code>min = 2B</code>, <code>max = 3B</code>, and <code>2.5 \leq med</code>; then <code>value = 3B</code>.</p></li>
-<li><p>If <code>rc = 5</code>: <code>min = 3B</code>, <code>max = 4B</code>, and <code>med &lt; 3.5</code>; then <code>value = 3B</code>.</p></li>
-<li><p>If <code>rc = 6</code>: <code>min = 3B</code>, <code>max = 4B</code>, and <code>3.5 \leq med</code>; then <code>value = 4B</code>.</p></li>
-<li><p>If <code>rc = 7</code>: <code>min = 1B</code>, <code>max = 3B</code>, and <code>med &lt; 1.5</code>; then <code>value = 1B</code>.</p></li>
-<li><p>If <code>rc = 8</code>: <code>min = 1B</code>, <code>max = 3B</code>, and <code>1.5 \leq med &lt; 2.5</code>; then <code>value = 2B</code>.</p></li>
-<li><p>If <code>rc = 9</code>: <code>min = 1B</code>, <code>max = 3B</code>, and <code>2.5 \leq med</code>; then <code>value = 3B</code>.</p></li>
-<li><p>If <code>rc = 10</code>: <code>min = 2B</code>, <code>max = 4B</code>, and <code>med &lt; 2.5</code>; then <code>value = 2B</code>.</p></li>
-<li><p>If <code>rc = 11</code>: <code>min = 2B</code>, <code>max = 4B</code>, and <code>2.5 \leq med &lt; 3.5</code>; then <code>value = 3B</code>.</p></li>
-<li><p>If <code>rc = 12</code>: <code>min = 2B</code>, <code>max = 4B</code>, and <code>3.5 \leq med</code>; then <code>value = 4B</code>.</p></li>
-<li><p>If <code>rc = 13</code>: <code>min = 1B</code>, <code>max = 4B</code>, and <code>med &lt; 1.5</code>; then <code>value = 1B</code>.</p></li>
-<li><p>If <code>rc = 14</code>: <code>min = 1B</code>, <code>max = 4B</code>, and <code>1.5 \leq med &lt; 2.5</code>; then <code>value = 2B</code>.</p></li>
-<li><p>If <code>rc = 15</code>: <code>min = 1B</code>, <code>max = 4B</code>, and <code>2.5 \leq med &lt; 3.5</code>; then <code>value = 3B</code>.</p></li>
-<li><p>If <code>rc = 16</code>: <code>min = 1B</code>, <code>max = 4B</code>, and <code>3.5 \leq med</code>; then <code>value = 4B</code>.</p></li>
-</ul></li>
-<li><p><strong>Syntax:</strong> <code>rc = repl_box5(array, sample, line, value, $</code><br />
-<code>DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
-<li><p><strong>Positional parameters [Input/Output]:</strong></p>
-<ul>
-<li><p><code>array {BYTE array} [I]:</code> The 2-D input array containing missing values.</p></li>
-<li><p><code>sample {INT} [I]:</code> The sample coordinate of the missing value in the 2-D <code>array</code>.</p></li>
-<li><p><code>line {INT} [I]:</code> The line coordinate of the missing value in the 2-D <code>array</code>.</p></li>
-<li><p><code>value {BYTE} [O]:</code> The proposed replacement value for the missing value.</p></li>
-</ul></li>
-<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
-<ul>
-<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
-<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
-</ul></li>
-<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
-<li><p><strong>Outcome:</strong></p>
-<ul>
-<li><p>If no exception condition has been detected, this function returns a numeric code <code>rc</code> smaller than <code>99</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameter <code>value</code> contains the suggested replacement value for the missing value and the returned code <code>rc</code> indicates which decision rule has been applied to suggest the replacement value.</p></li>
-<li><p>If an exception condition has been detected, this function returns a non-zero error code larger than <code>99</code>, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameter <code>value</code> may be inexistent, incomplete or incorrect.</p></li>
-</ul></li>
-<li><p><strong>Exception conditions:</strong></p>
-<ul>
-<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
-<li><p>Error 110: Input positional parameter <code>array</code> is invalid.</p></li>
-<li><p>Error 120: Input positional parameter <code>sample</code> is invalid.</p></li>
-<li><p>Error 130: Input positional parameter <code>line</code> is invalid.</p></li>
-</ul></li>
-<li><p><strong>Dependencies:</strong></p>
-<ul>
-<li><p><code>is_array.pro</code></p></li>
-<li><p><code>is_numeric.pro</code></p></li>
-<li><p><code>percentile.pro</code></p></li>
-<li><p><code>strstr.pro</code></p></li>
-</ul></li>
-<li><p><strong>Remarks:</strong></p>
-<ul>
-<li><p><strong>Note 1:</strong> This function is exclusively intended for use in the specific context of replacing missing values in the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products, where the valid individual pixel values are limited to <code>[0B, 1B, 2B, 3B, 4B, 253B, 254B, 255B]</code>. Other functions in this package may add meaning to other intermediate values, such as <code>[253B, 254B]</code>, which are flags to indicate unretrievable values.</p></li>
-</ul></li>
-<li><p><strong>Examples:</strong></p>
-<pre><code>[See the outcome(s) generated by get_l1rccm.pro]</code></pre></li>
-<li><p><strong>References:</strong> None.</p></li>
-<li><p><strong>Versioning:</strong></p>
-<ul>
-<li><p>2018&#8211;08&#8211;08: Version 0.8 &#8212; Original routines to manipulate <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products provided by Linda Hunt.</p></li>
-<li><p>2018&#8211;12&#8211;23: Version 0.9 &#8212; Initial release: This function and those it depends on supersede all previous routines dealing with <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products.</p></li>
-<li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
-<li><p>2019&#8211;01&#8211;30: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
-<li><p>2019&#8211;02&#8211;02: Version 2.01 &#8212; Minor code update.</p></li>
+<li><p>2019&#8211;02&#8211;04: Version 2.00 &#8212; Initial release, this function supersedes the former functions <code>repl_box3.pro</code> and <code>repl_box5.pro</code>; it implements the most current coding and documentation standards.</p></li>
+<li><p>2019&#8211;02&#8211;05: Version 2.10 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 </ul></li>
 </ul>
 </body>

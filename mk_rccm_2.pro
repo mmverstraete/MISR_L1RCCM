@@ -10,13 +10,14 @@ FUNCTION mk_rccm_2, $
 
    ;Sec-Doc
    ;  PURPOSE: This function attempts to replace missing values in the
-   ;  rccm_1 cloud mask by a reasonable value determined on the basis of
-   ;  its 8 immediate neighbors.
+   ;  rccm_1 cloud mask by reasonable estimates determined on the basis of
+   ;  the values of its immediate neighbors.
    ;
-   ;  ALGORITHM: This function defines a small 3 × 3 subwindow within the
-   ;  input array rccm_1, centered on each successive missing pixel and
-   ;  computes basic non-parametric statistics on the frequencies of
-   ;  neighboraing values.
+   ;  ALGORITHM: This function uses square sub-windows of various sizes,
+   ;  within the input array rccm_1 and centered on each successive
+   ;  missing pixel, to compute basic non-parametric statistics on the
+   ;  frequencies of neighboring values and propose a reasonable
+   ;  replacement value.
    ;
    ;  SYNTAX: rc = mk_rccm_2(rccm_1, misr_path, misr_orbit, $
    ;  misr_block, rccm_2, n_miss_2, $
@@ -36,8 +37,9 @@ FUNCTION mk_rccm_2, $
    ;  *   misr_block {INTEGER} [I]: The selected MISR BLOCK number.
    ;
    ;  *   rccm_2 {BYTE array} [O]: An array containing the upgraded RCCM
-   ;      product for the 9 camera files where many of the missing values
-   ;      are replaced by reasonable estimates of the local cloudiness.
+   ;      product for the 9 camera files where most if not all of the
+   ;      missing values are replaced by reasonable estimates of the local
+   ;      cloudiness.
    ;
    ;  *   n_miss_2 {LONG array} [O]: An array reporting how many missing
    ;      values (0B) remain in each of these 9 cloud masks.
@@ -110,7 +112,7 @@ FUNCTION mk_rccm_2, $
    ;      block2str.pro.
    ;
    ;  *   Error 400: An exception condition occurred in the function
-   ;      repl_box3.pro.
+   ;      repl_box.pro.
    ;
    ;  DEPENDENCIES:
    ;
@@ -126,7 +128,7 @@ FUNCTION mk_rccm_2, $
    ;
    ;  *   path2str.pro
    ;
-   ;  *   repl_box3.pro
+   ;  *   repl_box.pro
    ;
    ;  *   set_misr_specs.pro
    ;
@@ -155,6 +157,10 @@ FUNCTION mk_rccm_2, $
    ;      implement stricter coding standards and improve documentation.
    ;
    ;  *   2019–02–02: Version 2.01 — Delete unused variable pob_str.
+   ;
+   ;  *   2019–02–05: Version 2.10 — Implement new algorithm (multiple
+   ;      scans of the input cloud mask) to minimize artifacts in the
+   ;      filled areas.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -310,57 +316,210 @@ FUNCTION mk_rccm_2, $
    ;  Loop over the 9 camera files:
    FOR cam = 0, n_cams - 1 DO BEGIN
 
-   ;  Generate a temporary 2D cloud mask for the current camera:
+   ;  Generate a temporary 2D cloud mask for the current camera and generate
+   ;  a list of the missing pixels in that cloud mask:
       cld_msk = REFORM(rccm_1[cam, *, *])
-
-   ;  Generate a list of the missing pixels in that camera:
       idx = WHERE(cld_msk EQ 0B, count)
 
-      IF (count GT 0) THEN BEGIN
+   ;  If there are no missing values, proceed to the next camera:
+      IF (count EQ 0) THEN CONTINUE
+
+print, 'cam = ' + cams[cam] + ': initial # miss vals = ' + strstr(count)
+
+   ;  =========================================================================
+   ;  Step 1: Repeatedly scan the cloud mask to replace missing values
+   ;  surrounded by at least 4 HOMOGENEOUS valid neighbors within a 3x3
+   ;  sub-window:
+      iter = 0
+      box_inc = 1
+      min_num_required = 4
+      homogeneous = 1
+      REPEAT BEGIN
+         n_proc = 0L
+
+         IF (count GT 0) THEN BEGIN
 
    ;  Define the arrays containing the coordinates of those missing pixels:
-         mpix_sample = INTARR(count)
-         mpix_line = INTARR(count)
+            mpix_sample = INTARR(count)
+            mpix_line = INTARR(count)
 
    ;  Loop over the missing pixels of the current camera
-         FOR mpix = 0, count - 1 DO BEGIN
+            FOR mpix = 0, count - 1 DO BEGIN
 
    ;  Retrieve the image coordinates of the current missing pixel:
-            mpix_loc = ARRAY_INDICES(cld_msk, idx[mpix])
-            mpix_sample[mpix] = mpix_loc[0]
-            mpix_line[mpix] = mpix_loc[1]
+               mpix_loc = ARRAY_INDICES(cld_msk, idx[mpix])
+               mpix_sample[mpix] = mpix_loc[0]
+               mpix_line[mpix] = mpix_loc[1]
 
-   ;  Analyze a 3 by 3 subwindow centered on the missing pixel to determine
-   ;  a reasonable replacement value:
-            rc = repl_box3(cld_msk, mpix_sample[mpix], mpix_line[mpix], $
-               value, DEBUG = debug, EXCPT_COND = excpt_cond)
-            IF (excpt_cond NE '') THEN BEGIN
-               error_code = 400
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
-               RETURN, error_code
-            ENDIF
+   ;  Analyze the subwindow centered on the missing pixel to determine a
+   ;  reasonable replacement value:
+               rc = repl_box(cld_msk, mpix_sample[mpix], mpix_line[mpix], $
+                  box_inc, min_num_required, value, HOMOGENEOUS = homogeneous, $
+                  DEBUG = debug, EXCPT_COND = excpt_cond)
+               IF (excpt_cond NE '') THEN BEGIN
+                  error_code = 400
+                  excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                     rout_name + ': ' + excpt_cond
+                  RETURN, error_code
+               ENDIF
 
-   ;  If rc = -2, the pixel at the specified sample and line coordinates is
-   ;  actually not missing, and if rc = -1, there were not enough surrounding
-   ;  valid values to suggest a replacement for the missing value.
-
-   ;  If a replacement value has been found, copy it back into the temporary
-   ;  cloud mask for the current camera:
-            IF ((rc GE 0) AND (excpt_cond EQ '')) THEN BEGIN
-               cld_msk[idx[mpix]] = value
-            ENDIF
-         ENDFOR
+   ;  If a replacement value has been found (homogeneous case), copy it back
+   ;  into the temporary cloud mask for the current camera:
+               IF (rc GE 0) THEN BEGIN
+                  n_proc++
+                  cld_msk[idx[mpix]] = value
+               ENDIF
+            ENDFOR
 
    ;  Copy the temporary cld_msk back into the rccm_2 array:
-         rccm_2[cam, *, *] = cld_msk
-      ENDIF
+            rccm_2[cam, *, *] = cld_msk
+         ENDIF
 
    ;  Check whether there are any remaining missing pixels in this camera
    ;  cloud mask:
-      kdx = WHERE(cld_msk EQ 0B, cnt)
-         n_miss_2[cam] = cnt
-   ENDFOR
+         iter++
+;         kdx = WHERE(cld_msk EQ 0B, cnt)
+         idx = WHERE(cld_msk EQ 0B, count)
+;         n_miss_2[cam] = cnt
+         n_miss_2[cam] = count
+         IF (count EQ 0) THEN CONTINUE
+
+   ;  Proceed to the next iteration:
+ENDREP UNTIL ((n_proc EQ 0) OR (iter GT 40))
+
+print, 'cam = ' + cams[cam] + ': after step 1, iter = ' + $
+   strstr(iter), ' # miss vals = ' + strstr(count)
+
+   ;  =========================================================================
+   ;  Step 2: Repeatedly scan the cloud mask to replace missing values
+   ;  surrounded by at least 12 HETEROGENEOUS valid neighbors within a 5x5
+   ;  sub-window:
+      iter = 0
+      box_inc = 2
+      min_num_required = 12
+      homogeneous = 0
+      REPEAT BEGIN
+         n_proc = 0L
+
+         IF (count GT 0) THEN BEGIN
+
+   ;  Define the arrays containing the coordinates of those missing pixels:
+            mpix_sample = INTARR(count)
+            mpix_line = INTARR(count)
+
+   ;  Loop over the missing pixels of the current camera
+            FOR mpix = 0, count - 1 DO BEGIN
+
+   ;  Retrieve the image coordinates of the current missing pixel:
+               mpix_loc = ARRAY_INDICES(cld_msk, idx[mpix])
+               mpix_sample[mpix] = mpix_loc[0]
+               mpix_line[mpix] = mpix_loc[1]
+
+   ;  Analyze the subwindow centered on the missing pixel to determine a
+   ;  reasonable replacement value:
+               rc = repl_box(cld_msk, mpix_sample[mpix], mpix_line[mpix], $
+                  box_inc, min_num_required, value, HOMOGENEOUS = homogeneous, $
+                  DEBUG = debug, EXCPT_COND = excpt_cond)
+               IF (excpt_cond NE '') THEN BEGIN
+                  error_code = 400
+                  excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                     rout_name + ': ' + excpt_cond
+                  RETURN, error_code
+               ENDIF
+
+   ;  If a replacement value has been found (homogeneous case), copy it back
+   ;  into the temporary cloud mask for the current camera:
+               IF (rc GE 0) THEN BEGIN
+                  n_proc++
+                  cld_msk[idx[mpix]] = value
+               ENDIF
+            ENDFOR
+
+   ;  Copy the temporary cld_msk back into the rccm_2 array:
+            rccm_2[cam, *, *] = cld_msk
+         ENDIF
+
+   ;  Check whether there are any remaining missing pixels in this camera
+   ;  cloud mask:
+         iter++
+;         kdx = WHERE(cld_msk EQ 0B, cnt)
+         idx = WHERE(cld_msk EQ 0B, count)
+;         n_miss_2[cam] = cnt
+         n_miss_2[cam] = count
+         IF (count EQ 0) THEN CONTINUE
+
+   ;  Proceed to the next iteration:
+ENDREP UNTIL ((n_proc EQ 0) OR (iter GT 40))
+
+print, 'cam = ' + cams[cam] + ': after step 2, iter = ' + $
+   strstr(iter), ' # miss vals = ' + strstr(count)
+
+   ;  =========================================================================
+   ;  Step 3: Repeatedly scan the cloud mask to replace missing values
+   ;  surrounded by at least 3 HETEROGENEOUS valid neighbors within a 3x3
+   ;  sub-window:
+      iter = 0
+      box_inc = 1
+      min_num_required = 2
+      homogeneous = 0
+      REPEAT BEGIN
+         n_proc = 0L
+
+         IF (count GT 0) THEN BEGIN
+
+   ;  Define the arrays containing the coordinates of those missing pixels:
+            mpix_sample = INTARR(count)
+            mpix_line = INTARR(count)
+
+   ;  Loop over the missing pixels of the current camera
+            FOR mpix = 0, count - 1 DO BEGIN
+
+   ;  Retrieve the image coordinates of the current missing pixel:
+               mpix_loc = ARRAY_INDICES(cld_msk, idx[mpix])
+               mpix_sample[mpix] = mpix_loc[0]
+               mpix_line[mpix] = mpix_loc[1]
+
+   ;  Analyze the subwindow centered on the missing pixel to determine a
+   ;  reasonable replacement value:
+               rc = repl_box(cld_msk, mpix_sample[mpix], mpix_line[mpix], $
+                  box_inc, min_num_required, value, HOMOGENEOUS = homogeneous, $
+                  DEBUG = debug, EXCPT_COND = excpt_cond)
+               IF (excpt_cond NE '') THEN BEGIN
+                  error_code = 400
+                  excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                     rout_name + ': ' + excpt_cond
+                  RETURN, error_code
+               ENDIF
+
+   ;  If a replacement value has been found (homogeneous case), copy it back
+   ;  into the temporary cloud mask for the current camera:
+               IF (rc GE 0) THEN BEGIN
+                  n_proc++
+                  cld_msk[idx[mpix]] = value
+               ENDIF
+            ENDFOR
+
+   ;  Copy the temporary cld_msk back into the rccm_2 array:
+            rccm_2[cam, *, *] = cld_msk
+         ENDIF
+
+   ;  Check whether there are any remaining missing pixels in this camera
+   ;  cloud mask:
+;         kdx = WHERE(cld_msk EQ 0B, cnt)
+         idx = WHERE(cld_msk EQ 0B, count)
+;         n_miss_2[cam] = cnt
+         n_miss_2[cam] = count
+         IF (count EQ 0) THEN CONTINUE
+
+   ;  Proceed to the next iteration:
+         iter++
+      ENDREP UNTIL ((n_proc EQ 0) OR (iter GT 20))
+
+print, 'cam = ' + cams[cam] + ': after step 3, iter = ' + $
+   strstr(iter), ' # miss vals = ' + strstr(count)
+print
+
+   ENDFOR   ;  End of loop on cameras.
 
    RETURN, return_code
 

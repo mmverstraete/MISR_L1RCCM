@@ -198,6 +198,10 @@ FUNCTION mk_rccm_1, $
    ;  *   2019–02–02: Version 2.01 — Delete unused variable pob_str and
    ;      use the Radiance rather than the Radiance/RDQI field in L1B2
    ;      files.
+   ;
+   ;  *   2019–02–05: Version 2.10 — Implement new algorithm (multiple
+   ;      scans of the input cloud mask) to minimize artifacts in the
+   ;      filled areas.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;

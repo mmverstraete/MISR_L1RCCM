@@ -165,6 +165,10 @@ FUNCTION mk_rccm_0, $
    ;      implement stricter coding standards and improve documentation.
    ;
    ;  *   2019–02–02: Version 2.01 — Delete unused variable pob_str.
+   ;
+   ;  *   2019–02–05: Version 2.10 — Implement new algorithm (multiple
+   ;      scans of the input cloud mask) to minimize artifacts in the
+   ;      filled areas.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
