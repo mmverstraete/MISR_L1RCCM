@@ -1,0 +1,717 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+   <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <title>Documentation for the IDL routines in project MISR_RCCM</title>
+   </head>
+<body>
+<h1>Documentation for the IDL routines in project MISR_RCCM</h1>
+<h2>diag_rccm</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function collects metadata and basic statistics about the contents of a single <span class="smallcaps">MISR</span> <span class="smallcaps">Block</span> within each of the 9 <span class="smallcaps">MISR</span> RCCM files for the specified <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span>, and <span class="smallcaps">Block</span>, and saves these results into 9 text files and 9 corresponding <code>IDL</code> <code>SAVE</code> files.</p></li>
+<li><p><strong>Algorithm:</strong> This function inspects the contents of the 9 <span class="smallcaps">MISR</span> RCCM files and reports on the numbers of high-confidence cloud, low-confidence cloud, low confidence clear and high-confidence clear pixels, as well as on the number of glitter-contaminated pixels and on the tests used to derive those cloudiness levels.</p></li>
+<li><p><strong>Syntax:</strong> <code>rc = diag_rccm(misr_path, misr_orbit, misr_block, $</code><br />
+<code>RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $</code><br />
+<code>LOG_IT = log_it, LOG_FOLDER = log_folder, $</code><br />
+<code>SAVE_IT = save_it, SAVE_FOLDER = save_folder, $</code><br />
+<code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>misr_path {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
+<li><p><code>misr_orbit {LONG} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Orbit</span> number.</p></li>
+<li><p><code>misr_block {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Block</span> number.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>RCCM_FOLDER = rccm_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files, if they are not located in the default location.</p></li>
+<li><p><code>RCCM_VERSION = rccm_version {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> version identifier to use instead of the default value.</p></li>
+<li><p><code>LOG_IT = log_it {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) generating a log file.</p></li>
+<li><p><code>LOG_FOLDER = log_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the output folder containing the processing log.</p></li>
+<li><p><code>SAVE_IT = save_it {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) saving the results in a savefile.</p></li>
+<li><p><code>SAVE_FOLDER = save_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the output folder containing the savefile.</p></li>
+<li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to enable (1) or skip (0) reporting progress on the console.</p></li>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output log and save files are saved in the designated or default folders.</p></li>
+<li><p>If an exception condition has been detected, this function returns [a non-zero error code, or some non-sandard returned value], and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output log and save files may be inexistent, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: Input argument <code>misr_path</code> is invalid.</p></li>
+<li><p>Error 120: Input argument <code>misr_orbit</code> is invalid.</p></li>
+<li><p>Error 130: Input argument <code>misr_block</code> is invalid.</p></li>
+<li><p>Error 199: An exception condition occurred in <code>set_roots_vers.pro</code>.</p></li>
+<li><p>Error 200: An exception condition occurred in function <code>path2str.pro</code>.</p></li>
+<li><p>Error 210: An exception condition occurred in function <code>orbit2str.pro</code>.</p></li>
+<li><p>Error 220: An exception condition occurred in function <code>block2str.pro</code>.</p></li>
+<li><p>Error 230: An exception condition occurred in function <code>orbit2date.pro</code>.</p></li>
+<li><p>Error 299: The computer is not recognized and at least one of the optional input keyword parameters <code>rccm_folder</code>, <code>log_folder</code>, <code>save_folder</code> is not specified.</p></li>
+<li><p>Error 300: An exception condition occurred in function <code>find_rccm_files</code>.</p></li>
+<li><p>Error 500: The output folder <code>log_fpath</code> is unwritable.</p></li>
+<li><p>Error 510: An exception condition occurred in function <code>is_writable</code>.</p></li>
+<li><p>Error 520: The output folder <code>save_fpath</code> is unwritable.</p></li>
+<li><p>Error 530: An exception condition occurred in function <code>is_writable</code>.</p></li>
+<li><p>Error 600: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_SETREGION_BY_PATH_BLOCKRANGE</code>.</p></li>
+<li><p>Error 610: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_FILE_TO_GRIDLIST</code>.</p></li>
+<li><p>Error 620: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_FILE_GRID_TO_FIELDLIST</code>.</p></li>
+<li><p>Error 630: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_READDATA</code>.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>MISR Toolkit</code></p></li>
+<li><p><code>block2str.pro</code></p></li>
+<li><p><code>chk_misr_block.pro</code></p></li>
+<li><p><code>chk_misr_orbit.pro</code></p></li>
+<li><p><code>chk_misr_path.pro</code></p></li>
+<li><p><code>find_rccm_files.pro</code></p></li>
+<li><p><code>force_path_sep.pro</code></p></li>
+<li><p><code>get_host_info.pro</code></p></li>
+<li><p><code>is_writable.pro</code></p></li>
+<li><p><code>orbit2date.pro</code></p></li>
+<li><p><code>orbit2str.pro</code></p></li>
+<li><p><code>path2str.pro</code></p></li>
+<li><p><code>set_roots_vers.pro</code></p></li>
+<li><p><code>today.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong></p>
+<ul>
+<li><p><strong>Note 1:</strong> The input keyword parameters <code>log_it</code> and <code>save_it</code> are provided to generate the desired outputs selectively. Deselecting some of them may accelerate the processing, but if none of them are set, then no output will be saved either.</p></li>
+</ul></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>IDL&gt; misr_path = 168
+IDL&gt; misr_path = 168
+IDL&gt; misr_orbit = 65487
+IDL&gt; misr_block = 111
+IDL&gt; log_it = 1
+IDL&gt; save_it = 1
+IDL&gt; verbose = 1
+IDL&gt; debug = 1
+IDL&gt; rc = diag_rccm(misr_path, misr_orbit, misr_block, $
+   LOG_IT = log_it, LOG_FOLDER = log_folder, $
+   SAVE_IT = save_it, SAVE_FOLDER = save_folder, $
+   VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
+Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
+   Save_RCCM_diag_GM-P168-O065487-B111-AA_2012-04-10_2019-02-19.sav
+Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
+   Log_RCCM_diag_GM-P168-O065487-B111-AA_2012-04-10_2019-02-19.txt
+...
+Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
+   Save_RCCM_diag_GM-P168-O065487-B111-DF_2012-04-10_2019-02-19.sav
+Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
+   Log_RCCM_diag_GM-P168-O065487-B111-DF_2012-04-10_2019-02-19.txt</code></pre></li>
+<li><p><strong>References:</strong> None.</p></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2019&#8211;02&#8211;05: Version 1.0 &#8212; Initial release.</p></li>
+<li><p>2019&#8211;02&#8211;06: Version 1.1 &#8212; Initial public release, following the stricter coding and documentation standards.</p></li>
+<li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
+<li><p>2019&#8211;02&#8211;24: Version 2.01 &#8212; Documentation update.</p></li>
+</ul></li>
+</ul>
+<h2>find_rccm_files</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function provides the file specifications (path + names) of the 9 <span class="smallcaps">MISR</span> <span class="smallcaps">L1</span> Radiometric Camera-by-camera Cloud Mask (RCCM) files corresponding to the given <code>misr_path</code> and <code>misr_orbit</code>, if they are available in the expected folder.</p></li>
+<li><p><strong>Algorithm:</strong> This function reports the file specifications (path + names) of the 9 <span class="smallcaps">MISR</span> <span class="smallcaps">L1</span> RCCM files for the specified <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span> in the expected folder and verifies that they are readable.</p></li>
+<li><p><strong>Syntax:</strong> <code>rc = find_rccm_files(misr_path, misr_orbit, rccm_files, $</code><br />
+<code>RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $</code><br />
+<code>DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>misr_path {INT} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
+<li><p><code>misr_orbit {LONG} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Orbit</span> number.</p></li>
+<li><p><code>rccm_files {STRING array} [O]:</code> The file specifications (path and filenames) of the 9 <span class="smallcaps">MISR</span> <span class="smallcaps">L1</span> RCCM files for the specified <code>misr_path</code> and <code>misr_orbit</code>.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>RCCM_FOLDER = rccm_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files, if they are not located in the default location.</p></li>
+<li><p><code>RCCM_VERSION = rccm_version {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> version identifier to use instead of the default value.</p></li>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> was set and if the optional output keyword parameter <code>EXCPT_COND</code> was provided in the call. The output positional parameter <code>rccm_files</code> contains the specifications of the 9 <span class="smallcaps">MISR</span> RCCM files for the specified <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
+<li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> was set and if the optional output keyword parameter <code>EXCPT_COND</code> was provided. The output positional parameter <code>rccm_files</code> may be inexistent, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: Input argument <code>misr_path</code> is invalid.</p></li>
+<li><p>Error 120: Input argument <code>misr_orbit</code> is invalid.</p></li>
+<li><p>Error 199: An exception condition occurred in <code>set_roots_vers.pro</code>.</p></li>
+<li><p>Error 200: An exception condition occurred in function <code>path2str.pro</code>.</p></li>
+<li><p>Error 210: An exception condition occurred in function <code>orbit2str.pro</code>.</p></li>
+<li><p>Error 300: The input folder <code>rccm_path</code> exists but is unreadable.</p></li>
+<li><p>Error 310: An exception condition occurred in function <code>is_readable.pro</code>.</p></li>
+<li><p>Error 320: The input folder <code>rccm_path</code> does not exist.</p></li>
+<li><p>Error 400: The input folder <code>rccm_path</code> does not contain any <span class="smallcaps">L1</span> RCCM files for selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
+<li><p>Error 410: The input folder <code>rccm_path</code> contains fewer than 9 <span class="smallcaps">L1</span> RCCM files for selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
+<li><p>Error 420: The input folder <code>rccm_path</code> contains more than 9 <span class="smallcaps">L1</span> RCCM files for selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
+<li><p>Error 430: At least one of the <span class="smallcaps">MISR</span> <span class="smallcaps">L1</span> RCCM files in the input folder <code>rccm_path</code> is not readable.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>chk_misr_orbit.pro</code></p></li>
+<li><p><code>chk_misr_path.pro</code></p></li>
+<li><p><code>is_readable.pro</code></p></li>
+<li><p><code>orbit2str.pro</code></p></li>
+<li><p><code>path2str.pro</code></p></li>
+<li><p><code>set_roots_vers.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong></p>
+<ul>
+<li><p><strong>Note 1:</strong> If specified, the optional keyword parameter <code>RCCM_FOLDER</code> overrides the default address given in <code>set_roots_vers.pro</code>.</p></li>
+<li><p><strong>Note 2:</strong> If specified, the optional keyword parameter <code>RCCM_VERSION</code> overrides the default version identifier given in <code>set_roots_vers.pro</code>.</p></li>
+<li><p><strong>Note 3:</strong> This function assumes that the folder <code>rccm_path</code>, defined either by default or by the input keyword parameter <code>l1b2_folder</code>, contains full <span class="smallcaps">Orbit</span>s, i.e., that files contain data for all <span class="smallcaps">Block</span>s. Exception condition <code>420</code> may be triggered by the presence of multiple subsetted files for the same <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
+<li><p><strong>Note 4:</strong> All 9 <span class="smallcaps">MISR</span> <span class="smallcaps">L1</span> RCCM files for the given <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span> are expected to reside in the same folder.</p></li>
+</ul></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>IDL&gt; misr_path = 168
+IDL&gt; misr_orbit = 68050
+IDL&gt; rccm_folder = &#39;&#39;
+IDL&gt; rccm_version = &#39;&#39;
+IDL&gt; debug = 1
+IDL&gt; rc = find_rccm_files(misr_path, misr_orbit, $
+   rccm_files, RCCM_FOLDER = rccm_folder, $
+   RCCM_VERSION = rccm_version, $
+   DEBUG = debug, EXCPT_COND = excpt_cond)
+IDL&gt; PRINT, rccm_files
+/Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_AA_F04_0025.hdf
+/Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_AF_F04_0025.hdf
+/Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_AN_F04_0025.hdf
+/Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_BA_F04_0025.hdf
+/Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_BF_F04_0025.hdf
+/Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_CA_F04_0025.hdf
+/Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_CF_F04_0025.hdf
+/Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_DA_F04_0025.hdf
+/Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_DF_F04_0025.hdf</code></pre></li>
+<li><p><strong>References:</strong> None.</p></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
+<li><p>2019&#8211;01&#8211;30: Version 1.1 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+<li><p>2019&#8211;02&#8211;02: Version 1.2 &#8212; Delete unused variable <code>pob_str</code>.</p></li>
+<li><p>2019&#8211;02&#8211;05: Version 1.3 &#8212; Reorganize the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> functions.</p></li>
+<li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
+<li><p>2019&#8211;02&#8211;24: Version 2.01 &#8212; Documentation update.</p></li>
+</ul></li>
+</ul>
+<h2>fix_rccm</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function generates a clean version of the <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> Georectified Radiance Product (GRP) Radiometric Camera-by-camera Cloud Mask (RCCM) data product with edge and obscured pixels duly flagged and missing values replaced by reasonable estimates.</p></li>
+<li><p><strong>Algorithm:</strong> This function reads the 9 original <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data product files for the specified <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>, as well as the corresponding 9 <span class="smallcaps">L1B2</span> Georectified Radiance Product (GRP) Terrain projected Global Mode (GM) files, and replaces eventual missing values by estimates based on the values of neighboring pixels within a <span class="math inline">3&#8197;&#215;&#8197;3</span> (or a <span class="math inline">5&#8197;&#215;&#8197;5</span>) pixel window.</p></li>
+<li><p><strong>Syntax:</strong> <code>rc = fix_rccm(misr_path, misr_orbit, misr_block, $</code><br />
+<code>rccm, L1B2_FOLDER = l1b2_folder, L1B2_VERSION = l1b2_version, $</code><br />
+<code>RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $</code><br />
+<code>LOG_IT = log_it, LOG_FOLDER = log_folder, $</code><br />
+<code>SAVE_IT = save_it, SAVE_FOLDER = save_folder, $</code><br />
+<code>MAP_IT = map_it, MAP_FOLDER = map_folder, $</code><br />
+<code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>misr_path {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
+<li><p><code>misr_orbit {LONG} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Orbit</span> number.</p></li>
+<li><p><code>misr_block {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Block</span> number.</p></li>
+<li><p><code>rccm {BYTE array} [O]: </code> The cleaned RCCM product.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>L1B2_FOLDER = l1b2_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> files, if they are not located in the default location.</p></li>
+<li><p><code>L1B2_VERSION = l1b2_version {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The <span class="smallcaps">L1B2</span> version identifier to use instead of the default value.</p></li>
+<li><p><code>RCCM_FOLDER = rccm_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files, if they are not located in the default location.</p></li>
+<li><p><code>RCCM_VERSION = rccm_version {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> version identifier to use instead of the default value.</p></li>
+<li><p><code>LOG_IT = log_it {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) generating a log file.</p></li>
+<li><p><code>LOG_FOLDER = log_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the output folder containing the processing log.</p></li>
+<li><p><code>SAVE_IT = save_it {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) saving the results in a savefile.</p></li>
+<li><p><code>SAVE_FOLDER = save_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the output folder containing the savefile.</p></li>
+<li><p><code>MAP_IT = map_it {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) generating maps of the numerical results.</p></li>
+<li><p><code>MAP_FOLDER = map_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the output folder containing the maps.</p></li>
+<li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to enable (1) or skip (0) reporting progress on the console.</p></li>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameter <code>rccm</code> contains a clean version of the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data product. The meaning of pixel values is as follows:</p>
+<ul>
+<li><p><code>0B</code>: Missing.</p></li>
+<li><p><code>1B</code>: Cloud with high confidence.</p></li>
+<li><p><code>2B</code>: Cloud with low confidence.</p></li>
+<li><p><code>3B</code>: Clear with low confidence.</p></li>
+<li><p><code>4B</code>: Clear with high confidence.</p></li>
+<li><p><code>253B</code>: Obscured.</p></li>
+<li><p><code>254B</code>: Edge.</p></li>
+<li><p><code>255B</code>: Fill.</p></li>
+</ul></li>
+<li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameter <code>rccm</code> inexistent, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Warning 98: The current computer is unrecognized.</p></li>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: Input positional parameter <code>misr_path</code> is invalid.</p></li>
+<li><p>Error 120: Input positional parameter <code>misr_orbit</code> is invalid.</p></li>
+<li><p>Error 130: Input positional parameter <code>misr_block</code> is invalid.</p></li>
+<li><p>Error 199: An exception condition occurred in the function <code>set_roots_vers.pro</code>.</p></li>
+<li><p>Error 200: An exception condition occurred in the function <code>path2str.pro</code>.</p></li>
+<li><p>Error 202: An exception condition occurred in the function <code>path2str.pro</code>.</p></li>
+<li><p>Error 210: An exception condition occurred in the function <code>orbit2str.pro</code>.</p></li>
+<li><p>Error 212: An exception condition occurred in the function <code>orbit2str.pro</code>.</p></li>
+<li><p>Error 220: An exception condition occurred in the function <code>block2str.pro</code>.</p></li>
+<li><p>Error 230: An exception condition occurred in the function <code>orbit2date.pro</code>.</p></li>
+<li><p>Error 240: <span class="smallcaps">RCCM</span> file for the current camera not found.</p></li>
+<li><p>Error 250: Found multiple <span class="smallcaps">RCCM</span> files for the current camera.</p></li>
+<li><p>Error 299: The current computer is unrecognized and one or more input or output folder(s) is not specified by keyword parameters.</p></li>
+<li><p>Error 300: The <span class="smallcaps">RCCM</span> file exists but is unreadable.</p></li>
+<li><p>Error 302: The <span class="smallcaps">L1B2</span> file exists but is unreadable.</p></li>
+<li><p>Error 310: An exception condition occurred in the function <code>is_readable.pro</code>.</p></li>
+<li><p>Error 312: An exception condition occurred in the function <code>is_readable.pro</code>.</p></li>
+<li><p>Error 320: The <span class="smallcaps">RCCM</span> file does not exist.</p></li>
+<li><p>Error 322: The <span class="smallcaps">L1B2</span> file does not exist.</p></li>
+<li><p>Error 330: An exception condition occurred in the function <code>mk_rccm_0.pro</code>.</p></li>
+<li><p>Error 340: An exception condition occurred in the function <code>mk_rccm_1.pro</code>.</p></li>
+<li><p>Error 350: An exception condition occurred in the function <code>mk_rccm_2.pro</code>.</p></li>
+<li><p>Error 360: An exception condition occurred in the function <code>mk_rccm_0.pro</code>.</p></li>
+<li><p>Error 400: <span class="smallcaps">L1B2</span> file for the current camera not found.</p></li>
+<li><p>Error 410: Found multiple <span class="smallcaps">L1B2</span> files for the current camera.</p></li>
+<li><p>Error 500: The output folder <code>log_path</code> is unwritable.</p></li>
+<li><p>Error 510: An exception condition occurred in the function <code>is_writable.pro</code>.</p></li>
+<li><p>Error 520: The output folder <code>map_path</code> is unwritable.</p></li>
+<li><p>Error 530: An exception condition occurred in the function <code>is_writable.pro</code>.</p></li>
+<li><p>Error 600: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_MAKE_FILENAME</code>.</p></li>
+<li><p>Error 610: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_MAKE_FILENAME</code>.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>MISR Toolkit</code></p></li>
+<li><p><code>block2str.pro</code></p></li>
+<li><p><code>chk_misr_block.pro</code></p></li>
+<li><p><code>chk_misr_orbit.pro</code></p></li>
+<li><p><code>chk_misr_path.pro</code></p></li>
+<li><p><code>get_host_info.pro</code></p></li>
+<li><p><code>is_readable.pro</code></p></li>
+<li><p><code>mk_rccm_0.pro</code></p></li>
+<li><p><code>mk_rccm_1.pro</code></p></li>
+<li><p><code>mk_rccm_2.pro</code></p></li>
+<li><p><code>orbit2date.pro</code></p></li>
+<li><p><code>orbit2str.pro</code></p></li>
+<li><p><code>path2str.pro</code></p></li>
+<li><p><code>set_misr_specs.pro</code></p></li>
+<li><p><code>set_roots_vers.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+<li><p><code>today.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong></p>
+<ul>
+<li><p><strong>Note 1:</strong> If specified, the optional keyword parameters <code>XXX_FOLDER</code> override the default addresses given in <code>set_roots_vers.pro</code>.</p></li>
+<li><p><strong>Note 2:</strong> If specified, the optional keyword parameters <code>XXX_VERSION</code> override the default version identifiers given in <code>set_roots_vers.pro</code>.</p></li>
+<li><p><strong>Note 3:</strong> If a flag <code>XXX_IT</code> controlling an output file is specified, the corresponding folder must be reachable by default or given through the associated keyword, and be writable.</p></li>
+<li><p><strong>Note 4:</strong> If maps are requested by setting the input keyword parameter <code>map_it</code>, map legends are also saved as text files with matching names to describe the contents of these maps.</p></li>
+<li><p><strong>Note 5:</strong> The <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> product is only available at the reduced spatial resolution of 128 line by 512 samples per <span class="smallcaps">Block</span>.</p></li>
+<li><p><strong>Note 6:</strong> The <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> product is provided on a per-camera basis, and the cloud masks for a given camera apply to all spectral bands of that camera.</p></li>
+<li><p><strong>Note 7:</strong> By default, the output files generated by this function are saved in a folder located under the Global Mode outcomes.</p></li>
+</ul></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>IDL&gt; misr_path = 168
+IDL&gt; misr_orbit = 68050
+IDL&gt; misr_block = 110
+IDL&gt; log_it = 1
+IDL&gt; save_it = 1
+IDL&gt; map_it = 1
+IDL&gt; debug = 1
+IDL&gt; rc = fix_rccm(misr_path, misr_orbit, misr_block, rccm, $
+   LOG_IT = log_it, SAVE_IT = save_it, MAP_IT = map_it, $
+   DEBUG = debug, EXCPT_COND = excpt_cond)
+IDL&gt; PRINT, &#39;rc = &#39;, rc
+rc =            0</code></pre></li>
+<li><p><strong>References:</strong></p>
+<ul>
+<li><p>Bull, M., Matthews, J., McDonald, D., Menzies, A., Moroney, C., Mueller, K. Paradise, S. and Smyth, M. (2011) <em>Data Products Specifications</em>, Technical Report <strong>JPL D-13963, Revision S</strong>, Jet Propulsion Laboratory, California Institute of Technology, Pasadena, CA, USA.</p></li>
+<li><p>Diner, D. J., Di Girolamo, L. and Clothiaux, E. E. (1999) <em>Level 1 Cloud Detection Algorithm Theoretical Basis</em>, Technical Report <strong>JPL D-13397, Revision B</strong>, Jet Propulsion Laboratory, California Institute of Technology, Pasadena, CA, USA.</p></li>
+</ul></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2018&#8211;08&#8211;08: Version 0.8 &#8212; Original routines to manipulate <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products provided by Linda Hunt.</p></li>
+<li><p>2018&#8211;12&#8211;23: Version 0.9 &#8212; Initial release: This function and those it depends on supersede all previous routines dealing with <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products.</p></li>
+<li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
+<li><p>2019&#8211;01&#8211;30: Version 1.1 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+<li><p>2019&#8211;02&#8211;02: Version 1.2 &#8212; Add further diagnostic information in the log file, update the code and the documentation.</p></li>
+<li><p>2019&#8211;02&#8211;05: Version 1.3 &#8212; Reorganize the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> functions.</p></li>
+<li><p>2019&#8211;02&#8211;07: Version 1.4 &#8212; Rename this function from <code>get_rccm.pro</code> to<br />
+<code>fix_rccm.pro</code>.</p></li>
+<li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
+<li><p>2019&#8211;02&#8211;24: Version 2.01 &#8212; Documentation update.</p></li>
+</ul></li>
+</ul>
+<h2>mk_rccm_0</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function retrieves the standard <span class="smallcaps">Radiometric</span> <span class="smallcaps">Camera</span> <span class="smallcaps">to</span> <span class="smallcaps">camera</span> <span class="smallcaps">Cloud</span> <span class="smallcaps">Masks</span> (<span class="smallcaps">RCCM</span>) from the original <span class="smallcaps">MISR</span> data product files.</p></li>
+<li><p><strong>Algorithm:</strong> This function reads the 9 <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data product files and extracts the cloud masks.</p></li>
+<li><p><strong>Syntax:</strong> <code>rc = mk_rccm_0(rccm_files, misr_path, misr_orbit, $</code><br />
+<code>misr_block, rccm_0, n_miss_0, $</code><br />
+<code>DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>rccm_files {STRING array} [I]:</code> An array containing the file specifications for the 9 <span class="smallcaps">RCCM</span> files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
+<li><p><code>misr_path {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
+<li><p><code>misr_orbit {LONG} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Orbit</span> number.</p></li>
+<li><p><code>misr_block {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Block</span> number.</p></li>
+<li><p><code>rccm_0 {BYTE array} [O]:</code> An array containing the standard <span class="smallcaps">RCCM</span> product for the 9 camera files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>.</p></li>
+<li><p><code>n_miss_0 {LONG array} [O]:</code> An array reporting how many non-retrieved values (<code>0B</code>) exist in each of these 9 cloud masks.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameters <code>rccm_0</code> and <code>n_miss_0</code> contain the cloud masks and the number of non-retrieved values in each of them, respectively. The meaning of pixel values is as follows:</p>
+<ul>
+<li><p><code>0B</code>: No retrieval.</p></li>
+<li><p><code>1B</code>: Cloud with high confidence.</p></li>
+<li><p><code>2B</code>: Cloud with low confidence.</p></li>
+<li><p><code>3B</code>: Clear with low confidence.</p></li>
+<li><p><code>4B</code>: Clear with high confidence.</p></li>
+<li><p><code>255B</code>: Fill.</p></li>
+</ul></li>
+<li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameters <code>rccm_0</code> and <code>n_miss_0</code> may be inexistent, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: Input positional parameter <code>misr_path</code> is invalid.</p></li>
+<li><p>Error 120: Input positional parameter <code>misr_orbit</code> is invalid.</p></li>
+<li><p>Error 130: Input positional parameter <code>misr_block</code> is invalid.</p></li>
+<li><p>Error 200: An exception condition occurred in the function <code>path2str.pro</code>.</p></li>
+<li><p>Error 210: An exception condition occurred in the function <code>orbit2str.peo</code>.</p></li>
+<li><p>Error 220: An exception condition occurred in the function <code>block2str.pro</code>.</p></li>
+<li><p>Error 300: One of the input <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files exists but is unreadable.</p></li>
+<li><p>Error 310: An exception condition occurred in the function <code>is_readable.pro</code>.</p></li>
+<li><p>Error 320: One of the input <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files does not exist.</p></li>
+<li><p>Error 600: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_SETREGION_BY_PATH_BLOCKRANGE</code>.</p></li>
+<li><p>Error 610: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_READDATA</code>.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>MISR Toolkit</code></p></li>
+<li><p><code>block2str.pro</code></p></li>
+<li><p><code>chk_misr_block.pro</code></p></li>
+<li><p><code>chk_misr_orbit.pro</code></p></li>
+<li><p><code>chk_misr_path.pro</code></p></li>
+<li><p><code>is_readable.pro</code></p></li>
+<li><p><code>set_misr_specs.pro</code></p></li>
+<li><p><code>orbit2str.pro</code></p></li>
+<li><p><code>path2str.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong> None.</p></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>[See the outcome(s) generated by fix_rccm.pro]</code></pre></li>
+<li><p><strong>References:</strong></p>
+<ul>
+<li><p>Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies, Catherine Moroney, Kevin Mueller, Susan Paradise, Mike Smyth (2011) <em>MISR Data Products Specifications</em>, <strong>JPL D-13963</strong>, Revision S, Section 6.7.6, p. 85.</p></li>
+</ul></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2018&#8211;08&#8211;08: Version 0.8 &#8212; Original routines to manipulate <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products provided by Linda Hunt.</p></li>
+<li><p>2018&#8211;12&#8211;23: Version 0.9 &#8212; Initial release: This function and those it depends on supersede all previous routines dealing with <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products.</p></li>
+<li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
+<li><p>2019&#8211;01&#8211;30: Version 1.1 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+<li><p>2019&#8211;02&#8211;02: Version 1.2 &#8212; Delete unused variable <code>pob_str</code>.</p></li>
+<li><p>2019&#8211;02&#8211;05: Version 1.3 &#8212; Reorganize the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> functions.</p></li>
+<li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
+</ul></li>
+</ul>
+<h2>mk_rccm_1</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function flags edge and obscured pixels in the standard <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> array <code>rccm_0</code>.</p></li>
+<li><p><strong>Algorithm:</strong> This function reads the 9 <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> data product files and extracts the geographical locations containing unobserved values, either because they fall outside of the instrument swath width (&#8216;edge&#8217;) or because they are unobservable due to the local topography, and ports the corresponding flags into the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> array <code>rccm_0</code>.</p></li>
+<li><p><strong>Syntax:</strong> <code>rc = mk_rccm_1(rccm_0, l1b2_files, misr_path, $</code><br />
+<code>misr_orbit, misr_block, rccm_1, n_miss_1, $</code><br />
+<code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>rccm_0 {BYTE array} [I]:</code> An array containing the standard <span class="smallcaps">RCCM</span> product for the 9 camera files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>.</p></li>
+<li><p><code>l1b2_files {STRING array} [I]:</code> An array containing the file specifications for the 9 <span class="smallcaps">L1B2</span> files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
+<li><p><code>misr_path {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
+<li><p><code>misr_orbit {LONG} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Orbit</span> number.</p></li>
+<li><p><code>misr_block {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Block</span> number.</p></li>
+<li><p><code>rccm_1 {BYTE array} [O]:</code> An array containing the updated <span class="smallcaps">RCCM</span> product for the 9 camera files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>, i.e., with non zero values for edge and obscured pixels.</p></li>
+<li><p><code>n_miss_1 {LONG array} [O]:</code> An array reporting how many missing values (<code>0B</code>) remain in each of these 9 cloud masks.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to enable (1) or skip (0) reporting progress on the console.</p></li>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameters <code>rccm_1</code> and <code>n_miss_1</code> contain the updated cloud masks and the number of missing values in each of them, respectively. The meaning of pixel values is as follows:</p>
+<ul>
+<li><p><code>0B</code>: Missing.</p></li>
+<li><p><code>1B</code>: Cloud with high confidence.</p></li>
+<li><p><code>2B</code>: Cloud with low confidence.</p></li>
+<li><p><code>3B</code>: Clear with low confidence.</p></li>
+<li><p><code>4B</code>: Clear with high confidence.</p></li>
+<li><p><code>253B</code>: Obscured.</p></li>
+<li><p><code>254B</code>: Edge.</p></li>
+<li><p><code>255B</code>: Fill.</p></li>
+</ul></li>
+<li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameters <code>rccm_1</code> and <code>n_miss_1</code> may be inexistent, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: Input positional parameter <code>rccm_0</code> is invalid.</p></li>
+<li><p>Error 120: Input positional parameter <code>l1b2_files</code> is invalid.</p></li>
+<li><p>Error 130: Input positional parameter <code>misr_path</code> is invalid.</p></li>
+<li><p>Error 140: Input positional parameter <code>misr_orbit</code> is invalid.</p></li>
+<li><p>Error 150: Input positional parameter <code>misr_block</code> is invalid.</p></li>
+<li><p>Error 200: An exception condition occurred in the function <code>path2str.pro</code>.</p></li>
+<li><p>Error 210: An exception condition occurred in the function <code>orbit2str.peo</code>.</p></li>
+<li><p>Error 220: An exception condition occurred in the function <code>block2str.pro</code>.</p></li>
+<li><p>Error 300: One of the input <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> files exists but is unreadable.</p></li>
+<li><p>Error 310: An exception condition occurred in the function <code>is_readable.pro</code>.</p></li>
+<li><p>Error 320: One of the input <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> files does not exist.</p></li>
+<li><p>Error 600: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_SETREGION_BY_PATH_BLOCKRANGE</code>.</p></li>
+<li><p>Error 610: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_READDATA</code>.</p></li>
+<li><p>Error 620: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_READDATA</code>.</p></li>
+<li><p>Error 630: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_READDATA</code>.</p></li>
+<li><p>Error 640: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_READDATA</code>.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>MISR Toolkit</code></p></li>
+<li><p><code>block2str.pro</code></p></li>
+<li><p><code>chk_misr_block.pro</code></p></li>
+<li><p><code>chk_misr_orbit.pro</code></p></li>
+<li><p><code>chk_misr_path.pro</code></p></li>
+<li><p><code>is_readable.pro</code></p></li>
+<li><p><code>orbit2str.pro</code></p></li>
+<li><p><code>path2str.pro</code></p></li>
+<li><p><code>set_misr_specs.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong> None.</p></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>[See the outcome(s) generated by fix_rccm.pro]</code></pre></li>
+<li><p><strong>References:</strong></p>
+<ul>
+<li><p>Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies, Catherine Moroney, Kevin Mueller, Susan Paradise, Mike Smyth (2011) <em>MISR Data Products Specifications</em>, <strong>JPL D-13963</strong>, Revision S, Section 6.7.6, p. 85 for the <span class="smallcaps">RCCM</span> values and Section 9.4.4, p. 210 for the <span class="smallcaps">AGP</span> values.</p></li>
+</ul></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2018&#8211;08&#8211;08: Version 0.8 &#8212; Original routines to manipulate <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products provided by Linda Hunt.</p></li>
+<li><p>2018&#8211;12&#8211;23: Version 0.9 &#8212; Initial release: This function and those it depends on supersede all previous routines dealing with <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products.</p></li>
+<li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
+<li><p>2019&#8211;01&#8211;30: Version 1.1 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+<li><p>2019&#8211;02&#8211;02: Version 1.2 &#8212; Delete unused variable <code>pob_str</code> and use the Radiance rather than the Radiance/RDQI field in <span class="smallcaps">L1B2</span> files.</p></li>
+<li><p>2019&#8211;02&#8211;05: Version 1.3 &#8212; Reorganize the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> functions.</p></li>
+<li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
+</ul></li>
+</ul>
+<h2>mk_rccm_2</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function attempts to replace missing values in the <code>rccm_1</code> cloud mask by reasonable estimates determined on the basis of the values of its immediate neighbors.</p></li>
+<li><p><strong>Algorithm:</strong> This function uses square sub-windows of various sizes, within the input array <code>rccm_1</code> and centered on each successive missing pixel, to compute basic non-parametric statistics on the frequencies of neighboring values and propose a reasonable replacement value.</p></li>
+<li><p><strong>Syntax:</strong> <code>rc = mk_rccm_2(rccm_1, misr_path, misr_orbit, $</code><br />
+<code>misr_block, rccm_2, n_miss_2, $</code><br />
+<code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>rccm_1 {BYTE array} [I]:</code> An array containing the updated <span class="smallcaps">RCCM</span> product for the 9 camera files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>, i.e., with non zero values for edge and obscured pixels.</p></li>
+<li><p><code>misr_path {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
+<li><p><code>misr_orbit {LONG} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Orbit</span> number.</p></li>
+<li><p><code>misr_block {INTEGER} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Block</span> number.</p></li>
+<li><p><code>rccm_2 {BYTE array} [O]:</code> An array containing the upgraded <span class="smallcaps">RCCM</span> product for the 9 camera files where most if not all of the missing values are replaced by reasonable estimates of the local cloudiness.</p></li>
+<li><p><code>n_miss_2 {LONG array} [O]:</code> An array reporting how many missing values (<code>0B</code>) remain in each of these 9 cloud masks.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to enable (1) or skip (0) reporting progress on the console.</p></li>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameters <code>rccm_2</code> and <code>n_miss_2</code> contain the upgraded cloud masks and the number of remaining missing values in each of them, respectively. The meaning of pixel values is as follows:</p>
+<ul>
+<li><p><code>0B</code>: Missing.</p></li>
+<li><p><code>1B</code>: Cloud with high confidence.</p></li>
+<li><p><code>2B</code>: Cloud with low confidence.</p></li>
+<li><p><code>3B</code>: Clear with low confidence.</p></li>
+<li><p><code>4B</code>: Clear with high confidence.</p></li>
+<li><p><code>253B</code>: Obscured.</p></li>
+<li><p><code>254B</code>: Edge.</p></li>
+<li><p><code>255B</code>: Fill.</p></li>
+</ul></li>
+<li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameters <code>rccm_2</code> and <code>n_miss_2</code> may be inexistent, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: Input positional parameter <code>rccm_1</code> is invalid.</p></li>
+<li><p>Error 120: Input positional parameter <code>misr_path</code> is invalid.</p></li>
+<li><p>Error 130: Input positional parameter <code>misr_orbit</code> is invalid.</p></li>
+<li><p>Error 140: Input positional parameter <code>misr_block</code> is invalid.</p></li>
+<li><p>Error 200: An exception condition occurred in the function <code>path2str.pro</code>.</p></li>
+<li><p>Error 210: An exception condition occurred in the function <code>orbit2str.peo</code>.</p></li>
+<li><p>Error 220: An exception condition occurred in the function <code>block2str.pro</code>.</p></li>
+<li><p>Error 400: An exception condition occurred in the function <code>repl_box.pro</code>.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>block2str.pro</code></p></li>
+<li><p><code>chk_misr_block.pro</code></p></li>
+<li><p><code>chk_misr_orbit.pro</code></p></li>
+<li><p><code>chk_misr_path.pro</code></p></li>
+<li><p><code>orbit2str.pro</code></p></li>
+<li><p><code>path2str.pro</code></p></li>
+<li><p><code>repl_box.pro</code></p></li>
+<li><p><code>set_misr_specs.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong> None</p></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>[See the outcome(s) generated by fix_rccm.pro]</code></pre></li>
+<li><p><strong>References:</strong> None.</p></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2018&#8211;08&#8211;08: Version 0.8 &#8212; Original routines to manipulate <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products provided by Linda Hunt.</p></li>
+<li><p>2018&#8211;12&#8211;23: Version 0.9 &#8212; Initial release: This function and those it depends on supersede all previous routines dealing with <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products.</p></li>
+<li><p>2018&#8211;12&#8211;30: Version 1.0 &#8212; Initial public release.</p></li>
+<li><p>2019&#8211;01&#8211;30: Version 1.1 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+<li><p>2019&#8211;02&#8211;02: Version 1.2 &#8212; Delete unused variable <code>pob_str</code>.</p></li>
+<li><p>2019&#8211;02&#8211;05: Version 1.3 &#8212; Reorganize the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> functions.</p></li>
+<li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
+</ul></li>
+</ul>
+<h2>repl_box</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function suggests to replace the missing value (<code>0B</code>) located at coordinates <code>[sample, line]</code> within the 2-D input positional parameter <code>array</code> by a suitable value established from an analysis of its valid neighbors within a square sub-window of <code>(2 \times box_inc) + 1</code> pixels on the side.</p></li>
+<li><p><strong>Algorithm:</strong> This function assumes that the input positional parameter <code>array</code> is of type <code>BYTE</code>, is dimensioned <code>[512, 128]</code>, and contains <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data, where individual element values can be <code>0B</code> (indicating missing data), lie within the range <code>[1B, 4B]</code> (indicating valid data: <code>1B</code> = cloudy with high confidence, <code>2B</code> = cloudy with low confidence, <code>3B</code> = clear with low confidence, and <code>4B</code> = clear with high confidence), or take on values larger than <code>250</code> (indicating unobservable pixels, e.g., obscured by topography or outside the swath of the instrument).<br />
+The function (1) inspects a sub-window of <code>(2 \times box_inc) + 1</code> by <code>(2 \times box_inc) + 1</code> values, centred on the presumed missing pixel, and possibly trimmed to exclude elements lying outside the bounds of the <code>array</code>, (2) computes statistics on the values of the valid neighbors within that sub-window, and (3) proposes a reasonable non-null replacement value if at least <code>min_num_required</code> of those neighbors are valid (i.e., are themselves not missing and not flagged with values larger than <code>250</code>).<br />
+The return code of the function indicates which decision rule has been applied, and the suggested replacement value for the missing pixel depends upon basic non-parametric statistics on the frequencies of appearance among valid neighbors of the missing value. Negative return codes refer to situations in which no replacement value for the missing pixel is proposed. Let <code>min</code>, <code>med</code> and <code>max</code> be the minimum, the median and the maximum values of the valid neighbors of the presumed missing value within the sub-window:</p>
+<ul>
+<li><p>If <code>rc = -3</code>: No replacement value is suggested because the pixel at the specified line and sample position within the input positional parameter <code>array</code> is not a missing value (<code>0B</code>).</p></li>
+<li><p>If <code>rc = -2</code>: No replacement value is suggested as fewer than <code>min_num_required</code> valid neighboring values (not counting those that might fall outside the <code>array</code>) are available for analysis.</p></li>
+<li><p>If <code>rc = -1</code>: No replacement value is suggested because the optional keyword parameter <code>HOMOGENEOUS</code> is set and the neighbors of the missing pixels in the current sub-window are not homogeneous.</p></li>
+<li><p>If <code>rc = 0</code>: All valid neighbors of the missing pixel have the same value; then <code>value</code> is that same value.</p></li>
+<li><p>If <code>rc = 1</code>: <code>min = 1B</code>, <code>max = 2B</code>, and <code>med &lt; 1.5</code>; then <code>value = 1B</code>.</p></li>
+<li><p>If <code>rc = 2</code>: <code>min = 1B</code>, <code>max = 2B</code>, and <code>1.5 \leq med</code>; then <code>value = 2B</code>.</p></li>
+<li><p>If <code>rc = 3</code>: <code>min = 2B</code>, <code>max = 3B</code>, and <code>med &lt; 2.5</code>; then <code>value = 2B</code>.</p></li>
+<li><p>If <code>rc = 4</code>: <code>min = 2B</code>, <code>max = 3B</code>, and <code>2.5 \leq med</code>; then <code>value = 3B</code>.</p></li>
+<li><p>If <code>rc = 5</code>: <code>min = 3B</code>, <code>max = 4B</code>, and <code>med &lt; 3.5</code>; then <code>value = 3B</code>.</p></li>
+<li><p>If <code>rc = 6</code>: <code>min = 3B</code>, <code>max = 4B</code>, and <code>3.5 \leq med</code>; then <code>value = 4B</code>.</p></li>
+<li><p>If <code>rc = 7</code>: <code>min = 1B</code>, <code>max = 3B</code>, and <code>med &lt; 1.5</code>; then <code>value = 1B</code>.</p></li>
+<li><p>If <code>rc = 8</code>: <code>min = 1B</code>, <code>max = 3B</code>, and <code>1.5 \leq med &lt; 2.5</code>; then <code>value = 2B</code>.</p></li>
+<li><p>If <code>rc = 9</code>: <code>min = 1B</code>, <code>max = 3B</code>, and <code>2.5 \leq med</code>; then <code>value = 3B</code>.</p></li>
+<li><p>If <code>rc = 10</code>: <code>min = 2B</code>, <code>max = 4B</code>, and <code>med &lt; 2.5</code>; then <code>value = 2B</code>.</p></li>
+<li><p>If <code>rc = 11</code>: <code>min = 2B</code>, <code>max = 4B</code>, and <code>2.5 \leq med &lt; 3.5</code>; then <code>value = 3B</code>.</p></li>
+<li><p>If <code>rc = 12</code>: <code>min = 2B</code>, <code>max = 4B</code>, and <code>3.5 \leq med</code>; then <code>value = 4B</code>.</p></li>
+<li><p>If <code>rc = 13</code>: <code>min = 1B</code>, <code>max = 4B</code>, and <code>med &lt; 1.5</code>; then <code>value = 1B</code>.</p></li>
+<li><p>If <code>rc = 14</code>: <code>min = 1B</code>, <code>max = 4B</code>, and <code>1.5 \leq med &lt; 2.5</code>; then <code>value = 2B</code>.</p></li>
+<li><p>If <code>rc = 15</code>: <code>min = 1B</code>, <code>max = 4B</code>, and <code>2.5 \leq med &lt; 3.5</code>; then <code>value = 3B</code>.</p></li>
+<li><p>If <code>rc = 16</code>: <code>min = 1B</code>, <code>max = 4B</code>, and <code>3.5 \leq med</code>; then <code>value = 4B</code>.</p></li>
+<li><p>If <code>rc &gt; 99</code>: An exception condition has been detected while executing this function.</p></li>
+</ul></li>
+<li><p><strong>Syntax:</strong> <code>rc = repl_box(array, sample, line, box_inc, min_num_required, $</code><br />
+<code>value, HOMOGENEOUS = homogeneous, DEBUG = debug, $</code><br />
+<code>EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>array {BYTE array} [I]:</code> The 2-D input array containing missing values.</p></li>
+<li><p><code>sample {INT} [I]:</code> The sample coordinate of the missing value in the 2-D <code>array</code>.</p></li>
+<li><p><code>line {INT} [I]:</code> The line coordinate of the missing value in the 2-D <code>array</code>.</p></li>
+<li><p><code>box_inc {INT} [I]:</code> The parameter controlling the size of the sub-window to consider (e.g., <code>1</code> for a <span class="math inline">3&#8197;&#215;&#8197;3</span> sub-window, <code>2</code> for a <span class="math inline">5&#8197;&#215;&#8197;5</span> sub-window), etc.</p></li>
+<li><p><code>min_num_required {INT} [I]:</code> The minimum number of valid neighbors needed to choose the replacement value.</p></li>
+<li><p><code>value {BYTE} [O]:</code> The proposed replacement value for the missing value.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>HOMOGENEOUS = homogeneous {INT} [I]:</code> Flag to enable (1) or skip (0) considering only cases where all neighbors take on identical values.</p></li>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns a value in the range <code>[0, 16]</code>, indicating which decision rule has been applied, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameter <code>value</code> contains the suggested replacement value for the missing pixel, if one could be determined. Negative return codes indicate that no replacement value can be suggested.</p></li>
+<li><p>If an exception condition has been detected, this function returns a non-zero error code larger than <code>99</code>, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameter <code>value</code> may be inexistent, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: Input positional parameter <code>array</code> is invalid.</p></li>
+<li><p>Error 120: Input positional parameter <code>sample</code> is invalid.</p></li>
+<li><p>Error 130: Input positional parameter <code>line</code> is invalid.</p></li>
+<li><p>Error 140: Input positional parameter <code>box_inc</code> must be an <code>INTEGER</code>.</p></li>
+<li><p>Error 150: Input positional parameter <code>box_inc</code> must be smaller than half the smallest dimension of <code>array</code>.</p></li>
+<li><p>Error 160: Input positional parameter <code>min_num_required</code> must be an <code>INTEGER</code>.</p></li>
+<li><p>Error 200: An unforeseen condition occurred in function <code>repl_box.pro</code>.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>is_array.pro</code></p></li>
+<li><p><code>is_integer.pro</code></p></li>
+<li><p><code>is_numeric.pro</code></p></li>
+<li><p><code>percentile.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong></p>
+<ul>
+<li><p><strong>Note 1:</strong> This function is exclusively intended for use in the specific context of replacing missing values in the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> data products, where the valid individual pixel values are limited to <code>[0B, 1B, 2B, 3B, 4B, 253B, 254B, 255B]</code>. Other functions in this package may add meaning to other intermediate values, such as <code>[253B, 254B]</code>, which are flags to indicate unretrievable values.</p></li>
+</ul></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>[See the outcome(s) generated by fix_rccm.pro]</code></pre></li>
+<li><p><strong>References:</strong> None.</p></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2019&#8211;02&#8211;04: Version 1.0 &#8212; Initial release, this function supersedes the former functions <code>repl_box3.pro</code> and <code>repl_box5.pro</code>; it implements the most current coding and documentation standards.</p></li>
+<li><p>2019&#8211;02&#8211;05: Version 1.1 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
+<li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
+</ul></li>
+</ul>
+</body>
+</html>
