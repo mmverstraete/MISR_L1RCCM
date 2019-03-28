@@ -6,6 +6,7 @@ FUNCTION repl_box, $
    min_num_required, $
    value, $
    HOMOGENEOUS = homogeneous, $
+   VERBOSE = verbose, $
    DEBUG = debug, $
    EXCPT_COND = excpt_cond
 
@@ -105,8 +106,8 @@ FUNCTION repl_box, $
    ;
    ;  SYNTAX:
    ;  rc = repl_box(array, sample, line, box_inc, min_num_required, $
-   ;  value, HOMOGENEOUS = homogeneous, DEBUG = debug, $
-   ;  EXCPT_COND = excpt_cond)
+   ;  value, HOMOGENEOUS = homogeneous, VERBOSE = verbose, $
+   ;  DEBUG = debug, EXCPT_COND = excpt_cond)
    ;
    ;  POSITIONAL PARAMETERS [INPUT/OUTPUT]:
    ;
@@ -134,6 +135,13 @@ FUNCTION repl_box, $
    ;  *   HOMOGENEOUS = homogeneous {INT} [I]: Flag to enable (1) or
    ;      skip (0) considering only cases where all neighbors take on
    ;      identical values.
+   ;
+   ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
+   ;      (> 0) or skip (0) reporting progress on the console: 1 only
+   ;      reports exiting the routine; 2 reports entering and exiting the
+   ;      routine, as well as key milestones; 3 reports entering and
+   ;      exiting the routine, and provides detailed information on the
+   ;      intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -229,6 +237,10 @@ FUNCTION repl_box, $
    ;  *   2019–02–18: Version 2.00 — Implement new algorithm (multiple
    ;      scans of the input cloud mask) to minimize artifacts in the
    ;      filled areas.
+   ;
+   ;  *   2019–03–28: Version 2.10 — Update the handling of the optional
+   ;      input keyword parameter VERBOSE and generate the software
+   ;      version consistent with the published documentation.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -278,8 +290,15 @@ FUNCTION repl_box, $
    return_code = 0
 
    ;  Set the default values of flags and essential output keyword parameters:
+   IF (KEYWORD_SET(verbose)) THEN BEGIN
+      IF (is_numeric(verbose)) THEN verbose = FIX(verbose) ELSE verbose = 0
+      IF (verbose LT 0) THEN verbose = 0
+      IF (verbose GT 3) THEN verbose = 3
+   ENDIF ELSE verbose = 0
    IF (KEYWORD_SET(debug)) THEN debug = 1 ELSE debug = 0
    excpt_cond = ''
+
+   IF (verbose GT 1) THEN PRINT, 'Entering ' + rout_name + '.'
 
    ;  Initialize the output positional parameter(s):
    value = 0B
@@ -416,75 +435,91 @@ FUNCTION repl_box, $
       CASE 1 OF
          ((min_val EQ 1B) AND (max_val EQ 2B) AND (med_val LT 1.5)): BEGIN
             value = 1B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 1
          END
          ((min_val EQ 1B) AND (max_val EQ 2B) AND (med_val GE 1.5)): BEGIN
             value = 2B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 2
          END
 
          ((min_val EQ 2B) AND (max_val EQ 3B) AND (med_val LT 2.5)): BEGIN
             value = 2B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 3
          END
          ((min_val EQ 2B) AND (max_val EQ 3B) AND (med_val GE 2.5)): BEGIN
             value = 3B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 4
          END
 
          ((min_val EQ 3B) AND (max_val EQ 4B) AND (med_val LT 3.5)): BEGIN
             value = 3B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 5
          END
          ((min_val EQ 3B) AND (max_val EQ 4B) AND (med_val GE 3.5)): BEGIN
             value = 4B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 6
          END
 
          ((min_val EQ 1B) AND (max_val EQ 3B) AND (med_val LT 1.5)): BEGIN
             value = 1B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 7
          END
          ((min_val EQ 1B) AND (max_val EQ 3B) AND (med_val GE 1.5) AND $
             (med_val LT 2.5)): BEGIN
             value = 2B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 8
          END
          ((min_val EQ 1B) AND (max_val EQ 3B) AND (med_val GE 2.5)): BEGIN
             value = 3B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 9
          END
 
          ((min_val EQ 2B) AND (max_val EQ 4B) AND (med_val LT 2.5)): BEGIN
             value = 2B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 10
          END
          ((min_val EQ 2B) AND (max_val EQ 4B) AND (med_val GE 2.5) AND $
             (med_val LT 3.5)): BEGIN
             value = 3B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 11
          END
          ((min_val EQ 2B) AND (max_val EQ 4B) AND (med_val GE 3.5)): BEGIN
             value = 4B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 12
          END
 
          ((min_val EQ 1B) AND (max_val EQ 4B) AND (med_val LT 1.5)): BEGIN
             value = 1B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 13
          END
          ((min_val EQ 1B) AND (max_val EQ 4B) AND (med_val GE 1.5) AND $
             (med_val LT 2.5)): BEGIN
             value = 2B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 14
          END
          ((min_val EQ 1B) AND (max_val EQ 4B) AND (med_val GE 2.5) AND $
             (med_val LT 3.5)): BEGIN
             value = 3B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 15
          END
          ((min_val EQ 1B) AND (max_val EQ 4B) AND (med_val GE 3.5)): BEGIN
             value = 4B
+            IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
             RETURN, 16
          END
       ELSE: BEGIN

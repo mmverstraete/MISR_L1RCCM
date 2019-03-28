@@ -67,8 +67,12 @@ FUNCTION diag_rccm, $
    ;      set_roots_vers.pro): The directory address of the output folder
    ;      containing the savefile.
    ;
-   ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to
-   ;      enable (1) or skip (0) reporting progress on the console.
+   ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
+   ;      (> 0) or skip (0) reporting progress on the console: 1 only
+   ;      reports exiting the routine; 2 reports entering and exiting the
+   ;      routine, as well as key milestones; 3 reports entering and
+   ;      exiting the routine, and provides detailed information on the
+   ;      intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -89,13 +93,12 @@ FUNCTION diag_rccm, $
    ;      the designated or default folders.
    ;
    ;  *   If an exception condition has been detected, this function
-   ;      returns [a non-zero error code, or some non-sandard returned
-   ;      value], and the output keyword parameter excpt_cond contains a
-   ;      message about the exception condition encountered, if the
-   ;      optional input keyword parameter DEBUG is set and if the
-   ;      optional output keyword parameter EXCPT_COND is provided. The
-   ;      output log and save files may be inexistent, incomplete or
-   ;      incorrect.
+   ;      returns a non-zero error code, and the output keyword parameter
+   ;      excpt_cond contains a message about the exception condition
+   ;      encountered, if the optional input keyword parameter DEBUG is
+   ;      set and if the optional output keyword parameter EXCPT_COND is
+   ;      provided. The output log and save files may be inexistent,
+   ;      incomplete or incorrect.
    ;
    ;  EXCEPTION CONDITIONS:
    ;
@@ -104,6 +107,11 @@ FUNCTION diag_rccm, $
    ;  *   Error 110: Input argument misr_path is invalid.
    ;
    ;  *   Error 120: Input argument misr_orbit is invalid.
+   ;
+   ;  *   Error 122: The input positional parameter misr_orbit is
+   ;      inconsistent with the input positional parameter misr_path.
+   ;
+   ;  *   Error 124: An exception condition occurred in is_frompath.pro.
    ;
    ;  *   Error 130: Input argument misr_block is invalid.
    ;
@@ -173,6 +181,10 @@ FUNCTION diag_rccm, $
    ;
    ;  *   get_host_info.pro
    ;
+   ;  *   is_frompath.pro
+   ;
+   ;  *   is_numeric.pro
+   ;
    ;  *   is_writable.pro
    ;
    ;  *   orbit2date.pro
@@ -202,7 +214,7 @@ FUNCTION diag_rccm, $
    ;      IDL> misr_block = 111
    ;      IDL> log_it = 1
    ;      IDL> save_it = 1
-   ;      IDL> verbose = 1
+   ;      IDL> verbose = 2
    ;      IDL> debug = 1
    ;      IDL> rc = diag_rccm(misr_path, misr_orbit, misr_block, $
    ;         LOG_IT = log_it, LOG_FOLDER = log_folder, $
@@ -231,7 +243,11 @@ FUNCTION diag_rccm, $
    ;      scans of the input cloud mask) to minimize artifacts in the
    ;      filled areas.
    ;
-   ;  *   2019–02–24: Version 2.01 — Documentation update.
+   ;  *   2019–02–28: Version 2.01 — Documentation update.
+   ;
+   ;  *   2019–03–28: Version 2.10 — Update the handling of the optional
+   ;      input keyword parameter VERBOSE and generate the software
+   ;      version consistent with the published documentation.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -283,9 +299,15 @@ FUNCTION diag_rccm, $
    ;  Set the default values of flags and essential output keyword parameters:
    IF (KEYWORD_SET(log_it)) THEN log_it = 1 ELSE log_it = 0
    IF (KEYWORD_SET(save_it)) THEN save_it = 1 ELSE save_it = 0
-   IF (KEYWORD_SET(verbose)) THEN verbose = 1 ELSE verbose = 0
+   IF (KEYWORD_SET(verbose)) THEN BEGIN
+      IF (is_numeric(verbose)) THEN verbose = FIX(verbose) ELSE verbose = 0
+      IF (verbose LT 0) THEN verbose = 0
+      IF (verbose GT 3) THEN verbose = 3
+   ENDIF ELSE verbose = 0
    IF (KEYWORD_SET(debug)) THEN debug = 1 ELSE debug = 0
    excpt_cond = ''
+
+   IF (verbose GT 1) THEN PRINT, 'Entering ' + rout_name + '.'
 
    IF (debug) THEN BEGIN
 
@@ -318,6 +340,30 @@ FUNCTION diag_rccm, $
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': ' + excpt_cond
          RETURN, error_code
+      ENDIF
+
+   ;  Return to the calling routine with an error message if the input
+   ;  positional parameter 'misr_orbit' is inconsistent with the input
+   ;  positional parameter 'misr_path':
+      res = is_frompath(misr_path, misr_orbit, $
+         DEBUG = debug, EXCPT_COND = excpt_cond)
+      IF (res NE 1) THEN BEGIN
+         CASE 1 OF
+            (res EQ 0): BEGIN
+               error_code = 122
+               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                  rout_name + ': The input positional parameter ' + $
+                  'misr_orbit is inconsistent with the input positional ' + $
+                  'parameter misr_path.'
+               RETURN, error_code
+            END
+            (res EQ -1): BEGIN
+               error_code = 124
+               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                  rout_name + ': ' + excpt_cond
+               RETURN, error_code
+            END
+         ENDCASE
       ENDIF
 
    ;  Return to the calling routine with an error message if the input
@@ -775,9 +821,11 @@ FUNCTION diag_rccm, $
             CLOSE, log_unit
          ENDIF
 
-         IF (verbose AND save_it) THEN PRINT, 'Saved ' + save_fspec
-         IF (verbose AND log_it) THEN PRINT, 'Saved ' + log_fspecs[i]
+         IF ((verbose GT 1) AND save_it) THEN PRINT, 'Saved ' + save_fspec
+         IF ((verbose GT 1) AND log_it) THEN PRINT, 'Saved ' + log_fspecs[i]
       ENDIF
    ENDFOR   ;  End of loop on RCCM files
+
+   IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
 
 END

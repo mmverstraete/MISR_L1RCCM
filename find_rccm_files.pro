@@ -4,6 +4,7 @@ FUNCTION find_rccm_files, $
    rccm_files, $
    RCCM_FOLDER = rccm_folder, $
    RCCM_VERSION = rccm_version, $
+   VERBOSE = verbose, $
    DEBUG = debug, $
    EXCPT_COND = excpt_cond
 
@@ -19,7 +20,7 @@ FUNCTION find_rccm_files, $
    ;
    ;  SYNTAX: rc = find_rccm_files(misr_path, misr_orbit, rccm_files, $
    ;  RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $
-   ;  DEBUG = debug, EXCPT_COND = excpt_cond)
+   ;  VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
    ;
    ;  POSITIONAL PARAMETERS [INPUT/OUTPUT]:
    ;
@@ -43,6 +44,13 @@ FUNCTION find_rccm_files, $
    ;      function
    ;      set_roots_vers.pro): The MISR RCCM version identifier to use
    ;      instead of the default value.
+   ;
+   ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
+   ;      (> 0) or skip (0) reporting progress on the console: 1 only
+   ;      reports exiting the routine; 2 reports entering and exiting the
+   ;      routine, as well as key milestones; 3 reports entering and
+   ;      exiting the routine, and provides detailed information on the
+   ;      intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -79,6 +87,11 @@ FUNCTION find_rccm_files, $
    ;
    ;  *   Error 120: Input argument misr_orbit is invalid.
    ;
+   ;  *   Error 122: The input positional parameter misr_orbit is
+   ;      inconsistent with the input positional parameter misr_path.
+   ;
+   ;  *   Error 124: An exception condition occurred in is_frompath.pro.
+   ;
    ;  *   Error 199: An exception condition occurred in
    ;      set_roots_vers.pro.
    ;
@@ -113,6 +126,10 @@ FUNCTION find_rccm_files, $
    ;
    ;  *   chk_misr_path.pro
    ;
+   ;  *   is_frompath.pro
+   ;
+   ;  *   is_numeric.pro
+   ;
    ;  *   is_readable.pro
    ;
    ;  *   orbit2str.pro
@@ -125,21 +142,14 @@ FUNCTION find_rccm_files, $
    ;
    ;  REMARKS:
    ;
-   ;  *   NOTE 1: If specified, the optional keyword parameter RCCM_FOLDER
-   ;      overrides the default address given in set_roots_vers.pro.
-   ;
-   ;  *   NOTE 2: If specified, the optional keyword parameter
-   ;      RCCM_VERSION overrides the default version identifier given in
-   ;      set_roots_vers.pro.
-   ;
-   ;  *   NOTE 3: This function assumes that the folder rccm_path, defined
+   ;  *   NOTE 1: This function assumes that the folder rccm_path, defined
    ;      either by default or by the input keyword parameter l1b2_folder,
    ;      contains full ORBITs, i.e., that files contain data for all
    ;      BLOCKs. Exception condition 420 may be triggered by the presence
    ;      of multiple subsetted files for the same MISR PATH and ORBIT.
    ;
-   ;  *   NOTE 4: All 9 MISR L1 RCCM files for the given PATH and ORBIT
-   ;      are expected to reside in the same folder.
+   ;  *   NOTE 2: The RCCM file specifications are provided in the native
+   ;      MISR camera order, i.e., from DF to DA.
    ;
    ;  EXAMPLES:
    ;
@@ -153,15 +163,15 @@ FUNCTION find_rccm_files, $
    ;         RCCM_VERSION = rccm_version, $
    ;         DEBUG = debug, EXCPT_COND = excpt_cond)
    ;      IDL> PRINT, rccm_files
-   ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_AA_F04_0025.hdf
+   ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_DF_F04_0025.hdf
+   ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_CF_F04_0025.hdf
+   ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_BF_F04_0025.hdf
    ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_AF_F04_0025.hdf
    ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_AN_F04_0025.hdf
+   ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_AA_F04_0025.hdf
    ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_BA_F04_0025.hdf
-   ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_BF_F04_0025.hdf
    ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_CA_F04_0025.hdf
-   ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_CF_F04_0025.hdf
    ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_DA_F04_0025.hdf
-   ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_DF_F04_0025.hdf
    ;
    ;  REFERENCES: None.
    ;
@@ -181,6 +191,11 @@ FUNCTION find_rccm_files, $
    ;      filled areas.
    ;
    ;  *   2019–02–24: Version 2.01 — Documentation update.
+   ;
+   ;  *   2019–03–28: Version 2.10 — Sort the RCCM files in the native
+   ;      MISR order on output; update the handling of the optional input
+   ;      keyword parameter VERBOSE and generate the software version
+   ;      consistent with the published documentation.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -230,8 +245,15 @@ FUNCTION find_rccm_files, $
    return_code = 0
 
    ;  Set the default values of flags and essential output keyword parameters:
+   IF (KEYWORD_SET(verbose)) THEN BEGIN
+      IF (is_numeric(verbose)) THEN verbose = FIX(verbose) ELSE verbose = 0
+      IF (verbose LT 0) THEN verbose = 0
+      IF (verbose GT 3) THEN verbose = 3
+   ENDIF ELSE verbose = 0
    IF (KEYWORD_SET(debug)) THEN debug = 1 ELSE debug = 0
    excpt_cond = ''
+
+   IF (verbose GT 1) THEN PRINT, 'Entering ' + rout_name + '.'
 
    ;  Initialize the output positional parameter(s):
    rccm_files = ['']
@@ -268,7 +290,36 @@ FUNCTION find_rccm_files, $
             ': ' + excpt_cond
          RETURN, error_code
       ENDIF
+
+   ;  Return to the calling routine with an error message if the input
+   ;  positional parameter 'misr_orbit' is inconsistent with the input
+   ;  positional parameter 'misr_path':
+      res = is_frompath(misr_path, misr_orbit, $
+         DEBUG = debug, EXCPT_COND = excpt_cond)
+      IF (res NE 1) THEN BEGIN
+         CASE 1 OF
+            (res EQ 0): BEGIN
+               error_code = 122
+               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                  rout_name + ': The input positional parameter ' + $
+                  'misr_orbit is inconsistent with the input positional ' + $
+                  'parameter misr_path.'
+               RETURN, error_code
+            END
+            (res EQ -1): BEGIN
+               error_code = 124
+               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                  rout_name + ': ' + excpt_cond
+               RETURN, error_code
+            END
+         ENDCASE
+      ENDIF
    ENDIF
+
+   ;  Set the MISR specifications:
+   misr_specs = set_misr_specs()
+   n_cams = misr_specs.NCameras
+   misr_cams = misr_specs.CameraNames
 
    ;  Set the default folders and version identifiers of the MISR and
    ;  MISR-HR files on this computer, and return to the calling routine if
@@ -392,6 +443,21 @@ FUNCTION find_rccm_files, $
          ENDIF
       ENDFOR
    ENDIF
+
+   ;  Sort those files in the native MISR order:
+   temp = STRARR(9)
+   FOR cam = 0, n_cams - 1 DO BEGIN
+      pattern = '_' + misr_cams[cam] + '_'
+      idx = WHERE(STRPOS(rccm_files, pattern) GT 0, count)
+      temp[cam] = rccm_files[idx[0]]
+   ENDFOR
+   rccm_files = temp
+
+   IF (verbose GT 1) THEN BEGIN
+      FOR cam = 0, n_cams - 1 DO PRINT, 'rccm_files[' + strstr(cam) + $
+         '] = ' + rccm_files[cam]
+   ENDIF
+   IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
 
    RETURN, return_code
 
