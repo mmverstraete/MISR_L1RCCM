@@ -361,6 +361,9 @@ FUNCTION fix_rccm, $
    ;  *   2019–03–28: Version 2.10 — Update the handling of the optional
    ;      input keyword parameter VERBOSE and generate the software
    ;      version consistent with the published documentation.
+   ;
+   ;  *   2019–04–08: Version 2.11 — Bug fix: Add IF statement on
+   ;      line 943.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -940,7 +943,7 @@ FUNCTION fix_rccm, $
 
    IF (log_it) THEN BEGIN
       PRINTF, log_unit, 'Saved ' + log_spec
-      PRINTF, log_unit, 'Saved ' + save_fspec
+      IF (save_it) THEN PRINTF, log_unit, 'Saved ' + save_fspec
       CLOSE, log_unit
       FREE_LUN, log_unit
    ENDIF
