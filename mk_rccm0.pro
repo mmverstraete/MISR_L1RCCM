@@ -157,7 +157,8 @@ FUNCTION mk_rccm0, $
    ;  *   Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies,
    ;      Catherine Moroney, Kevin Mueller, Susan Paradise, Mike
    ;      Smyth (2011) _MISR Data Products Specifications_, JPL D-13963,
-   ;      Revision S, Section 6.7.6, p. 85.
+   ;      REVISION S, Section 6.7.6, p. 85, Jet Propulsion Laboratory,
+   ;      California Institute of Technology, Pasadena, CA, USA.
    ;
    ;  VERSIONING:
    ;
@@ -190,6 +191,9 @@ FUNCTION mk_rccm0, $
    ;  *   2019–03–28: Version 2.10 — Update the handling of the optional
    ;      input keyword parameter VERBOSE and generate the software
    ;      version consistent with the published documentation.
+   ;
+   ;  *   2019–05–04: Version 2.11 — Update the code to report the
+   ;      specific error message of MTK routines.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -354,7 +358,8 @@ FUNCTION mk_rccm0, $
    IF (debug AND (status NE 0)) THEN BEGIN
       error_code = 600
       excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-         ': Status from MTK_SETREGION_BY_PATH_BLOCKRANGE = ' + strstr(status)
+         ': Error message from MTK_SETREGION_BY_PATH_BLOCKRANGE: ' + $
+         MTK_ERROR_MESSAGE(status)
       RETURN, error_code
    ENDIF
 
@@ -398,7 +403,8 @@ FUNCTION mk_rccm0, $
       IF (debug AND (status NE 0)) THEN BEGIN
          error_code = 610
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-            ': status from MTK_READDATA = ' + strstr(status)
+            ': Error message from MTK_READDATA: ' + $
+            MTK_ERROR_MESSAGE(status)
          RETURN, error_code
       ENDIF
       rccm_0[cam, *, *] = cld_msk

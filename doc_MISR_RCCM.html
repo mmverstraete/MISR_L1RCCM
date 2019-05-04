@@ -7,9 +7,102 @@
    </head>
 <body>
 <h1>Documentation for the IDL routines in project MISR_RCCM</h1>
+<h2>count_rccm_miss</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function counts the number of missing <span class="smallcaps">RCCM</span> pixel values found in each of the 9 cameras of all available <span class="smallcaps">Orbits</span> for the specified <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Block</span>, and saves the results in plain <code>ASCII</code> output text file.</p></li>
+<li><p><strong>Algorithm:</strong> This function relies on the <code>IDL</code> functions <code>rccm_0</code> and <code>rccm_1</code> to read the <span class="smallcaps">RCCM</span> files for each of the available <span class="smallcaps">Orbits</span> and to distinguish genuinely missing values from swath edge and obscured values. This requires loading the corresponding <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> Radiance files to locate those edge and obscured values.</p></li>
+<li><p><strong>Syntax:</strong> <code>rc = count_rccm_miss(misr_path, misr_block, $</code><br />
+<code>L1B2_FOLDER = l1b2_folder, L1B2_VERSION = l1b2_version, $</code><br />
+<code>RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $</code><br />
+<code>OUT_FOLDER = out_folder, VERBOSE = verbose, $</code><br />
+<code>DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>misr_path {INT} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
+<li><p><code>misr_block {INT} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Block</span> number.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>L1B2_FOLDER = l1b2_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> files, if they are not located in the default location.</p></li>
+<li><p><code>L1B2_VERSION = l1b2_version {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The <span class="smallcaps">L1B2</span> version identifier to use instead of the default value.</p></li>
+<li><p><code>RCCM_FOLDER = rccm_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files, if they are not located in the default location.</p></li>
+<li><p><code>RCCM_VERSION = rccm_version {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> version identifier to use instead of the default value.</p></li>
+<li><p><code>OUT_FOLDER = out_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the folder containing the output file(s).</p></li>
+<li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to enable (&gt; 0) or skip (0) reporting progress on the console: 1 only reports exiting the routine; 2 reports entering and exiting the routine, as well as key milestones; 3 reports entering and exiting the routine, and provides detailed information on the intermediary results.</p></li>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output file containing the statistics on the number of missing values in each <span class="smallcaps">RCCM</span> file is saved in the default or designated folder.</p></li>
+<li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output file may be inexistent, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: The input positional parameter <code>misr_path</code> is invalid.</p></li>
+<li><p>Error 120: The input positional parameter <code>misr_block</code> is invalid.</p></li>
+<li><p>Error 199: An exception condition occurred in <code>set_roots_vers.pro</code>.</p></li>
+<li><p>Error 200: An exception condition occurred in function <code>path2str.pro</code>.</p></li>
+<li><p>Error 210: An exception condition occurred in function <code>block2str.pro</code>.</p></li>
+<li><p>Error 299: The computer is not recognized and at least one of the optional input keyword parameters <code>l1b2_folder</code>, <code>rccm_folder</code>, <code>out_folder</code> is not specified.</p></li>
+<li><p>Error 300: The input folder <code>l1b2_path</code> exists but is unreadable.</p></li>
+<li><p>Error 310: An exception condition occurred in function <code>is_readable.pro</code>.</p></li>
+<li><p>Error 320: The input folder <code>l1b2_path</code> does not exist.</p></li>
+<li><p>Error 330: The input folder <code>rccm_path</code> exists but is unreadable.</p></li>
+<li><p>Error 340: An exception condition occurred in function <code>is_readable.pro</code>.</p></li>
+<li><p>Error 350: The input folder <code>rccm_path</code> does not exist.</p></li>
+<li><p>Error 400: The number of files in the folder containing <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> files is not a multiple of 9.</p></li>
+<li><p>Error 410: The number of files in the folder containing <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files is not a multiple of 9.</p></li>
+<li><p>Error 420: An exception condition occurred in function <code>heap_l1b2_block.pro</code>.</p></li>
+<li><p>Error 500: The output file <code>out_fspec</code> is unwritable.</p></li>
+<li><p>Error 510: An exception condition occurred in function <code>is_writable.pro</code>.</p></li>
+<li><p>Error 600: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_SETREGION_BY_PATH_BLOCKRANGE</code>.</p></li>
+<li><p>Error 610: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_MAKE_FILENAME</code>.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>MISR Toolkit</code></p></li>
+<li><p><code>block2str.pro</code></p></li>
+<li><p><code>chk_misr_block.pro</code></p></li>
+<li><p><code>chk_misr_path.pro</code></p></li>
+<li><p><code>find_rccm_files.pro</code></p></li>
+<li><p><code>force_path_sep.pro</code></p></li>
+<li><p><code>heap_l1b2_block.pro</code></p></li>
+<li><p><code>is_writable.pro</code></p></li>
+<li><p><code>mk_rccm0.pro</code></p></li>
+<li><p><code>mk_rccm1.pro</code></p></li>
+<li><p><code>orbit2date.pro</code></p></li>
+<li><p><code>path2str.pro</code></p></li>
+<li><p><code>set_roots_vers.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+<li><p><code>today.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong></p>
+<ul>
+<li><p><strong>Note 1:</strong> Because the <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> files need to be read to process the <span class="smallcaps">RCCM</span> files, this function is very time consuming: it can take over an hour to generate the statistics for a single <span class="smallcaps">Block</span> over the entire mission period.</p></li>
+</ul></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>[Insert the command and its outcome]</code></pre></li>
+<li><p><strong>References:</strong> None.</p></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2019&#8211;04&#8211;30: Version 1.0 &#8212; Initial release.</p></li>
+<li><p>2019&#8211;05&#8211;01: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+<li><p>2019&#8211;05&#8211;04: Version 2.01 &#8212; Update the code to report the specific error message of MTK routines.</p></li>
+</ul></li>
+</ul>
 <h2>diag_rccm</h2>
 <ul>
-<li><p><strong>Purpose:</strong> This function collects metadata and basic statistics about the contents of a single <span class="smallcaps">MISR</span> <span class="smallcaps">Block</span> within each of the 9 <span class="smallcaps">MISR</span> RCCM files for the specified <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span>, and <span class="smallcaps">Block</span>, and saves these results into 9 text files and 9 corresponding <code>IDL</code> <code>SAVE</code> files.</p></li>
+<li><p><strong>Purpose:</strong> This function collects metadata and basic statistics about the contents of a single <span class="smallcaps">MISR</span> <span class="smallcaps">Block</span> within each of the 9 <span class="smallcaps">MISR</span> RCCM files for the specified <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span>, and <span class="smallcaps">Block</span>, and optionally saves these results into 9 text files and 9 corresponding <code>IDL</code> <code>SAVE</code> files.</p></li>
 <li><p><strong>Algorithm:</strong> This function inspects the contents of the 9 <span class="smallcaps">MISR</span> RCCM files and reports on the numbers of high-confidence cloud, low-confidence cloud, low confidence clear and high-confidence clear pixels, as well as on the number of glitter-contaminated pixels and on the tests used to derive those cloudiness levels.</p></li>
 <li><p><strong>Syntax:</strong> <code>rc = diag_rccm(misr_path, misr_orbit, misr_block, $</code><br />
 <code>RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $</code><br />
@@ -64,12 +157,14 @@
 <li><p>Error 520: The output folder <code>save_fpath</code> is unwritable.</p></li>
 <li><p>Error 530: An exception condition occurred in function <code>is_writable</code>.</p></li>
 <li><p>Error 600: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
-<code>MTK_SETREGION_BY_PATH_BLOCKRANGE</code>.</p></li>
+<code>MTK_FILE_VERSION</code>.</p></li>
 <li><p>Error 610: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
-<code>MTK_FILE_TO_GRIDLIST</code>.</p></li>
+<code>MTK_SETREGION_BY_PATH_BLOCKRANGE</code>.</p></li>
 <li><p>Error 620: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
-<code>MTK_FILE_GRID_TO_FIELDLIST</code>.</p></li>
+<code>MTK_FILE_TO_GRIDLIST</code>.</p></li>
 <li><p>Error 630: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
+<code>MTK_FILE_GRID_TO_FIELDLIST</code>.</p></li>
+<li><p>Error 640: An exception condition occurred in the <span class="smallcaps">MISR</span> <span class="smallcaps">Toolkit</span> routine<br />
 <code>MTK_READDATA</code>.</p></li>
 </ul></li>
 <li><p><strong>Dependencies:</strong></p>
@@ -126,6 +221,8 @@ Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
 <li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;02&#8211;28: Version 2.01 &#8212; Documentation update.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
+<li><p>2019&#8211;05&#8211;02: Version 2.11 &#8212; Bug fix: Encapsulate folder and file creation in <code>IF</code> statements.</p></li>
+<li><p>2019&#8211;05&#8211;04: Version 2.12 &#8212; Update the code to report the specific error message of MTK routines.</p></li>
 </ul></li>
 </ul>
 <h2>find_rccm_files</h2>
@@ -366,7 +463,7 @@ IDL&gt; PRINT, &#39;rc = &#39;, rc
 rc =            0</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Bull, M., Matthews, J., McDonald, D., Menzies, A., Moroney, C., Mueller, K. Paradise, S. and Smyth, M. (2011) <em>Data Products Specifications</em>, Technical Report <strong>JPL D-13963, Revision S</strong>, Jet Propulsion Laboratory, California Institute of Technology, Pasadena, CA, USA.</p></li>
+<li><p>Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies, Catherine Moroney, Kevin Mueller, Susan Paradise, Mike Smyth (2011) <em>MISR Data Products Specifications</em>, <strong>JPL D-13963</strong>, <strong>Revision S</strong>, Jet Propulsion Laboratory, California Institute of Technology, Pasadena, CA, USA.</p></li>
 <li><p>Diner, D. J., Di Girolamo, L. and Clothiaux, E. E. (1999) <em>Level 1 Cloud Detection Algorithm Theoretical Basis</em>, Technical Report <strong>JPL D-13397, Revision B</strong>, Jet Propulsion Laboratory, California Institute of Technology, Pasadena, CA, USA.</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
@@ -554,7 +651,7 @@ rc =            0</code></pre></li>
 <pre><code>[See the outcome(s) generated by fix_rccm.pro]</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies, Catherine Moroney, Kevin Mueller, Susan Paradise, Mike Smyth (2011) <em>MISR Data Products Specifications</em>, <strong>JPL D-13963</strong>, Revision S, Section 6.7.6, p. 85.</p></li>
+<li><p>Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies, Catherine Moroney, Kevin Mueller, Susan Paradise, Mike Smyth (2011) <em>MISR Data Products Specifications</em>, <strong>JPL D-13963</strong>, <strong>Revision S</strong>, Section 6.7.6, p. 85, Jet Propulsion Laboratory, California Institute of Technology, Pasadena, CA, USA.</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
@@ -567,6 +664,7 @@ rc =            0</code></pre></li>
 <li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;02&#8211;27: Version 2.01 &#8212; New improved algorithm, capable of dealing with cases where most values are missing within a <span class="smallcaps">Block</span>, as long as values are not missing in neighboring cameras, rename this function from <code>mk_rccm_0</code> to <code>mk_rccm0</code>, and update the documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
+<li><p>2019&#8211;05&#8211;04: Version 2.11 &#8212; Update the code to report the specific error message of MTK routines.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm1</h2>
@@ -626,7 +724,7 @@ rc =            0</code></pre></li>
 <pre><code>[See the outcome(s) generated by fix_rccm.pro]</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies, Catherine Moroney, Kevin Mueller, Susan Paradise, Mike Smyth (2011) <em>MISR Data Products Specifications</em>, <strong>JPL D-13963</strong>, Revision S, Section 6.7.6, p. 85 for the <span class="smallcaps">RCCM</span> values and Section 9.4.4, p. 210 for the <span class="smallcaps">AGP</span> values.</p></li>
+<li><p>Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies, Catherine Moroney, Kevin Mueller, Susan Paradise, Mike Smyth (2011) <em>MISR Data Products Specifications</em>, <strong>JPL D-13963</strong>, <strong>Revision S</strong>, Section 6.7.6, p. 85, Jet Propulsion Laboratory, California Institute of Technology, Pasadena, CA, USA.</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>

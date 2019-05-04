@@ -311,11 +311,11 @@ FUNCTION fix_rccm, $
    ;
    ;  REFERENCES:
    ;
-   ;  *   Bull, M., Matthews, J., McDonald, D., Menzies, A., Moroney, C.,
-   ;      Mueller, K. Paradise, S. and Smyth, M. (2011) _Data Products
-   ;      Specifications_, Technical Report JPL D-13963, REVISION S, Jet
-   ;      Propulsion Laboratory, California Institute of Technology,
-   ;      Pasadena, CA, USA.
+   ;  *   Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies,
+   ;      Catherine Moroney, Kevin Mueller, Susan Paradise, Mike
+   ;      Smyth (2011) _MISR Data Products Specifications_, JPL D-13963,
+   ;      REVISION S, Jet Propulsion Laboratory, California Institute of
+   ;      Technology, Pasadena, CA, USA.
    ;
    ;  *   Diner, D. J., Di Girolamo, L. and Clothiaux, E. E. (1999) _Level
    ;      1 Cloud Detection Algorithm Theoretical Basis_, Technical Report

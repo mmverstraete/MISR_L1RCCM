@@ -549,8 +549,9 @@ FUNCTION map_rccm_block, $
          'map has been enlarged (4x in each direction) by duplication ' + $
          'for viewing convenience and to facilitate comparisons with ' + $
          'other maps. The total size of the Block area is 563.2 km ' + $
-         'across-track by 140.8 km along-track, while parallelogram-shaped ' + $
-         'ground area inside the Block is about 380 km across-track. ' + $
+         'across-track by 140.8 km along-track, while the ' + $
+         'parallelogram-shaped ground area inside the Block is about ' + $
+         '380 km across-track. ' + $
          'Color coding: ' + $
          good_vals_cols[0] + ': no retrieval or fill value; ' + $
          good_vals_cols[1] + ': cloud with high confidence; ' + $

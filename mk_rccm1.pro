@@ -134,8 +134,8 @@ FUNCTION mk_rccm1, $
    ;  *   Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies,
    ;      Catherine Moroney, Kevin Mueller, Susan Paradise, Mike
    ;      Smyth (2011) _MISR Data Products Specifications_, JPL D-13963,
-   ;      Revision S, Section 6.7.6, p. 85 for the RCCM values and Section
-   ;      9.4.4, p. 210 for the AGP values.
+   ;      REVISION S, Section 6.7.6, p. 85, Jet Propulsion Laboratory,
+   ;      California Institute of Technology, Pasadena, CA, USA.
    ;
    ;  VERSIONING:
    ;

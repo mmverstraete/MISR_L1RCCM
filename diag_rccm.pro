@@ -15,8 +15,8 @@ FUNCTION diag_rccm, $
    ;Sec-Doc
    ;  PURPOSE: This function collects metadata and basic statistics about
    ;  the contents of a single MISR BLOCK within each of the 9 MISR RCCM
-   ;  files for the specified PATH, ORBIT, and BLOCK, and saves these
-   ;  results into 9 text files and 9 corresponding IDL SAVE files.
+   ;  files for the specified PATH, ORBIT, and BLOCK, and optionally saves
+   ;  these results into 9 text files and 9 corresponding IDL SAVE files.
    ;
    ;  ALGORITHM: This function inspects the contents of the 9 MISR RCCM
    ;  files and reports on the numbers of high-confidence cloud,
@@ -149,17 +149,21 @@ FUNCTION diag_rccm, $
    ;
    ;  *   Error 600: An exception condition occurred in the MISR TOOLKIT
    ;      routine
-   ;      MTK_SETREGION_BY_PATH_BLOCKRANGE.
+   ;      MTK_FILE_VERSION.
    ;
    ;  *   Error 610: An exception condition occurred in the MISR TOOLKIT
    ;      routine
-   ;      MTK_FILE_TO_GRIDLIST.
+   ;      MTK_SETREGION_BY_PATH_BLOCKRANGE.
    ;
    ;  *   Error 620: An exception condition occurred in the MISR TOOLKIT
    ;      routine
-   ;      MTK_FILE_GRID_TO_FIELDLIST.
+   ;      MTK_FILE_TO_GRIDLIST.
    ;
    ;  *   Error 630: An exception condition occurred in the MISR TOOLKIT
+   ;      routine
+   ;      MTK_FILE_GRID_TO_FIELDLIST.
+   ;
+   ;  *   Error 640: An exception condition occurred in the MISR TOOLKIT
    ;      routine
    ;      MTK_READDATA.
    ;
@@ -248,6 +252,12 @@ FUNCTION diag_rccm, $
    ;  *   2019–03–28: Version 2.10 — Update the handling of the optional
    ;      input keyword parameter VERBOSE and generate the software
    ;      version consistent with the published documentation.
+   ;
+   ;  *   2019–05–02: Version 2.11 — Bug fix: Encapsulate folder and file
+   ;      creation in IF statements.
+   ;
+   ;  *   2019–05–04: Version 2.12 — Update the code to report the
+   ;      specific error message of MTK routines.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -481,77 +491,83 @@ FUNCTION diag_rccm, $
    ENDIF
    n_files = N_ELEMENTS(rccm_files)
 
+   IF (log_it) THEN BEGIN
+
    ;  Set the directory address of the folder containing the output log file
    ;  if it has not been set previously:
-   IF (KEYWORD_SET(log_folder)) THEN BEGIN
-      log_fpath = force_path_sep(log_folder, DEBUG = debug, $
-         EXCPT_COND = excpt_cond)
-   ENDIF ELSE BEGIN
-      log_fpath = root_dirs[3] + mpob_str + PATH_SEP() + 'RCCM' + PATH_SEP()
-   ENDELSE
+      IF (KEYWORD_SET(log_folder)) THEN BEGIN
+         log_fpath = force_path_sep(log_folder, DEBUG = debug, $
+            EXCPT_COND = excpt_cond)
+      ENDIF ELSE BEGIN
+         log_fpath = root_dirs[3] + mpob_str + PATH_SEP() + 'RCCM' + PATH_SEP()
+      ENDELSE
 
    ;  Return to the calling routine with an error message if the output
    ;  directory 'log_fpath' is not writable, and create it if it does not
    ;  exist:
-   rc = is_writable(log_fpath, DEBUG = debug, EXCPT_COND = excpt_cond)
-   CASE rc OF
-      1: BREAK
-      0: BEGIN
-            error_code = 500
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The output folder ' + log_fpath + $
-               ' is unwritable.'
-            RETURN, error_code
-         END
-      -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 510
+      rc = is_writable(log_fpath, DEBUG = debug, EXCPT_COND = excpt_cond)
+      CASE rc OF
+         1: BREAK
+         0: BEGIN
+               error_code = 500
                excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
+                  rout_name + ': The output folder ' + log_fpath + $
+                  ' is unwritable.'
                RETURN, error_code
-            ENDIF
-         END
-      -2: BEGIN
-            FILE_MKDIR, log_fpath
-         END
-      ELSE: BREAK
-   ENDCASE
+            END
+         -1: BEGIN
+               IF (debug) THEN BEGIN
+                  error_code = 510
+                  excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                     rout_name + ': ' + excpt_cond
+                  RETURN, error_code
+               ENDIF
+            END
+         -2: BEGIN
+               FILE_MKDIR, log_fpath
+            END
+         ELSE: BREAK
+      ENDCASE
+   ENDIF
+
+   IF (save_it) THEN BEGIN
 
    ;  Set the directory address of the folder containing the output save file
    ;  if it has not been set previously:
-   IF (KEYWORD_SET(save_folder)) THEN BEGIN
-      save_fpath = force_path_sep(save_folder, DEBUG = debug, $
-         EXCPT_COND = excpt_cond)
-   ENDIF ELSE BEGIN
-      save_fpath = root_dirs[3] + mpob_str + PATH_SEP() + 'RCCM' + PATH_SEP()
-   ENDELSE
+      IF (KEYWORD_SET(save_folder)) THEN BEGIN
+         save_fpath = force_path_sep(save_folder, DEBUG = debug, $
+            EXCPT_COND = excpt_cond)
+      ENDIF ELSE BEGIN
+         save_fpath = root_dirs[3] + mpob_str + PATH_SEP() + 'RCCM' + PATH_SEP()
+      ENDELSE
 
    ;  Return to the calling routine with an error message if the output
    ;  directory 'save_fpath' is not writable, and create it if it does not
    ;  exist:
-   rc = is_writable(save_fpath, DEBUG = debug, EXCPT_COND = excpt_cond)
-   CASE rc OF
-      1: BREAK
-      0: BEGIN
-            error_code = 520
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The output folder ' + save_fpath + $
-               ' is unwritable.'
-            RETURN, error_code
-         END
-      -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 530
+      rc = is_writable(save_fpath, DEBUG = debug, EXCPT_COND = excpt_cond)
+      CASE rc OF
+         1: BREAK
+         0: BEGIN
+               error_code = 520
                excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
+                  rout_name + ': The output folder ' + save_fpath + $
+                  ' is unwritable.'
                RETURN, error_code
-            ENDIF
-         END
-      -2: BEGIN
-            FILE_MKDIR, save_fpath
-         END
-      ELSE: BREAK
-   ENDCASE
+            END
+         -1: BEGIN
+               IF (debug) THEN BEGIN
+                  error_code = 530
+                  excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                     rout_name + ': ' + excpt_cond
+                  RETURN, error_code
+               ENDIF
+            END
+         -2: BEGIN
+               FILE_MKDIR, save_fpath
+            END
+         ELSE: BREAK
+      ENDCASE
+   ENDIF
 
    i_cams = STRARR(n_files)
    i_vers = STRARR(n_files)
@@ -565,6 +581,13 @@ FUNCTION diag_rccm, $
          COUNT = n_parts, /EXTRACT)
       i_cams[i] = parts[7]
       status = MTK_FILE_VERSION(rccm_files[0], misr_version)
+      IF (debug AND (status NE 0)) THEN BEGIN
+         error_code = 600
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
+            ': Error message from MTK_FILE_VERSION: ' + $
+            MTK_ERROR_MESSAGE(status)
+         RETURN, error_code
+      ENDIF
       i_vers[i] = misr_version
 
       IF (log_it) THEN BEGIN
@@ -612,18 +635,20 @@ FUNCTION diag_rccm, $
       status = MTK_SETREGION_BY_PATH_BLOCKRANGE(misr_path, $
          misr_block, misr_block, region)
       IF (debug AND (status NE 0)) THEN BEGIN
-         error_code = 600
+         error_code = 610
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-            ': status from MTK_SETREGION_BY_PATH_BLOCKRANGE = ' + strstr(status)
+            ': Error message from MTK_SETREGION_BY_PATH_BLOCKRANGE: ' + $
+            MTK_ERROR_MESSAGE(status)
          RETURN, error_code
       ENDIF
 
    ;  Retrieve the names of the first grid:
       status = MTK_FILE_TO_GRIDLIST(rccm_files[i], ngrids, grids)
       IF (debug AND (status NE 0)) THEN BEGIN
-         error_code = 610
+         error_code = 620
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-            ': status from MTK_FILE_TO_GRIDLIST = ' + strstr(status)
+            ': Error message from MTK_FILE_TO_GRIDLIST: ' + $
+            MTK_ERROR_MESSAGE(status)
          RETURN, error_code
       ENDIF
       meta_data = CREATE_STRUCT(meta_data, 'Ngrids', ngrids)
@@ -638,9 +663,10 @@ FUNCTION diag_rccm, $
          status = MTK_FILE_GRID_TO_FIELDLIST(rccm_files[i], grids[j], $
             nfields, fields)
          IF (debug AND (status NE 0)) THEN BEGIN
-            error_code = 620
+            error_code = 630
             excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-               ': status from MTK_FILE_GRID_TO_FIELDLIST = '+ strstr(status)
+               ': Error message from MTK_FILE_GRID_TO_FIELDLIST: ' + $
+               MTK_ERROR_MESSAGE(status)
             RETURN, error_code
          ENDIF
 
@@ -658,9 +684,10 @@ FUNCTION diag_rccm, $
             status = MTK_READDATA(rccm_files[i], grids[j], fields[k], $
                region, databuf, mapinfo)
             IF (status NE 0) THEN BEGIN
-               error_code = 630
+               error_code = 640
                excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': status from MTK_READDATA = ' + strstr(status)
+                  rout_name + ': Error message from MTK_READDATA: ' + $
+                  MTK_ERROR_MESSAGE(status)
                RETURN, error_code
             ENDIF
 
