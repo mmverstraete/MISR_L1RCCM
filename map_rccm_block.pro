@@ -193,7 +193,17 @@ FUNCTION map_rccm_block, $
    ;
    ;  EXAMPLES:
    ;
-   ;      [See the outcome of function fix_rccm.pro, with map_it = 1.]
+   ;      IDL> misr_path = 168
+   ;      IDL> misr_orbit = 68050
+   ;      IDL> misr_block = 110
+   ;      IDL> rccm_logo = 'rccm0'
+   ;      IDL> rccm_lgnd = ''
+   ;      IDL> rc = map_rccm_block(misr_path, misr_orbit, $
+   ;         misr_block, rccm_0, rccm_logo, rccm_lgnd, $
+   ;         MAP_IT = map_it, MAP_FOLDER = map_folder, $
+   ;         DEBUG = debug, EXCPT_COND = excpt_cond)
+   ;      IDL> PRINT, rc
+   ;             0
    ;
    ;  REFERENCES: None.
    ;
@@ -207,6 +217,10 @@ FUNCTION map_rccm_block, $
    ;  *   2019–03–28: Version 2.10 — Update the handling of the optional
    ;      input keyword parameter VERBOSE and generate the software
    ;      version consistent with the published documentation.
+   ;
+   ;  *   2019–05–07: Version 2.15 — Software version described in the
+   ;      paper entitled _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;

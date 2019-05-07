@@ -195,7 +195,11 @@ FUNCTION count_rccm_miss, $
    ;
    ;  EXAMPLES:
    ;
-   ;      [Insert the command and its outcome]
+   ;      IDL> misr_path = 167
+   ;      IDL> misr_block = 100
+   ;      IDL> rc = count_rccm_miss(misr_path, misr_block)
+   ;      IDL> PRINT, rc
+   ;             0
    ;
    ;  REFERENCES: None.
    ;
@@ -208,6 +212,10 @@ FUNCTION count_rccm_miss, $
    ;
    ;  *   2019–05–04: Version 2.01 — Update the code to report the
    ;      specific error message of MTK routines.
+   ;
+   ;  *   2019–05–07: Version 2.15 — Software version described in the
+   ;      paper entitled _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;

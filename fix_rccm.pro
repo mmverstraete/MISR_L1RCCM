@@ -364,6 +364,10 @@ FUNCTION fix_rccm, $
    ;
    ;  *   2019–04–08: Version 2.11 — Bug fix: Add IF statement on
    ;      line 943.
+   ;
+   ;  *   2019–05–07: Version 2.15 — Software version described in the
+   ;      paper entitled _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;

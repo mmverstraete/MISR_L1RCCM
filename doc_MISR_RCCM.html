@@ -91,13 +91,18 @@
 <li><p><strong>Note 1:</strong> Because the <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> files need to be read to process the <span class="smallcaps">RCCM</span> files, this function is very time consuming: it can take over an hour to generate the statistics for a single <span class="smallcaps">Block</span> over the entire mission period.</p></li>
 </ul></li>
 <li><p><strong>Examples:</strong></p>
-<pre><code>[Insert the command and its outcome]</code></pre></li>
+<pre><code>IDL&gt; misr_path = 167
+IDL&gt; misr_block = 100
+IDL&gt; rc = count_rccm_miss(misr_path, misr_block)
+IDL&gt; PRINT, rc
+       0</code></pre></li>
 <li><p><strong>References:</strong> None.</p></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
 <li><p>2019&#8211;04&#8211;30: Version 1.0 &#8212; Initial release.</p></li>
 <li><p>2019&#8211;05&#8211;01: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
 <li><p>2019&#8211;05&#8211;04: Version 2.01 &#8212; Update the code to report the specific error message of MTK routines.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
 </ul></li>
 </ul>
 <h2>diag_rccm</h2>
@@ -223,6 +228,106 @@ Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
 <li><p>2019&#8211;05&#8211;02: Version 2.11 &#8212; Bug fix: Encapsulate folder and file creation in <code>IF</code> statements.</p></li>
 <li><p>2019&#8211;05&#8211;04: Version 2.12 &#8212; Update the code to report the specific error message of MTK routines.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
+</ul></li>
+</ul>
+<h2>find_missing_rccm_files</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function inspects the available <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files for the specified <span class="smallcaps">Path</span> between the indicated dates, and reports on missing <span class="smallcaps">Orbits</span> within each of the identified products.</p></li>
+<li><p><strong>Algorithm:</strong> This function relies on the <span class="smallcaps">MISR</span> Toolkit to generate a list of missing <span class="smallcaps">RCCM</span> <span class="smallcaps">Orbits</span> for the specified <span class="smallcaps">Path</span> that occur between the <code>from_date</code> and the <code>until_date</code> dates, inclusive. If the optional input keyword parameter <code>log_it</code> is set, it generates a log file indicating the <span class="smallcaps">Orbits</span> for which the requested products and versions are missing, and saves it in the specified or default folder.</p></li>
+<li><p><strong>Syntax:</strong> <code>rc = find_missing_rccm_files(misr_mode, misr_path, n_missing_rccm_files, $</code><br />
+<code>FROM_DATE = from_date, UNTIL_DATE = until_date, n_missing_rccm_files $</code><br />
+<code>RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $</code><br />
+<code>LOG_IT = log_it, LOG_FOLDER = log_folder, $</code><br />
+<code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>misr_mode {STRING} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Mode</span>.</p></li>
+<li><p><code>misr_path {INT} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
+<li><p><code>n_missing_rccm_files {LONG} [O]:</code> The number of missing <span class="smallcaps">MISR</span> Global Mode RCCM files.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>RCCM_FOLDER = rccm_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files, if they are not located in the default location.</p></li>
+<li><p><code>RCCM_VERSION = rccm_version {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The <span class="smallcaps">RCCM</span> version identifier to use instead of the default value.</p></li>
+<li><p><code>LOG_IT = log_it {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) generating a log file.</p></li>
+<li><p><code>LOG_FOLDER = log_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the output folder containing the processing log.</p></li>
+<li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to enable (&gt; 0) or skip (0) reporting progress on the console: 1 only reports exiting the routine; 2 reports entering and exiting the routine, as well as key milestones; 3 reports entering and exiting the routine, and provides detailed information on the intermediary results.</p></li>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameter <code>n_missing_rccm_files</code> reports on the number of missing files in the designated or default folder, between the specified dates. A log file is saved if the input keyword parameter <code>LOG_IT</code> is set.</p></li>
+<li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameter <code>n_missing_rccm_files</code> may be undefined, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: The input positional parameter <code>misr_mode</code> is invalid.</p></li>
+<li><p>Error 120: The input positional parameter <code>misr_path</code> is invalid.</p></li>
+<li><p>Error 199: An exception condition occurred in <code>set_roots_vers.pro</code>.</p></li>
+<li><p>Error 200: An exception condition occurred in function <code>path2str.pro</code>.</p></li>
+<li><p>Error 210: An exception condition occurred in function <code>chk_ymddate.pro</code>.</p></li>
+<li><p>Error 220: An exception condition occurred in function <code>chk_ymddate.pro</code>.</p></li>
+<li><p>Error 299: The computer is not recognized and at least one of the optional input keyword parameters <code>rccm_folder</code>, <code>log_folder</code> is not specified.</p></li>
+<li><p>Error 300: An exception condition occurred in function <code>set_rccm_folder.pro</code>.</p></li>
+<li><p>Error 400: An exception condition occurred in function <code>find_orbits_paths_dates.pro</code>.</p></li>
+<li><p>Error 500: The output folder <code>log_fpath</code> exists but is unwritable.</p></li>
+<li><p>Error 510: An exception condition occurred in function <code>is_writable.pro</code>.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>chk_misr_mode.pro</code></p></li>
+<li><p><code>chk_misr_path.pro</code></p></li>
+<li><p><code>chk_ymddate.pro</code></p></li>
+<li><p><code>find_orbits_paths_dates.pro</code></p></li>
+<li><p><code>force_path_sep.pro</code></p></li>
+<li><p><code>get_host_info.pro</code></p></li>
+<li><p><code>is_numeric.pro</code></p></li>
+<li><p><code>is_writable.pro</code></p></li>
+<li><p><code>match2.pro</code> [from IDL AstroLib]</p></li>
+<li><p><code>path2str.pro</code></p></li>
+<li><p><code>set_rccm_folder.pro</code></p></li>
+<li><p><code>set_misr_specs.pro</code></p></li>
+<li><p><code>set_roots_vers.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+<li><p><code>today.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong> None.</p></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>IDL&gt; misr_mode = &#39;GM&#39;
+IDL&gt; misr_path = 168
+IDL&gt; from_date = &#39;&#39;
+IDL&gt; until_date = &#39;2018-12-31&#39;
+IDL&gt; log_it = 1
+IDL&gt; verbose = 1
+IDL&gt; debug = 1
+IDL&gt; rc = find_missing_rccm_files(misr_mode, $
+   misr_path, n_missing_rccm_files, $
+   FROM_DATE = from_date, UNTIL_DATE = until_date, $
+   RCCM_FOLDER = rccm_folder, $
+   RCCM_VERSION = rccm_version, LOG_IT = log_it, $
+   LOG_FOLDER = log_folder, VERBOSE = verbose, $
+   DEBUG = debug, EXCPT_COND = excpt_cond)
+IDL&gt; PRINT, rc
+      0</code></pre></li>
+<li><p><strong>References:</strong> None.</p></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2016&#8211;06&#8211;13: Version 0.9 &#8212; Initial release.</p></li>
+<li><p>2017&#8211;11&#8211;10: Version 1.0 &#8212; Initial public release.</p></li>
+<li><p>2018&#8211;01&#8211;30: Version 1.1 &#8212; Implement optional debugging.</p></li>
+<li><p>2018&#8211;06&#8211;01: Version 1.5 &#8212; Implement new coding standards.</p></li>
+<li><p>2019&#8211;01&#8211;28: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+<li><p>2019&#8211;03&#8211;20: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
+<li><p>2019&#8211;05&#8211;04: Version 2.11 &#8212; Update the code to report the specific error message of MTK routines.</p></li>
+<li><p>2019&#8211;05&#8211;06: Version 2.12 &#8212; Update the code to report the <span class="smallcaps">RCCM</span> version number used.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
 </ul></li>
 </ul>
 <h2>find_rccm_files</h2>
@@ -319,6 +424,7 @@ IDL&gt; PRINT, rccm_files
 <li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;02&#8211;24: Version 2.01 &#8212; Documentation update.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Sort the <span class="smallcaps">RCCM</span> files in the native <span class="smallcaps">MISR</span> order on output; update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
 </ul></li>
 </ul>
 <h2>fix_rccm</h2>
@@ -481,6 +587,7 @@ rc =            0</code></pre></li>
 <li><p>2019&#8211;02&#8211;27: Version 2.02 &#8212; Implement an improved algorithm, capable of effectively dealing with cases where most values are missing within a <span class="smallcaps">Block</span>, as long as values are not missing in neighboring cameras, take advantage of the new functions <code>find_rccm_files.pro</code> and <code>map_rccm_block.pro</code>, and update the documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
 <li><p>2019&#8211;04&#8211;08: Version 2.11 &#8212; Bug fix: Add <code>IF</code> statement on line 943.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
 </ul></li>
 </ul>
 <h2>map_rccm_block</h2>
@@ -569,13 +676,24 @@ rc =            0</code></pre></li>
 <li><p><strong>Note 1:</strong> Since the purpose of this function is to map the input positional parameter <code>rccm</code>, these maps are generated irrespective of the setting of the input keyword parameter <code>MAP_IT</code>.</p></li>
 </ul></li>
 <li><p><strong>Examples:</strong></p>
-<pre><code>[See the outcome of function fix_rccm.pro, with map_it = 1.]</code></pre></li>
+<pre><code>IDL&gt; misr_path = 168
+IDL&gt; misr_orbit = 68050
+IDL&gt; misr_block = 110
+IDL&gt; rccm_logo = &#39;rccm0&#39;
+IDL&gt; rccm_lgnd = &#39;&#39;
+IDL&gt; rc = map_rccm_block(misr_path, misr_orbit, $
+   misr_block, rccm_0, rccm_logo, rccm_lgnd, $
+   MAP_IT = map_it, MAP_FOLDER = map_folder, $
+   DEBUG = debug, EXCPT_COND = excpt_cond)
+IDL&gt; PRINT, rc
+       0</code></pre></li>
 <li><p><strong>References:</strong> None.</p></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
 <li><p>2019&#8211;02&#8211;27: Version 0.9 &#8212; Initial release.</p></li>
 <li><p>2019&#8211;03&#8211;01: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm0</h2>
@@ -665,6 +783,7 @@ rc =            0</code></pre></li>
 <li><p>2019&#8211;02&#8211;27: Version 2.01 &#8212; New improved algorithm, capable of dealing with cases where most values are missing within a <span class="smallcaps">Block</span>, as long as values are not missing in neighboring cameras, rename this function from <code>mk_rccm_0</code> to <code>mk_rccm0</code>, and update the documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
 <li><p>2019&#8211;05&#8211;04: Version 2.11 &#8212; Update the code to report the specific error message of MTK routines.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm1</h2>
@@ -737,6 +856,7 @@ rc =            0</code></pre></li>
 <li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;02&#8211;27: Version 2.01 &#8212; New improved algorithm, capable of dealing with cases where most values are missing within a <span class="smallcaps">Block</span>, as long as values are not missing in neighboring cameras, access <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> data through pointers to heap variables rather than by reading data files, rename this function from <code>mk_rccm_1</code> to <code>mk_rccm1</code>, and update the documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm2</h2>
@@ -790,6 +910,7 @@ rc =            0</code></pre></li>
 <li><p>2019&#8211;02&#8211;27: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
 <li><p>2019&#8211;02&#8211;27: Version 2.01 &#8212; New improved algorithm, capable of dealing with cases where most values are missing within a <span class="smallcaps">Block</span>, as long as values are not missing in neighboring cameras, and update the documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm3</h2>
@@ -863,6 +984,74 @@ rc =            0</code></pre></li>
 <li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;02&#8211;27: Version 2.01 &#8212; New improved algorithm, capable of dealing with cases where most values are missing within a <span class="smallcaps">Block</span>, as long as values are not missing in neighboring cameras, rename this function from <code>mk_rccm_3</code> to <code>mk_rccm3</code>, and update the documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
+</ul></li>
+</ul>
+<h2>plot_rccm_miss</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function generates a time series plot of the number of missing <span class="smallcaps">RCCM</span> values found in the 9 cameras of all available <span class="smallcaps">Orbits</span> for the <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Block</span> specified in the file name <code>in_fspec</code>, which is assumed to have been generated by the function <code>count_rccm_miss.pro</code>.</p></li>
+<li><p><strong>Algorithm:</strong> This function reads the file provided by the input positional parameter <code>in_fspec</code> and saves the time series plot of the total number of missing <span class="smallcaps">RCCM</span> values for each processed <span class="smallcaps">Orbit</span>. By default, this plot is saved in the same folder as this input file. If the optional keyword parameter <code>OUT_FOLDER</code> is specified, it supersedes the default directory and the plot is saved in that folder instead. If the optional keyword parameter <code>SEMI_LOG</code> is set, then two plots are generated: one with a linear and one with a logarithmic scale on the <code>Y</code> axis. In this latter case, the minimum number of missing values for the purpose of plotting is set to <code>1</code>. The name(s) of the plot file(s) is(are) similar to the name of the input file, and include an extra field to indicate whether the plot is linear (<code>_lin</code>) or semi-logarithmic (<code>_slog</code>); the plot file extension(s) is(are) <code>.png</code>.</p></li>
+<li><p><strong>Syntax:</strong> <code>rc = plot_rccm_miss(in_fspec, $</code><br />
+<code>SEMI_LOG = semi_log, OUT_FILE = out_file, $</code><br />
+<code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>in_fspec {STRING} [I]:</code> The full file specification (path and name) of the file containing the results generated by the function <code>count_rccm_miss.pro</code>.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>SEMI_LOG = semi_log {STRING} [I] (Default value: 0)</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) generating the semi-logarithmic plot of the time series.</p></li>
+<li><p><code>OUT_FOLDER = out_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the folder containing the output file(s).</p></li>
+<li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to enable (&gt; 0) or skip (0) reporting progress on the console: 1 only reports exiting the routine; 2 reports entering and exiting the routine, as well as key milestones; 3 reports entering and exiting the routine, and provides detailed information on the intermediary results.</p></li>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The time series plot(s) of the missing RCCM values is(are) saved in the default or specified folder.</p></li>
+<li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The time series plot(s) of the missing RCCM values may be inexistent, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: The input positional parameter <code>in_fspec</code> is not of type STRING.</p></li>
+<li><p>Error 300: The input file <code>in_fspec</code> exists but is unreadable.</p></li>
+<li><p>Error 310: An exception condition occurred in function <code>is_readable.pro</code>.</p></li>
+<li><p>Error 320: The input file <code>in_fspec</code> does not exist.</p></li>
+<li><p>Error 330: The input file <code>in_fspec</code> is not recognized.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>is_numeric.pro</code></p></li>
+<li><p><code>is_readable.pro</code></p></li>
+<li><p><code>is_string.pro</code></p></li>
+<li><p><code>set_year_range.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong></p>
+<ul>
+<li><p><strong>Note 1:</strong> This function assumes that the input data file <code>in_fspec</code> was generated by the function <code>count_rccm_miss.pro</code>, and therefore to the particular output format specified in that function.</p></li>
+</ul></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>IDL&gt; in_fspec = &#39;~/MISR_HR/Outcomes/GM-P168-B110/
+   Num_RCCM_miss_P168-B110_2000-03-24_2018-05-29.txt&#39;
+IDL&gt; semi_log = 1
+IDL&gt; rc = plot_rccm_miss(in_fspec, SEMI_LOG = semi_log, $
+   VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
+The linear time series plot has been saved in
+   ~/MISR_HR/Outcomes/GM-P168-B110/
+   Num_RCCM_miss_P168-B110_2000-03-24_2018-05-29_lin.png
+The semi-logarithmic time series plot has been saved in
+   ~/MISR_HR/Outcomes/GM-P168-B110/
+   Num_RCCM_miss_P168-B110_2000-03-24_2018-05-29_slog.png</code></pre></li>
+<li><p><strong>References:</strong> None.</p></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2019&#8211;05&#8211;01: Version 1.0 &#8212; Initial release.</p></li>
+<li><p>2019&#8211;05&#8211;06: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
 </ul></li>
 </ul>
 <h2>repl_box</h2>
@@ -951,6 +1140,77 @@ The return code of the function indicates which decision rule has been applied, 
 <li><p>2019&#8211;02&#8211;05: Version 1.1 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
+</ul></li>
+</ul>
+<h2>set_rccm_folder</h2>
+<ul>
+<li><p><strong>Purpose:</strong> This function sets the path to the folder containing the <span class="smallcaps">MISR</span> files for the specified <span class="smallcaps">Path</span>.</p></li>
+<li><p><strong>Algorithm:</strong> By default, this function sets the path to the folder containing the <span class="smallcaps">MISR</span> files according to the settings included in the function <code>set_roots_vers</code>; the optional input keyword parameter <code>rccm_folder</code> overrides this setting. The function also checks that this folder is available for reading.</p></li>
+<li><p><strong>Syntax:</strong> <code>rc = set_rccm_folder(misr_path, rccm_fpath, n_rccm_files, $</code><br />
+<code>RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $</code><br />
+<code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<li><p><strong>Positional parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>misr_path {INT} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
+<li><p><code>rccm_fpath {STRING} [O]:</code> The path to the folder containing the <span class="smallcaps">MISR</span> files for the specified <span class="smallcaps">Path</span>.</p></li>
+<li><p><code>n_rccm_files {LONG} [O]:</code> The number of files residing in the <code>rccm_folder</code>.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>RCCM_FOLDER = rccm_folder {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The directory address of the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files, if they are not located in the default location.</p></li>
+<li><p><code>RCCM_VERSION = rccm_version {STRING} [I] (Default value:</code> Set by function<br />
+<code>set_roots_vers.pro):</code> The <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> version identifier to use instead of the default value.</p></li>
+<li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to enable (&gt; 0) or skip (0) reporting progress on the console: 1 only reports exiting the routine; 2 reports entering and exiting the routine, as well as key milestones; 3 reports entering and exiting the routine, and provides detailed information on the intermediary results.</p></li>
+<li><p><code>DEBUG = debug {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) debugging tests.</p></li>
+<li><p><code>EXCPT_COND = excpt_cond {STRING} [O] (Default value: &#8221;):</code> Description of the exception condition if one has been encountered, or a null string otherwise.</p></li>
+</ul></li>
+<li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
+<li><p><strong>Outcome:</strong></p>
+<ul>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameter <code>rccm_fpath</code> contains the the path to the folder containing the <span class="smallcaps">MISR</span> files for the specified <span class="smallcaps">Path</span>.</p></li>
+<li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameter <code>rccm_fpath</code> may be undefined, incomplete or incorrect.</p></li>
+</ul></li>
+<li><p><strong>Exception conditions:</strong></p>
+<ul>
+<li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: The input positional parameter <code>misr_path</code> is invalid.</p></li>
+<li><p>Error 199: An exception condition occurred in <code>set_roots_vers.pro</code>.</p></li>
+<li><p>Error 200: An exception condition occurred in function <code>path2str.pro</code>.</p></li>
+<li><p>Error 299: The computer is not recognized and the optional input keyword parameter <code>rccm_folder</code> is not specified.</p></li>
+<li><p>Error 300: The folder <code>rccm_path</code> exists but is unreadable.</p></li>
+<li><p>Error 310: An exception condition occurred in function <code>is_readable.pro</code>.</p></li>
+<li><p>Error 320: The folder <code>rccm_path</code> does not exist.</p></li>
+<li><p>Error 400: The folder <code>rccm_path</code> does not contain any files.</p></li>
+</ul></li>
+<li><p><strong>Dependencies:</strong></p>
+<ul>
+<li><p><code>chk_misr_path.pro</code></p></li>
+<li><p><code>force_path_sep.pro</code></p></li>
+<li><p><code>is_numeric.pro</code></p></li>
+<li><p><code>is_readable.pro</code></p></li>
+<li><p><code>path2str.pro</code></p></li>
+<li><p><code>set_roots_vers.pro</code></p></li>
+<li><p><code>strstr.pro</code></p></li>
+</ul></li>
+<li><p><strong>Remarks:</strong> None.</p></li>
+<li><p><strong>Examples:</strong></p>
+<pre><code>IDL&gt; misr_path = 168
+IDL&gt; rccm_folder = &#39;&#39;
+IDL&gt; rccm_version = &#39;&#39;
+IDL&gt; rc = set_rccm_folder(misr_path, rccm_fpath, $
+   n_rccm_files, RCCM_FOLDER = rccm_folder, $
+   RCCM_VERSION = rccm_version, VERBOSE = verbose, $
+   DEBUG = debug, EXCPT_COND = excpt_cond)
+IDL&gt; PRINT, rc
+       0</code></pre></li>
+<li><p><strong>References:</strong> None.</p></li>
+<li><p><strong>Versioning:</strong></p>
+<ul>
+<li><p>2019&#8211;05&#8211;05: Version 1.0 &#8212; Initial release.</p></li>
+<li><p>2019&#8211;05&#8211;06: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
 </ul></li>
 </ul>
 </body>

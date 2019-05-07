@@ -194,6 +194,10 @@ FUNCTION mk_rccm0, $
    ;
    ;  *   2019–05–04: Version 2.11 — Update the code to report the
    ;      specific error message of MTK routines.
+   ;
+   ;  *   2019–05–07: Version 2.15 — Software version described in the
+   ;      paper entitled _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;

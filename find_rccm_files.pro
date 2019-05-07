@@ -196,6 +196,10 @@ FUNCTION find_rccm_files, $
    ;      MISR order on output; update the handling of the optional input
    ;      keyword parameter VERBOSE and generate the software version
    ;      consistent with the published documentation.
+   ;
+   ;  *   2019–05–07: Version 2.15 — Software version described in the
+   ;      paper entitled _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
