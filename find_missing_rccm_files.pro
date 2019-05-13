@@ -494,7 +494,7 @@ FUNCTION find_missing_rccm_files, $
 
    ;  Generate the array containing the actually available RCCM files of the
    ;  specified Version:
-   pattern = rccm_fpath + 'MISR*GRP_RCCM_GM*' + rccm_version + '.hdf'
+   pattern = rccm_fpath + 'MISR_AM1_GRP_RCCM_GM*' + rccm_version + '.hdf'
    avail_rccm_files = FILE_SEARCH(pattern, COUNT = avail_files)
 
    ;  Generate the array of unique available Orbits:
