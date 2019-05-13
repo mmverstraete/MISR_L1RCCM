@@ -10,11 +10,11 @@ FUNCTION set_rccm_folder, $
 
    ;Sec-Doc
    ;  PURPOSE: This function sets the path to the folder containing the
-   ;  MISR files for the specified PATH.
+   ;  MISR RCCM files for the specified PATH.
    ;
    ;  ALGORITHM: By default, this function sets the path to the folder
-   ;  containing the MISR files according to the settings included in the
-   ;  function set_roots_vers; the optional input keyword parameter
+   ;  containing the MISR RCCM files according to the settings included in
+   ;  the function set_roots_vers; the optional input keyword parameter
    ;  rccm_folder overrides this setting. The function also checks that
    ;  this folder is available for reading.
    ;
@@ -27,10 +27,10 @@ FUNCTION set_rccm_folder, $
    ;  *   misr_path {INT} [I]: The selected MISR PATH number.
    ;
    ;  *   rccm_fpath {STRING} [O]: The path to the folder containing the
-   ;      MISR files for the specified PATH.
+   ;      MISR RCCM files for the specified PATH.
    ;
-   ;  *   n_rccm_files {LONG} [O]: The number of files residing in the
-   ;      rccm_folder.
+   ;  *   n_rccm_files {LONG} [O]: The number of RCCM files residing in
+   ;      the rccm_folder.
    ;
    ;  KEYWORD PARAMETERS [INPUT/OUTPUT]:
    ;
@@ -68,8 +68,8 @@ FUNCTION set_rccm_folder, $
    ;      a null string, if the optional input keyword parameter DEBUG is
    ;      set and if the optional output keyword parameter EXCPT_COND is
    ;      provided in the call. The output positional parameter rccm_fpath
-   ;      contains the the path to the folder containing the MISR files
-   ;      for the specified PATH.
+   ;      contains the the path to the folder containing the MISR RCCM
+   ;      files for the specified PATH.
    ;
    ;  *   If an exception condition has been detected, this function
    ;      returns a non-zero error code, and the output keyword parameter
@@ -101,7 +101,7 @@ FUNCTION set_rccm_folder, $
    ;
    ;  *   Error 320: The folder rccm_path does not exist.
    ;
-   ;  *   Error 400: The folder rccm_path does not contain any files.
+   ;  *   Error 400: The folder rccm_path does not contain any RCCM files.
    ;
    ;  DEPENDENCIES:
    ;

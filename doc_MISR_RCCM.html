@@ -1145,16 +1145,16 @@ The return code of the function indicates which decision rule has been applied, 
 </ul>
 <h2>set_rccm_folder</h2>
 <ul>
-<li><p><strong>Purpose:</strong> This function sets the path to the folder containing the <span class="smallcaps">MISR</span> files for the specified <span class="smallcaps">Path</span>.</p></li>
-<li><p><strong>Algorithm:</strong> By default, this function sets the path to the folder containing the <span class="smallcaps">MISR</span> files according to the settings included in the function <code>set_roots_vers</code>; the optional input keyword parameter <code>rccm_folder</code> overrides this setting. The function also checks that this folder is available for reading.</p></li>
+<li><p><strong>Purpose:</strong> This function sets the path to the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files for the specified <span class="smallcaps">Path</span>.</p></li>
+<li><p><strong>Algorithm:</strong> By default, this function sets the path to the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files according to the settings included in the function <code>set_roots_vers</code>; the optional input keyword parameter <code>rccm_folder</code> overrides this setting. The function also checks that this folder is available for reading.</p></li>
 <li><p><strong>Syntax:</strong> <code>rc = set_rccm_folder(misr_path, rccm_fpath, n_rccm_files, $</code><br />
 <code>RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $</code><br />
 <code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
 <li><p><strong>Positional parameters [Input/Output]:</strong></p>
 <ul>
 <li><p><code>misr_path {INT} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
-<li><p><code>rccm_fpath {STRING} [O]:</code> The path to the folder containing the <span class="smallcaps">MISR</span> files for the specified <span class="smallcaps">Path</span>.</p></li>
-<li><p><code>n_rccm_files {LONG} [O]:</code> The number of files residing in the <code>rccm_folder</code>.</p></li>
+<li><p><code>rccm_fpath {STRING} [O]:</code> The path to the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files for the specified <span class="smallcaps">Path</span>.</p></li>
+<li><p><code>n_rccm_files {LONG} [O]:</code> The number of <span class="smallcaps">RCCM</span> files residing in the <code>rccm_folder</code>.</p></li>
 </ul></li>
 <li><p><strong>Keyword parameters [Input/Output]:</strong></p>
 <ul>
@@ -1169,7 +1169,7 @@ The return code of the function indicates which decision rule has been applied, 
 <li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
 <li><p><strong>Outcome:</strong></p>
 <ul>
-<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameter <code>rccm_fpath</code> contains the the path to the folder containing the <span class="smallcaps">MISR</span> files for the specified <span class="smallcaps">Path</span>.</p></li>
+<li><p>If no exception condition has been detected, this function returns <code>0</code>, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameter <code>rccm_fpath</code> contains the the path to the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files for the specified <span class="smallcaps">Path</span>.</p></li>
 <li><p>If an exception condition has been detected, this function returns a non-zero error code, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameter <code>rccm_fpath</code> may be undefined, incomplete or incorrect.</p></li>
 </ul></li>
 <li><p><strong>Exception conditions:</strong></p>
@@ -1182,7 +1182,7 @@ The return code of the function indicates which decision rule has been applied, 
 <li><p>Error 300: The folder <code>rccm_path</code> exists but is unreadable.</p></li>
 <li><p>Error 310: An exception condition occurred in function <code>is_readable.pro</code>.</p></li>
 <li><p>Error 320: The folder <code>rccm_path</code> does not exist.</p></li>
-<li><p>Error 400: The folder <code>rccm_path</code> does not contain any files.</p></li>
+<li><p>Error 400: The folder <code>rccm_path</code> does not contain any <span class="smallcaps">RCCM</span> files.</p></li>
 </ul></li>
 <li><p><strong>Dependencies:</strong></p>
 <ul>
