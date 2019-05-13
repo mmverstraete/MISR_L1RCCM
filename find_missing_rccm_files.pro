@@ -463,7 +463,7 @@ FUNCTION find_missing_rccm_files, $
       ENDCASE
 
    ;  Generate the specification of the log file:
-      log_fname = 'Missing_RCCM_Orbits.txt'
+      log_fname = 'Missing_RCCM_Orbits_' + date + '.txt'
       log_fspec = log_fpath + log_fname
 
    ;  Open and initiate the output log file:
