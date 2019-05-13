@@ -233,7 +233,7 @@ Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
 </ul>
 <h2>find_missing_rccm_files</h2>
 <ul>
-<li><p><strong>Purpose:</strong> This function inspects the available <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files for the specified <span class="smallcaps">Path</span> between the indicated dates, and reports on missing <span class="smallcaps">Orbits</span> within each of the identified products.</p></li>
+<li><p><strong>Purpose:</strong> This function inspects the available <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files for the specified <span class="smallcaps">Path</span> between the indicated dates, and reports on missing <span class="smallcaps">Orbits</span> within that period.</p></li>
 <li><p><strong>Algorithm:</strong> This function relies on the <span class="smallcaps">MISR</span> Toolkit to generate a list of missing <span class="smallcaps">RCCM</span> <span class="smallcaps">Orbits</span> for the specified <span class="smallcaps">Path</span> that occur between the <code>from_date</code> and the <code>until_date</code> dates, inclusive. If the optional input keyword parameter <code>log_it</code> is set, it generates a log file indicating the <span class="smallcaps">Orbits</span> for which the requested products and versions are missing, and saves it in the specified or default folder.</p></li>
 <li><p><strong>Syntax:</strong> <code>rc = find_missing_rccm_files(misr_mode, misr_path, n_missing_rccm_files, $</code><br />
 <code>FROM_DATE = from_date, UNTIL_DATE = until_date, n_missing_rccm_files $</code><br />

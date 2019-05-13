@@ -15,7 +15,7 @@ FUNCTION find_missing_rccm_files, $
    ;Sec-Doc
    ;  PURPOSE: This function inspects the available MISR RCCM files for
    ;  the specified PATH between the indicated dates, and reports on
-   ;  missing ORBITS within each of the identified products.
+   ;  missing ORBITS within that period.
    ;
    ;  ALGORITHM: This function relies on the MISR Toolkit to generate a
    ;  list of missing RCCM ORBITS for the specified PATH that occur
