@@ -1,5 +1,4 @@
 FUNCTION find_missing_rccm_files, $
-   misr_mode, $
    misr_path, $
    n_missing_rccm_files, $
    FROM_DATE = from_date, $
@@ -26,15 +25,13 @@ FUNCTION find_missing_rccm_files, $
    ;  folder.
    ;
    ;  SYNTAX:
-   ;  rc = find_missing_rccm_files(misr_mode, misr_path, n_missing_rccm_files, $
+   ;  rc = find_missing_rccm_files(misr_path, n_missing_rccm_files, $
    ;  FROM_DATE = from_date, UNTIL_DATE = until_date, n_missing_rccm_files $
    ;  RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $
    ;  LOG_IT = log_it, LOG_FOLDER = log_folder, $
    ;  VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
    ;
    ;  POSITIONAL PARAMETERS [INPUT/OUTPUT]:
-   ;
-   ;  *   misr_mode {STRING} [I]: The selected MISR MODE.
    ;
    ;  *   misr_path {INT} [I]: The selected MISR PATH number.
    ;
@@ -101,9 +98,7 @@ FUNCTION find_missing_rccm_files, $
    ;
    ;  *   Error 100: One or more positional parameter(s) are missing.
    ;
-   ;  *   Error 110: The input positional parameter misr_mode is invalid.
-   ;
-   ;  *   Error 120: The input positional parameter misr_path is invalid.
+   ;  *   Error 110: The input positional parameter misr_path is invalid.
    ;
    ;  *   Error 199: An exception condition occurred in
    ;      set_roots_vers.pro.
@@ -133,8 +128,6 @@ FUNCTION find_missing_rccm_files, $
    ;      is_writable.pro.
    ;
    ;  DEPENDENCIES:
-   ;
-   ;  *   chk_misr_mode.pro
    ;
    ;  *   chk_misr_path.pro
    ;
@@ -168,15 +161,13 @@ FUNCTION find_missing_rccm_files, $
    ;
    ;  EXAMPLES:
    ;
-   ;      IDL> misr_mode = 'GM'
    ;      IDL> misr_path = 168
    ;      IDL> from_date = ''
    ;      IDL> until_date = '2018-12-31'
    ;      IDL> log_it = 1
    ;      IDL> verbose = 1
    ;      IDL> debug = 1
-   ;      IDL> rc = find_missing_rccm_files(misr_mode, $
-   ;         misr_path, n_missing_rccm_files, $
+   ;      IDL> rc = find_missing_rccm_files(misr_path, n_missing_rccm_files, $
    ;         FROM_DATE = from_date, UNTIL_DATE = until_date, $
    ;         RCCM_FOLDER = rccm_folder, $
    ;         RCCM_VERSION = rccm_version, LOG_IT = log_it, $
@@ -189,28 +180,12 @@ FUNCTION find_missing_rccm_files, $
    ;
    ;  VERSIONING:
    ;
-   ;  *   2016–06–13: Version 0.9 — Initial release.
+   ;  *   2019–05–10: Version 1.0 — Initial public release.
    ;
-   ;  *   2017–11–10: Version 1.0 — Initial public release.
-   ;
-   ;  *   2018–01–30: Version 1.1 — Implement optional debugging.
-   ;
-   ;  *   2018–06–01: Version 1.5 — Implement new coding standards.
-   ;
-   ;  *   2019–01–28: Version 2.00 — Systematic update of all routines to
+   ;  *   2019–05–12: Version 2.00 — Systematic update of all routines to
    ;      implement stricter coding standards and improve documentation.
    ;
-   ;  *   2019–03–20: Version 2.10 — Update the handling of the optional
-   ;      input keyword parameter VERBOSE and generate the software
-   ;      version consistent with the published documentation.
-   ;
-   ;  *   2019–05–04: Version 2.11 — Update the code to report the
-   ;      specific error message of MTK routines.
-   ;
-   ;  *   2019–05–06: Version 2.12 — Update the code to report the RCCM
-   ;      version number used.
-   ;
-   ;  *   2019–05–07: Version 2.15 — Software version described in the
+   ;  *   2019–05–14: Version 2.15 — Software version described in the
    ;      paper entitled _Replacing Missing Values in the Standard MISR
    ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
    ;Sec-Lic
@@ -280,23 +255,12 @@ FUNCTION find_missing_rccm_files, $
 
    ;  Return to the calling routine with an error message if one or more
    ;  positional parameters are missing:
-      n_reqs = 3
+      n_reqs = 2
       IF (N_PARAMS() NE n_reqs) THEN BEGIN
          error_code = 100
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': Routine must be called with ' + strstr(n_reqs) + $
-            ' positional parameter(s): misr_mode, misr_path, ' + $
-            'n_missing_rccm_files.'
-         RETURN, error_code
-      ENDIF
-
-   ;  Return to the calling routine with an error message if the input
-   ;  positional parameter 'misr_mode' is invalid:
-      rc = chk_misr_mode(misr_mode, DEBUG = debug, EXCPT_COND = excpt_cond)
-      IF (rc NE 0) THEN BEGIN
-         error_code = 110
-         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-            ': ' + excpt_cond
+            ' positional parameter(s): misr_path, n_missing_rccm_files.'
          RETURN, error_code
       ENDIF
 
@@ -304,7 +268,7 @@ FUNCTION find_missing_rccm_files, $
    ;  positional parameter 'misr_path' is invalid:
       rc = chk_misr_path(misr_path, DEBUG = debug, EXCPT_COND = excpt_cond)
       IF (rc NE 0) THEN BEGIN
-         error_code = 120
+         error_code = 110
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': ' + excpt_cond
          RETURN, error_code
@@ -360,7 +324,7 @@ FUNCTION find_missing_rccm_files, $
          ': ' + excpt_cond
       RETURN, error_code
    ENDIF
-   mp_str = misr_mode + '-' + misr_path_str
+   mp_str = 'GM-' + misr_path_str
 
    ;  Set the date range to inspect:
    IF (KEYWORD_SET(from_date)) THEN BEGIN
@@ -479,11 +443,11 @@ FUNCTION find_missing_rccm_files, $
       PRINTF, log_unit, 'Saved on: ', date_time, FORMAT = fmt1
       PRINTF, log_unit
 
-      PRINTF, log_unit, 'Content: ', 'Information on missing RCCM files', $
+      PRINTF, log_unit, 'Content: ', 'Information on missing GM RCCM files', $
          FORMAT = fmt1
       PRINTF, log_unit, 'RCCM path: ', rccm_fpath, FORMAT = fmt1
       PRINTF, log_unit
-      PRINTF, log_unit, 'MISR Mode: ', misr_mode, FORMAT = fmt1
+      PRINTF, log_unit, 'MISR Mode: ', 'GM', FORMAT = fmt1
       PRINTF, log_unit, 'MISR Path: ', strstr(misr_path), FORMAT = fmt1
       PRINTF, log_unit, 'From: ', from_date, FORMAT = fmt1
       PRINTF, log_unit, 'Until: ', until_date, FORMAT = fmt1

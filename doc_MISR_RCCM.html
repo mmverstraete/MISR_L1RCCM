@@ -235,14 +235,13 @@ Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
 <ul>
 <li><p><strong>Purpose:</strong> This function inspects the available <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files for the specified <span class="smallcaps">Path</span> between the indicated dates, and reports on missing <span class="smallcaps">Orbits</span> within that period.</p></li>
 <li><p><strong>Algorithm:</strong> This function relies on the <span class="smallcaps">MISR</span> Toolkit to generate a list of missing <span class="smallcaps">RCCM</span> <span class="smallcaps">Orbits</span> for the specified <span class="smallcaps">Path</span> that occur between the <code>from_date</code> and the <code>until_date</code> dates, inclusive. If the optional input keyword parameter <code>log_it</code> is set, it generates a log file indicating the <span class="smallcaps">Orbits</span> for which the requested products and versions are missing, and saves it in the specified or default folder.</p></li>
-<li><p><strong>Syntax:</strong> <code>rc = find_missing_rccm_files(misr_mode, misr_path, n_missing_rccm_files, $</code><br />
+<li><p><strong>Syntax:</strong> <code>rc = find_missing_rccm_files(misr_path, n_missing_rccm_files, $</code><br />
 <code>FROM_DATE = from_date, UNTIL_DATE = until_date, n_missing_rccm_files $</code><br />
 <code>RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $</code><br />
 <code>LOG_IT = log_it, LOG_FOLDER = log_folder, $</code><br />
 <code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
 <li><p><strong>Positional parameters [Input/Output]:</strong></p>
 <ul>
-<li><p><code>misr_mode {STRING} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Mode</span>.</p></li>
 <li><p><code>misr_path {INT} [I]:</code> The selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> number.</p></li>
 <li><p><code>n_missing_rccm_files {LONG} [O]:</code> The number of missing <span class="smallcaps">MISR</span> Global Mode RCCM files.</p></li>
 </ul></li>
@@ -268,8 +267,7 @@ Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
 <li><p><strong>Exception conditions:</strong></p>
 <ul>
 <li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
-<li><p>Error 110: The input positional parameter <code>misr_mode</code> is invalid.</p></li>
-<li><p>Error 120: The input positional parameter <code>misr_path</code> is invalid.</p></li>
+<li><p>Error 110: The input positional parameter <code>misr_path</code> is invalid.</p></li>
 <li><p>Error 199: An exception condition occurred in <code>set_roots_vers.pro</code>.</p></li>
 <li><p>Error 200: An exception condition occurred in function <code>path2str.pro</code>.</p></li>
 <li><p>Error 210: An exception condition occurred in function <code>chk_ymddate.pro</code>.</p></li>
@@ -282,7 +280,6 @@ Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
 </ul></li>
 <li><p><strong>Dependencies:</strong></p>
 <ul>
-<li><p><code>chk_misr_mode.pro</code></p></li>
 <li><p><code>chk_misr_path.pro</code></p></li>
 <li><p><code>chk_ymddate.pro</code></p></li>
 <li><p><code>find_orbits_paths_dates.pro</code></p></li>
@@ -300,15 +297,13 @@ Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
 </ul></li>
 <li><p><strong>Remarks:</strong> None.</p></li>
 <li><p><strong>Examples:</strong></p>
-<pre><code>IDL&gt; misr_mode = &#39;GM&#39;
-IDL&gt; misr_path = 168
+<pre><code>IDL&gt; misr_path = 168
 IDL&gt; from_date = &#39;&#39;
 IDL&gt; until_date = &#39;2018-12-31&#39;
 IDL&gt; log_it = 1
 IDL&gt; verbose = 1
 IDL&gt; debug = 1
-IDL&gt; rc = find_missing_rccm_files(misr_mode, $
-   misr_path, n_missing_rccm_files, $
+IDL&gt; rc = find_missing_rccm_files(misr_path, n_missing_rccm_files, $
    FROM_DATE = from_date, UNTIL_DATE = until_date, $
    RCCM_FOLDER = rccm_folder, $
    RCCM_VERSION = rccm_version, LOG_IT = log_it, $
@@ -319,15 +314,9 @@ IDL&gt; PRINT, rc
 <li><p><strong>References:</strong> None.</p></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
-<li><p>2016&#8211;06&#8211;13: Version 0.9 &#8212; Initial release.</p></li>
-<li><p>2017&#8211;11&#8211;10: Version 1.0 &#8212; Initial public release.</p></li>
-<li><p>2018&#8211;01&#8211;30: Version 1.1 &#8212; Implement optional debugging.</p></li>
-<li><p>2018&#8211;06&#8211;01: Version 1.5 &#8212; Implement new coding standards.</p></li>
-<li><p>2019&#8211;01&#8211;28: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
-<li><p>2019&#8211;03&#8211;20: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
-<li><p>2019&#8211;05&#8211;04: Version 2.11 &#8212; Update the code to report the specific error message of MTK routines.</p></li>
-<li><p>2019&#8211;05&#8211;06: Version 2.12 &#8212; Update the code to report the <span class="smallcaps">RCCM</span> version number used.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
+<li><p>2019&#8211;05&#8211;10: Version 1.0 &#8212; Initial public release.</p></li>
+<li><p>2019&#8211;05&#8211;12: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
+<li><p>2019&#8211;05&#8211;14: Version 2.15 &#8212; Software version described in the paper entitled <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>.</p></li>
 </ul></li>
 </ul>
 <h2>find_rccm_files</h2>
