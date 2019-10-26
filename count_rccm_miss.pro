@@ -13,8 +13,8 @@ FUNCTION count_rccm_miss, $
    ;Sec-Doc
    ;  PURPOSE: This function counts the number of missing RCCM pixel
    ;  values found in each of the 9 cameras of all available ORBITS for
-   ;  the specified MISR PATH and BLOCK, and saves the results in plain
-   ;  ASCII output text file.
+   ;  the specified MISR PATH and BLOCK, and saves the results in a plain
+   ;  ASCII text file.
    ;
    ;  ALGORITHM: This function relies on the IDL functions rccm_0 and
    ;  rccm_1 to read the RCCM files for each of the available ORBITS and
@@ -64,11 +64,17 @@ FUNCTION count_rccm_miss, $
    ;      containing the output file(s).
    ;
    ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
-   ;      (> 0) or skip (0) reporting progress on the console: 1 only
-   ;      reports exiting the routine; 2 reports entering and exiting the
-   ;      routine, as well as key milestones; 3 reports entering and
-   ;      exiting the routine, and provides detailed information on the
-   ;      intermediary results.
+   ;      (> 0) or skip (0) outputting messages on the console:
+   ;
+   ;      -   If verbose > 0, messages inform the user about progress in
+   ;          the execution of time-consuming routines, or the location of
+   ;          output files (e.g., log, map, plot, etc.);
+   ;
+   ;      -   If verbose > 1, messages record entering and exiting the
+   ;          routine; and
+   ;
+   ;      -   If verbose > 2, messages provide additional information
+   ;          about intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -118,33 +124,19 @@ FUNCTION count_rccm_miss, $
    ;      the optional input keyword parameters l1b2_folder, rccm_folder,
    ;      out_folder is not specified.
    ;
-   ;  *   Error 300: The input folder l1b2_path exists but is unreadable.
+   ;  *   Error 300: The input folder l1b2_path is not found, not a
+   ;      directory or not readable.
    ;
-   ;  *   Error 310: An exception condition occurred in function
-   ;      is_readable.pro.
+   ;  *   Error 310: The input folder rccm_path is not found, not a
+   ;      directory or not readable.
    ;
-   ;  *   Error 320: The input folder l1b2_path does not exist.
+   ;  *   Error 400: The output folder out_fpath is not writable.
    ;
-   ;  *   Error 330: The input folder rccm_path exists but is unreadable.
-   ;
-   ;  *   Error 340: An exception condition occurred in function
-   ;      is_readable.pro.
-   ;
-   ;  *   Error 350: The input folder rccm_path does not exist.
-   ;
-   ;  *   Error 400: The number of files in the folder containing MISR
-   ;      L1B2 files is not a multiple of 9.
-   ;
-   ;  *   Error 410: The number of files in the folder containing MISR
-   ;      RCCM files is not a multiple of 9.
-   ;
-   ;  *   Error 420: An exception condition occurred in function
-   ;      heap_l1b2_block.pro.
-   ;
-   ;  *   Error 500: The output file out_fspec is unwritable.
+   ;  *   Error 500: The gm_orbits and rc_orbits arrays have no ORBIT
+   ;      number in common.
    ;
    ;  *   Error 510: An exception condition occurred in function
-   ;      is_writable.pro.
+   ;      heap_l1b2_block.pro.
    ;
    ;  *   Error 600: An exception condition occurred in the MISR TOOLKIT
    ;      routine
@@ -158,6 +150,8 @@ FUNCTION count_rccm_miss, $
    ;
    ;  *   MISR Toolkit
    ;
+   ;  *   cgSetIntersection (David W. Fanning, Coyote Library)
+   ;
    ;  *   block2str.pro
    ;
    ;  *   chk_misr_block.pro
@@ -170,7 +164,11 @@ FUNCTION count_rccm_miss, $
    ;
    ;  *   heap_l1b2_block.pro
    ;
-   ;  *   is_writable.pro
+   ;  *   is_numeric.pro
+   ;
+   ;  *   is_readable_dir.pro
+   ;
+   ;  *   is_writable_dir.pro
    ;
    ;  *   mk_rccm0.pro
    ;
@@ -191,7 +189,9 @@ FUNCTION count_rccm_miss, $
    ;  *   NOTE 1: Because the MISR L1B2 files need to be read to process
    ;      the RCCM files, this function is very time consuming: it can
    ;      take over an hour to generate the statistics for a single BLOCK
-   ;      over the entire mission period.
+   ;      over the entire mission period. Set the optional input keyword
+   ;      parameter VERBOSE to 2 to generate an intermediary progress
+   ;      report on the console each time 50 ORBITS have been processed.
    ;
    ;  EXAMPLES:
    ;
@@ -201,7 +201,15 @@ FUNCTION count_rccm_miss, $
    ;      IDL> PRINT, rc
    ;             0
    ;
-   ;  REFERENCES: None.
+   ;  REFERENCES:
+   ;
+   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
+   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;      available from
+   ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
+   ;      10.5194/essd-2019-77).
    ;
    ;  VERSIONING:
    ;
@@ -214,8 +222,12 @@ FUNCTION count_rccm_miss, $
    ;      specific error message of MTK routines.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      paper entitled _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
+   ;      preprint published in ESSD Discussions mentioned above.
+   ;
+   ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
+   ;      documentation standards (in particular regarding the use of
+   ;      verbose and the assignment of numeric return codes), and switch
+   ;      to 3-parts version identifiers.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -358,108 +370,65 @@ FUNCTION count_rccm_miss, $
          ~KEYWORD_SET(out_folder)) THEN BEGIN
          error_code = 299
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-            ': ' + excpt_cond + '. And at least one of the optional input ' + $
-            'keyword parameters l1b2_folder, rccm_folder, out_folder ' + $
-            'is not specified.'
+            ': Computer is unrecognized, function set_roots_vers.pro did ' + $
+            'not assign default folder values, and at least one of the ' + $
+            'optional keyword parameters l1b2_folder, rccm_folder, ' + $
+            'out_folder is not specified.'
          RETURN, error_code
       ENDIF
    ENDIF
 
    ;  Set the directory address of the folder containing the input L1B2 files
-   ;  if it has not been set previously:
+   ;  if it has not been set previously, and verify that it exists:
    IF (KEYWORD_SET(l1b2_folder)) THEN BEGIN
-      l1b2_fpath = force_path_sep(l1b2_folder, DEBUG = debug, $
+      rc = force_path_sep(l1b2_folder, DEBUG = debug, $
          EXCPT_COND = excpt_cond)
+      l1b2_fpath = l1b2_folder
    ENDIF ELSE BEGIN
       l1b2_fpath = root_dirs[1] + misr_path_str + PATH_SEP() + $
          'L1_GM' + PATH_SEP()
    ENDELSE
-
-   ;  Return to the calling routine with an error message if the input
-   ;  directory 'l1b2_fpath' does not exist or is unreadable:
-   rc = is_readable(l1b2_fpath, DEBUG = debug, EXCPT_COND = excpt_cond)
-   CASE rc OF
-      1: BREAK
-      0: BEGIN
-            error_code = 300
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The input folder ' + l1b2_fpath + $
-               ' exists but is unreadable.'
-            RETURN, error_code
-         END
-      -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 310
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
-               RETURN, error_code
-            ENDIF
-         END
-      -2: BEGIN
-            error_code = 320
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The input folder ' + l1b2_fpath + $
-               ' does not exist.'
-            RETURN, error_code
-         END
-      ELSE: BREAK
-   ENDCASE
+   IF (debug) THEN BEGIN
+      res = is_readable_dir(l1b2_fpath)
+      IF (res NE 1) THEN BEGIN
+         error_code = 300
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
+            ': Folder l1b2_fpath does not exist or is unreadable.'
+         RETURN, error_code
+      ENDIF
+   ENDIF
 
    ;  Set the directory address of the folder containing the input RCCM files
-   ;  if it has not been set previously:
+   ;  if it has not been set previously, and verify that it exists:
    IF (KEYWORD_SET(rccm_folder)) THEN BEGIN
-      rccm_fpath = force_path_sep(rccm_folder, DEBUG = debug, $
+      rc = force_path_sep(rccm_folder, DEBUG = debug, $
          EXCPT_COND = excpt_cond)
+      rccm_fpath = rccm_folder
    ENDIF ELSE BEGIN
       rccm_fpath = root_dirs[1] + misr_path_str + PATH_SEP() + $
          'L1_RC' + PATH_SEP()
    ENDELSE
-
-   ;  Return to the calling routine with an error message if the input
-   ;  directory 'rccm_fpath' does not exist or is unreadable:
-   rc = is_readable(rccm_fpath, DEBUG = debug, EXCPT_COND = excpt_cond)
-   CASE rc OF
-      1: BREAK
-      0: BEGIN
-            error_code = 330
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The input folder ' + rccm_fpath + $
-               ' exists but is unreadable.'
-            RETURN, error_code
-         END
-      -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 340
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
-               RETURN, error_code
-            ENDIF
-         END
-      -2: BEGIN
-            error_code = 350
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The input folder ' + rccm_fpath + $
-               ' does not exist.'
-            RETURN, error_code
-         END
-      ELSE: BREAK
-   ENDCASE
-
-   ;  Retrieve and count the names of all available MISR L1B2 Radiance files
-   ;  for the specified Path:
-   in_gm_files = FILE_SEARCH(l1b2_fpath + 'MISR*_GM_*.hdf', $
-      COUNT = n_gm_files)
    IF (debug) THEN BEGIN
-      tst = n_gm_files MOD 9
-      IF (tst NE 0) THEN BEGIN
-         error_code = 400
+      res = is_readable_dir(rccm_fpath)
+      IF (res NE 1) THEN BEGIN
+         error_code = 310
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-            ': The number of files in the folder containing MISR L1B2 ' + $
-            'files is not a multiple of 9.'
+            ': Folder rccm_fpath does not exist or is unreadable.'
          RETURN, error_code
       ENDIF
    ENDIF
+
+   ;  Retrieve and count the names of all locally available MISR L1B2 Radiance
+   ;  files for the specified Path:
+   in_gm_files = FILE_SEARCH(l1b2_fpath + 'MISR*_GM_*.hdf', $
+      COUNT = n_gm_files)
+   tst = n_gm_files MOD 9
    n_gm_orbits = n_gm_files / 9
+   IF (debug AND (verbose GT 2)) THEN BEGIN
+      PRINT, 'Found ' + strstr(n_gm_files) + ' L1B2 GRP GM files.'
+      IF (tst NE 0) THEN PRINT, 'This is not a multiple of 9, so at least ' + $
+         'one of the Orbits does not feature 9 input GRP GM files.'
+   ENDIF
 
    ;  Generate a STRING array of unique MISR L1B2 Orbit numbers:
    pos = STRPOS(in_gm_files[0], '_O')
@@ -469,28 +438,34 @@ FUNCTION count_rccm_miss, $
    ;  Set the directory address of the folder containing the outputs
    ;  if it has not been set previously:
    IF (KEYWORD_SET(out_folder)) THEN BEGIN
-      out_fpath = force_path_sep(out_folder, DEBUG = debug, $
+      rc = force_path_sep(out_folder, DEBUG = debug, $
          EXCPT_COND = excpt_cond)
+      out_fpath = out_folder
    ENDIF ELSE BEGIN
       out_fpath = root_dirs[3] + 'GM-' + misr_path_str + '-' + $
          misr_block_str + PATH_SEP()
    ENDELSE
 
-   ;  Retrieve and count the names of all available MISR RCCM files
+   ;  Create the output directory 'out_fpath' if it does not exist:
+   res = is_writable_dir(out_fpath, /CREATE)
+   IF (debug AND (res NE 1)) THEN BEGIN
+      error_code = 400
+      excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+         rout_name + ': The variable out_fpath is unwritable.'
+      RETURN, error_code
+   ENDIF
+
+   ;  Retrieve and count the names of all locally available MISR RCCM files
    ;  for the specified Path:
    in_rc_files = FILE_SEARCH(rccm_fpath + 'MISR*_RCCM_*.hdf', $
       COUNT = n_rc_files)
-   IF (debug) THEN BEGIN
-      tst = n_rc_files MOD 9
-      IF (tst NE 0) THEN BEGIN
-         error_code = 410
-         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-            ': The number of files in the folder containing MISR RCCM ' + $
-            'files is not a multiple of 9.'
-         RETURN, error_code
-      ENDIF
-   ENDIF
+   tst = n_rc_files MOD 9
    n_rc_orbits = n_rc_files / 9
+   IF (debug AND (verbose GT 2)) THEN BEGIN
+      PRINT, 'Found ' + strstr(n_rc_files) + ' L1B2 RCCM files.'
+      IF (tst NE 0) THEN PRINT, 'This is not a multiple of 9, so at least ' + $
+         'one of the Orbits does not feature 9 input RCCM files.'
+   ENDIF
 
    ;  Generate a STRING array of unique MISR RCCM Orbit numbers:
    pos = STRPOS(in_rc_files[0], '_O')
@@ -499,8 +474,16 @@ FUNCTION count_rccm_miss, $
 
    ;  Identify the set of MISR Orbits for which both the 9 L1B2 and the
    ;  9 RCCM files are available:
-   idx_com_orbits = WHERE(gm_orbits EQ rc_orbits, n_com_orbits)
-   com_orbits = gm_orbits[idx_com_orbits]
+   idx_com_orbits = cgSetIntersection(LONG(gm_orbits), LONG(rc_orbits), $
+      COUNT = n_com_orbits, INDICES_A = indices_a, INDICES_B = indices_b, $
+      NORESULT = noresult, POSITIONS = positions, SUCCESS = success)
+   IF (debug AND (success EQ 0)) THEN BEGIN
+      error_code = 500
+      excpt_cond = 'Error ' + strstr(error_code) + ' in cgSetIntersection' + $
+         ': The gm_orbits and rc_orbits arrays have no Orbit number in common.'
+      RETURN, error_code
+   ENDIF
+   com_orbits = strstr(idx_com_orbits)
 
    ;  Define the arrays that will contain the results:
    com_dat = STRARR(n_com_orbits)
@@ -518,6 +501,9 @@ FUNCTION count_rccm_miss, $
       RETURN, error_code
    ENDIF
 
+   IF (verbose GT 0) THEN BEGIN
+      PRINT, 'Ready to process ' + strstr(n_com_orbit) + ' Orbits.'
+   ENDIF
    ;  Loop over all available Orbits for which the L1B2 and the RCCM files
    ;  are both available:
    FOR i_com_orbit = 0, n_com_orbits - 1 DO BEGIN
@@ -560,7 +546,7 @@ FUNCTION count_rccm_miss, $
          rad_ptr, brf_ptr, rdqi_ptr, scalf_ptr, convf_ptr, DEBUG = debug, $
          EXCPT_COND = excpt_cond)
       IF (debug AND (rc NE 0)) THEN BEGIN
-         error_code = 420
+         error_code = 510
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': ' + excpt_cond
          RETURN, error_code
@@ -586,35 +572,18 @@ FUNCTION count_rccm_miss, $
    ;  Clear the heap memory for the next Orbit:
       PTR_FREE, misr_ptr, radrd_ptr, rad_ptr, brf_ptr, rdqi_ptr, $
          scalf_ptr, convf_ptr
+
+      IF ((verbose GT 0) AND $
+         ((i_com_orbit MOD 25) EQ 0) AND $
+         (i_com_orbit GT 0)) THEN BEGIN
+         PRINT, 'Processed ' + strstr(i_com_orbit) + ' Orbits.'
+      ENDIF
    ENDFOR
 
    ;  Generate the name of the output file to contain the results:
    out_fname = 'Num_RCCM_miss_' + misr_path_str + '-' + misr_block_str + $
       '_' + com_dat[0] + '_' + com_dat[n_com_orbits - 1] + '.txt'
    out_fspec = out_fpath + out_fname
-
-   ;  Return to the calling routine with an error message if the output
-   ;  file 'out_fspec' is not writable:
-   rc = is_writable(out_fspec, DEBUG = debug, EXCPT_COND = excpt_cond)
-   CASE rc OF
-      1: BREAK
-      0: BEGIN
-            error_code = 500
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The output file ' + out_fspec + $
-               ' is unwritable.'
-            RETURN, error_code
-         END
-      -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 510
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
-               RETURN, error_code
-            ENDIF
-         END
-      ELSE: BREAK
-   ENDCASE
 
    ;  Open the output file:
    OPENW, out_unit, out_fspec, /GET_LUN
@@ -627,24 +596,23 @@ FUNCTION count_rccm_miss, $
       'Orbit and Camera for Path ' + strstr(misr_path) + ' and Block ' + $
       strstr(misr_block)
    PRINTF, out_unit, '#', 'Orbit', 'Cal date', 'Julian date', 'DF', 'CF', $
-      'BF', 'AF', 'AN', 'AA', 'BA', 'CA', 'DA', 'Total'
+      'BF', 'AF', 'AN', 'AA', 'BA', 'CA', 'DA', 'Total', FORMAT = fmt1
    PRINTF, out_unit, strrepeat("=", 142)
 
    ;  Write the results:
    FOR i_orbit = 0, n_com_orbits - 1 DO BEGIN
       PRINTF, out_unit, i_orbit, com_orbits[i_orbit], $
          com_dat[i_orbit], com_jul[i_orbit], n_miss_pts [i_orbit, *], $
-         TOTAL(n_miss_pts [i_orbit, *]), FORMAT = fmt
+         TOTAL(n_miss_pts [i_orbit, *]), FORMAT = fmt2
    ENDFOR
 
    ;  Close the output file:
    FREE_LUN, out_unit
 
-   IF (verbose GT 1) THEN BEGIN
+   IF (verbose GT 0) THEN BEGIN
       PRINT, 'The results have been saved in the output file'
-      PRINT, out_spec
+      PRINT, out_fspec
    ENDIF
-
-   IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
+   IF (verbose GT 1) THEN PRINT, 'Exiting ' + rout_name + '.'
 
 END

@@ -50,11 +50,17 @@ FUNCTION plot_rccm_miss, $
    ;      containing the output file(s).
    ;
    ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
-   ;      (> 0) or skip (0) reporting progress on the console: 1 only
-   ;      reports exiting the routine; 2 reports entering and exiting the
-   ;      routine, as well as key milestones; 3 reports entering and
-   ;      exiting the routine, and provides detailed information on the
-   ;      intermediary results.
+   ;      (> 0) or skip (0) outputting messages on the console:
+   ;
+   ;      -   If verbose > 0, messages inform the user about progress in
+   ;          the execution of time-consuming routines, or the location of
+   ;          output files (e.g., log, map, plot, etc.);
+   ;
+   ;      -   If verbose > 1, messages record entering and exiting the
+   ;          routine; and
+   ;
+   ;      -   If verbose > 2, messages provide additional information
+   ;          about intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -89,20 +95,17 @@ FUNCTION plot_rccm_miss, $
    ;  *   Error 110: The input positional parameter in_fspec is not of
    ;      type STRING.
    ;
-   ;  *   Error 300: The input file in_fspec exists but is unreadable.
+   ;  *   Error 300: The input file in_fspec is not found, not a regular
+   ;      file or not readable.
    ;
-   ;  *   Error 310: An exception condition occurred in function
-   ;      is_readable.pro.
-   ;
-   ;  *   Error 320: The input file in_fspec does not exist.
-   ;
-   ;  *   Error 330: The input file in_fspec is not recognized.
+   ;  *   Error 310: The The structure of the input filename in_fspec is
+   ;      not recognized.
    ;
    ;  DEPENDENCIES:
    ;
    ;  *   is_numeric.pro
    ;
-   ;  *   is_readable.pro
+   ;  *   is_readable_file.pro
    ;
    ;  *   is_string.pro
    ;
@@ -130,7 +133,15 @@ FUNCTION plot_rccm_miss, $
    ;         ~/MISR_HR/Outcomes/GM-P168-B110/
    ;         Num_RCCM_miss_P168-B110_2000-03-24_2018-05-29_slog.png
    ;
-   ;  REFERENCES: None.
+   ;  REFERENCES:
+   ;
+   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
+   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;      available from
+   ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
+   ;      10.5194/essd-2019-77).
    ;
    ;  VERSIONING:
    ;
@@ -140,8 +151,12 @@ FUNCTION plot_rccm_miss, $
    ;      implement stricter coding standards and improve documentation.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      paper entitled _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
+   ;      preprint published in ESSD Discussions mentioned above.
+   ;
+   ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
+   ;      documentation standards (in particular regarding the use of
+   ;      verbose and the assignment of numeric return codes), and switch
+   ;      to 3-parts version identifiers.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -228,41 +243,24 @@ FUNCTION plot_rccm_miss, $
 
    ;  Return to the calling routine with an error message if the input
    ;  file 'in_fspec' does not exist or is unreadable:
-   rc = is_readable(in_fspec, DEBUG = debug, EXCPT_COND = excpt_cond)
-   CASE rc OF
-      1: BREAK
-      0: BEGIN
-            error_code = 300
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The input file ' + in_fspec + $
-               ' exists but is unreadable.'
-            RETURN, error_code
-         END
-      -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 310
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
-               RETURN, error_code
-            ENDIF
-         END
-      -2: BEGIN
-            error_code = 320
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The input file ' + in_fspec + ' does not exist.'
-            RETURN, error_code
-         END
-      ELSE: BREAK
-   ENDCASE
+   res = is_readable_file(in_fspec)
+   IF (res EQ 0) THEN BEGIN
+      error_code = 300
+      excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+         rout_name + ': The input file ' + in_fspec + $
+         ' is not found, not a regular file or not readable.'
+      RETURN, error_code
+   ENDIF
 
    ;  Retrieve the MISR Path, Block and date range from the file name:
    fn = FILE_BASENAME(in_fspec)
    parts = STRSPLIT(fn, '_', COUNT = n_parts, /EXTRACT)
    head = parts[0] + '_' + parts[1] + '_' + parts[2]
    IF ((head NE 'Num_RCCM_miss') OR (n_parts NE 6)) THEN BEGIN
-      error_code = 330
+      error_code = 310
       excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-         ': The input file ' + in_fspec + ' is not recognized.'
+         ': The structure of the input filename ' + in_fspec + $
+         ' is not recognized.'
       RETURN, error_code
    ENDIF
    pb = parts[3]
@@ -350,10 +348,9 @@ FUNCTION plot_rccm_miss, $
       TITLE = plot_title)
 
    plot_fname = FILE_BASENAME(in_fspec, '.txt') + '_lin.png'
-   plot_fspec = FILE_DIRNAME(in_fspec, /MARK_DIRECTORY) + plot_fname
-   my_plot.Save, plot_fspec
+   plot_fspec_l = FILE_DIRNAME(in_fspec, /MARK_DIRECTORY) + plot_fname
+   my_plot.Save, plot_fspec_l
    my_plot.Close
-   PRINT, 'The linear time series plot has been saved in ' + plot_fspec
 
    ;  Optionally generate the logarithmic plot of the time series of missing
    ;  values:
@@ -374,14 +371,17 @@ FUNCTION plot_rccm_miss, $
          TITLE = plot_title)
 
       plot_fname = FILE_BASENAME(in_fspec, '.txt') + '_slog.png'
-      plot_fspec = FILE_DIRNAME(in_fspec, /MARK_DIRECTORY) + plot_fname
-      my_plot.Save, plot_fspec
+      plot_fspec_s = FILE_DIRNAME(in_fspec, /MARK_DIRECTORY) + plot_fname
+      my_plot.Save, plot_fspec_s
       my_plot.Close
-      PRINT, 'The semi-logarithmic time series plot has been saved in ' + $
-         plot_fspec
    ENDIF
 
-   IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
+   IF (verbose GT 0) THEN PRINT, $
+      'The linear time series plot has been saved in ' + plot_fspec_l
+   IF ((verbose GT 0) AND semi_log) THEN PRINT, $
+      'The semi-logarithmic time series plot has been saved in ' + $
+         plot_fspec_s
+   IF (verbose GT 1) THEN PRINT, 'Exiting ' + rout_name + '.'
 
    RETURN, return_code
 

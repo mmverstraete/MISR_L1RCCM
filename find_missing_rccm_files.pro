@@ -60,11 +60,17 @@ FUNCTION find_missing_rccm_files, $
    ;      containing the processing log.
    ;
    ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
-   ;      (> 0) or skip (0) reporting progress on the console: 1 only
-   ;      reports exiting the routine; 2 reports entering and exiting the
-   ;      routine, as well as key milestones; 3 reports entering and
-   ;      exiting the routine, and provides detailed information on the
-   ;      intermediary results.
+   ;      (> 0) or skip (0) outputting messages on the console:
+   ;
+   ;      -   If verbose > 0, messages inform the user about progress in
+   ;          the execution of time-consuming routines, or the location of
+   ;          output files (e.g., log, map, plot, etc.);
+   ;
+   ;      -   If verbose > 1, messages record entering and exiting the
+   ;          routine; and
+   ;
+   ;      -   If verbose > 2, messages provide additional information
+   ;          about intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -119,13 +125,10 @@ FUNCTION find_missing_rccm_files, $
    ;  *   Error 300: An exception condition occurred in function
    ;      set_rccm_folder.pro.
    ;
-   ;  *   Error 400: An exception condition occurred in function
+   ;  *   Error 400: The output folder log_fpath is unwritable.
+   ;
+   ;  *   Error 500: An exception condition occurred in function
    ;      find_orbits_paths_dates.pro.
-   ;
-   ;  *   Error 500: The output folder log_fpath exists but is unwritable.
-   ;
-   ;  *   Error 510: An exception condition occurred in function
-   ;      is_writable.pro.
    ;
    ;  DEPENDENCIES:
    ;
@@ -176,7 +179,15 @@ FUNCTION find_missing_rccm_files, $
    ;      IDL> PRINT, rc
    ;            0
    ;
-   ;  REFERENCES: None.
+   ;  REFERENCES:
+   ;
+   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
+   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;      available from
+   ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
+   ;      10.5194/essd-2019-77).
    ;
    ;  VERSIONING:
    ;
@@ -185,9 +196,13 @@ FUNCTION find_missing_rccm_files, $
    ;  *   2019–05–12: Version 2.00 — Systematic update of all routines to
    ;      implement stricter coding standards and improve documentation.
    ;
-   ;  *   2019–05–14: Version 2.15 — Software version described in the
-   ;      paper entitled _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
+   ;  *   2019–05–07: Version 2.15 — Software version described in the
+   ;      preprint published in ESSD Discussions mentioned above.
+   ;
+   ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
+   ;      documentation standards (in particular regarding the use of
+   ;      verbose and the assignment of numeric return codes), and switch
+   ;      to 3-parts version identifiers.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -381,7 +396,7 @@ FUNCTION find_missing_rccm_files, $
       from_date, until_date, misr_orbits, $
       DEBUG = debug, EXCPT_COND = excpt_cond)
    IF (debug AND rc NE 0) THEN BEGIN
-      error_code = 400
+      error_code = 500
       excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
          ': ' + excpt_cond
       RETURN, error_code
@@ -393,38 +408,22 @@ FUNCTION find_missing_rccm_files, $
 
    ;  Set the directory address of the folder containing the log file:
       IF (KEYWORD_SET(log_folder)) THEN BEGIN
-         log_fpath = force_path_sep(log_folder, DEBUG = debug, $
+         rc = force_path_sep(log_folder, DEBUG = debug, $
             EXCPT_COND = excpt_cond)
+         log_fpath = log_folder
       ENDIF ELSE BEGIN
          log_fpath = root_dirs[3] + mp_str + PATH_SEP()
       ENDELSE
 
-   ;  Return to the calling routine with an error message if the output
-   ;  directory 'log_fpath' is not writable, and create it if it does not
-   ;  exist:
-      rc = is_writable(log_fpath, DEBUG = debug, EXCPT_COND = excpt_cond)
-      CASE rc OF
-         1: BREAK
-         0: BEGIN
-               error_code = 500
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': The output folder ' + log_fpath + $
-                  ' is unwritable.'
-               RETURN, error_code
-            END
-         -1: BEGIN
-               IF (debug) THEN BEGIN
-                  error_code = 510
-                  excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                     rout_name + ': ' + excpt_cond
-                  RETURN, error_code
-               ENDIF
-            END
-         -2: BEGIN
-               FILE_MKDIR, log_fpath
-            END
-         ELSE: BREAK
-      ENDCASE
+   ;  Create the output directory 'log_fpath' if it does not exist, and
+   ;  return to the calling routine with an error message if it is unwritable:
+      res = is_writable_dir(log_fpath, /CREATE)
+      IF (debug AND (res NE 1)) THEN BEGIN
+         error_code = 400
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+            rout_name + ': The directory log_fpath is unwritable.'
+         RETURN, error_code
+      ENDIF
 
    ;  Generate the specification of the log file:
       log_fname = 'Missing_RCCM_Orbits_' + date + '.txt'
@@ -487,7 +486,11 @@ FUNCTION find_missing_rccm_files, $
       FREE_LUN, log_unit
    ENDIF
 
-   IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
+   IF (verbose GT 0) THEN BEGIN
+      PRINT, 'The log file has been saved in'
+      PRINT, log_fspec
+   ENDIF
+   IF (verbose GT 1) THEN PRINT, 'Exiting ' + rout_name + '.'
 
    RETURN, return_code
 

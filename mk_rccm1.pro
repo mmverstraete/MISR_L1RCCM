@@ -49,11 +49,17 @@ FUNCTION mk_rccm1, $
    ;  KEYWORD PARAMETERS [INPUT/OUTPUT]:
    ;
    ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
-   ;      (> 0) or skip (0) reporting progress on the console: 1 only
-   ;      reports exiting the routine; 2 reports entering and exiting the
-   ;      routine, as well as key milestones; 3 reports entering and
-   ;      exiting the routine, and provides detailed information on the
-   ;      intermediary results.
+   ;      (> 0) or skip (0) outputting messages on the console:
+   ;
+   ;      -   If verbose > 0, messages inform the user about progress in
+   ;          the execution of time-consuming routines, or the location of
+   ;          output files (e.g., log, map, plot, etc.);
+   ;
+   ;      -   If verbose > 1, messages record entering and exiting the
+   ;          routine; and
+   ;
+   ;      -   If verbose > 2, messages provide additional information
+   ;          about intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -121,6 +127,8 @@ FUNCTION mk_rccm1, $
    ;
    ;  *   set_misr_specs.pro
    ;
+   ;  *   strcat.pro
+   ;
    ;  *   strstr.pro
    ;
    ;  REMARKS: None.
@@ -136,6 +144,14 @@ FUNCTION mk_rccm1, $
    ;      Smyth (2011) _MISR Data Products Specifications_, JPL D-13963,
    ;      REVISION S, Section 6.7.6, p. 85, Jet Propulsion Laboratory,
    ;      California Institute of Technology, Pasadena, CA, USA.
+   ;
+   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
+   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;      available from
+   ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
+   ;      10.5194/essd-2019-77).
    ;
    ;  VERSIONING:
    ;
@@ -172,8 +188,15 @@ FUNCTION mk_rccm1, $
    ;      version consistent with the published documentation.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      paper entitled _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
+   ;      preprint published in ESSD Discussions mentioned above.
+   ;
+   ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
+   ;      documentation standards (in particular regarding the use of
+   ;      verbose and the assignment of numeric return codes), and switch
+   ;      to 3-parts version identifiers.
+   ;
+   ;  *   2019–09–28: Version 2.1.1 — Update the code to use the current
+   ;      version of the function hr2lr.pro.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -293,8 +316,8 @@ FUNCTION mk_rccm1, $
    misr_orbit_str = temp[2]
    misr_block_str = temp[3]
    misr_version = temp[4]
-   mpob_str = misr_mode + '-' + misr_path_str + '-' + $
-      misr_orbit_str + '-' + misr_block_str
+   mpob_str = strcat([misr_mode, misr_path_str, misr_orbit_str, $
+      misr_block_str], '-')
 
    ;  Define and initialize rccm_1 with rccm_0:
    rccm_1 = rccm_0
@@ -305,13 +328,13 @@ FUNCTION mk_rccm1, $
 
    ;  Retrieve the 4 spectral bands for the current camera:
       blue = *radrd_ptr[cam, 0]
-      IF (misr_cams[cam] EQ 'AN') THEN blue = hr2lr(blue)
+      IF (misr_cams[cam] EQ 'AN') THEN blue = hr2lr(blue, 'Radrd')
       green = *radrd_ptr[cam, 1]
-      IF (misr_cams[cam] EQ 'AN') THEN green = hr2lr(green)
+      IF (misr_cams[cam] EQ 'AN') THEN green = hr2lr(green, 'Radrd')
       red = *radrd_ptr[cam, 2]
-      red = hr2lr(red)
+      red = hr2lr(red, 'Radrd')
       nir = *radrd_ptr[cam, 3]
-      IF (misr_cams[cam] EQ 'AN') THEN nir = hr2lr(nir)
+      IF (misr_cams[cam] EQ 'AN') THEN nir = hr2lr(nir, 'Radrd')
 
    ;  Generate a temporary 2D cloud mask for the current camera:
       cld_msk = REFORM(rccm_0[cam, *, *])
@@ -342,13 +365,13 @@ FUNCTION mk_rccm1, $
       idx = WHERE(cld_msk EQ 0B, cnt)
       n_miss_1[cam] = cnt
 
-      IF (verbose GT 1) THEN BEGIN
+      IF (verbose GT 2) THEN BEGIN
          PRINT, 'rccm_1[' + misr_cams[cam] + '] contains ' + $
             strstr(cnt) + ' missing pixels.'
       ENDIF
    ENDFOR
 
-   IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
+   IF (verbose GT 1) THEN PRINT, 'Exiting ' + rout_name + '.'
 
    RETURN, return_code
 

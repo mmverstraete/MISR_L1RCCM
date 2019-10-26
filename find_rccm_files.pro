@@ -46,11 +46,17 @@ FUNCTION find_rccm_files, $
    ;      instead of the default value.
    ;
    ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
-   ;      (> 0) or skip (0) reporting progress on the console: 1 only
-   ;      reports exiting the routine; 2 reports entering and exiting the
-   ;      routine, as well as key milestones; 3 reports entering and
-   ;      exiting the routine, and provides detailed information on the
-   ;      intermediary results.
+   ;      (> 0) or skip (0) outputting messages on the console:
+   ;
+   ;      -   If verbose > 0, messages inform the user about progress in
+   ;          the execution of time-consuming routines, or the location of
+   ;          output files (e.g., log, map, plot, etc.);
+   ;
+   ;      -   If verbose > 1, messages record entering and exiting the
+   ;          routine; and
+   ;
+   ;      -   If verbose > 2, messages provide additional information
+   ;          about intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -101,24 +107,20 @@ FUNCTION find_rccm_files, $
    ;  *   Error 210: An exception condition occurred in function
    ;      orbit2str.pro.
    ;
-   ;  *   Error 300: The input folder rccm_path exists but is unreadable.
+   ;  *   Error 300: The input folder rccm_path is not found, not a
+   ;      directory or not readable.
    ;
-   ;  *   Error 310: An exception condition occurred in function
-   ;      is_readable.pro.
-   ;
-   ;  *   Error 320: The input folder rccm_path does not exist.
-   ;
-   ;  *   Error 400: The input folder rccm_path does not contain any L1
+   ;  *   Error 310: The input folder rccm_path does not contain any L1
    ;      RCCM files for selected MISR PATH and ORBIT.
    ;
-   ;  *   Error 410: The input folder rccm_path contains fewer than 9 L1
+   ;  *   Error 320: The input folder rccm_path contains fewer than 9 L1
    ;      RCCM files for selected MISR PATH and ORBIT.
    ;
-   ;  *   Error 420: The input folder rccm_path contains more than 9 L1
+   ;  *   Error 330: The input folder rccm_path contains more than 9 L1
    ;      RCCM files for selected MISR PATH and ORBIT.
    ;
-   ;  *   Error 430: At least one of the MISR L1 RCCM files in the input
-   ;      folder rccm_path is not readable.
+   ;  *   Error 340: One of the MISR L1 RCCM files in the input folder
+   ;      rccm_path is not readable.
    ;
    ;  DEPENDENCIES:
    ;
@@ -126,15 +128,21 @@ FUNCTION find_rccm_files, $
    ;
    ;  *   chk_misr_path.pro
    ;
+   ;  *   force_path_sep.pro
+   ;
    ;  *   is_frompath.pro
    ;
    ;  *   is_numeric.pro
    ;
-   ;  *   is_readable.pro
+   ;  *   is_readable_dir.pro
+   ;
+   ;  *   is_readable_file.pro
    ;
    ;  *   orbit2str.pro
    ;
    ;  *   path2str.pro
+   ;
+   ;  *   set_misr_specs.pro
    ;
    ;  *   set_roots_vers.pro
    ;
@@ -145,7 +153,7 @@ FUNCTION find_rccm_files, $
    ;  *   NOTE 1: This function assumes that the folder rccm_path, defined
    ;      either by default or by the input keyword parameter l1b2_folder,
    ;      contains full ORBITs, i.e., that files contain data for all
-   ;      BLOCKs. Exception condition 420 may be triggered by the presence
+   ;      BLOCKs. Exception condition 330 may be triggered by the presence
    ;      of multiple subsetted files for the same MISR PATH and ORBIT.
    ;
    ;  *   NOTE 2: The RCCM file specifications are provided in the native
@@ -173,7 +181,15 @@ FUNCTION find_rccm_files, $
    ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_CA_F04_0025.hdf
    ;      /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_DA_F04_0025.hdf
    ;
-   ;  REFERENCES: None.
+   ;  REFERENCES:
+   ;
+   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
+   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;      available from
+   ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
+   ;      10.5194/essd-2019-77).
    ;
    ;  VERSIONING:
    ;
@@ -198,8 +214,12 @@ FUNCTION find_rccm_files, $
    ;      consistent with the published documentation.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      paper entitled _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
+   ;      preprint published in ESSD Discussions mentioned above.
+   ;
+   ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
+   ;      documentation standards (in particular regarding the use of
+   ;      verbose and the assignment of numeric return codes), and switch
+   ;      to 3-parts version identifiers.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -362,10 +382,12 @@ FUNCTION find_rccm_files, $
       RETURN, error_code
    ENDIF
 
-   ;  Set the directory address of the folder containing RCCM files:
+   ;  Set the directory address of the folder containing the input RCCM files
+   ;  if it has not been set previously:
    IF (KEYWORD_SET(rccm_folder)) THEN BEGIN
-      rccm_path = force_path_sep(rccm_folder, DEBUG = debug, $
+      rc = force_path_sep(rccm_folder, DEBUG = debug, $
          EXCPT_COND = excpt_cond)
+      rccm_path = rccm_folder
    ENDIF ELSE BEGIN
       rccm_path = root_dirs[1] + misr_path_str + PATH_SEP() + $
          'L1_RC' + PATH_SEP()
@@ -373,32 +395,16 @@ FUNCTION find_rccm_files, $
 
    ;  Return to the calling routine with an error message if the input
    ;  directory 'rccm_path' does not exist or is unreadable:
-   rc = is_readable(rccm_path, DEBUG = debug, EXCPT_COND = excpt_cond)
-   CASE rc OF
-      0: BEGIN
-            error_code = 300
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The input folder ' + rccm_path + $
-               ' exists but is unreadable.'
-            RETURN, error_code
-         END
-      -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 310
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
-               RETURN, error_code
-            ENDIF
-         END
-      -2: BEGIN
-            error_code = 320
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The input folder ' + rccm_path + $
-               ' does not exist.'
-            RETURN, error_code
-         END
-      ELSE: BREAK
-   ENDCASE
+   IF (debug) THEN BEGIN
+      res = is_readable_dir(rccm_path)
+      IF (res EQ 0) THEN BEGIN
+         error_code = 300
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+            rout_name + ': The input file ' + rccm_path + $
+            ' is not found, not a directory or not readable.'
+         RETURN, error_code
+      ENDIF
+   ENDIF
 
    ;  Search for the 9 L1 RCCM files implied by the given MISR Path and
    ;  Orbit input parameters:
@@ -411,7 +417,7 @@ FUNCTION find_rccm_files, $
 
    ;  Manage exception conditions:
       IF (num_files EQ 0) THEN BEGIN
-         error_code = 400
+         error_code = 310
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': Directory ' + rccm_path + $
             ' does not contain any RCCM files for MISR Path ' + $
@@ -420,7 +426,7 @@ FUNCTION find_rccm_files, $
       ENDIF
 
       IF (num_files LT 9) THEN BEGIN
-         error_code = 410
+         error_code = 320
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': Directory ' + rccm_path + ' contains fewer than 9 RCCM ' + $
             'files for MISR Path ' + misr_path_str + ' and Orbit ' + $
@@ -428,7 +434,7 @@ FUNCTION find_rccm_files, $
          RETURN, error_code
       ENDIF
       IF (num_files GT 9) THEN BEGIN
-         error_code = 420
+         error_code = 330
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': Directory ' + rccm_path + 'contains more than 9 RCCM ' + $
             'files for MISR Path ' + misr_path_str + ' and Orbit ' + $
@@ -438,11 +444,12 @@ FUNCTION find_rccm_files, $
 
    ;  Check that each of these files is readable:
       FOR i = 0, num_files - 1 DO BEGIN
-         IF (is_readable(rccm_files[i], DEBUG = debug, $
-            EXCPT_COND = excpt_cond) NE 1) THEN BEGIN
-            error_code = 430
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-               ': RCCM file ' + rccm_files[i] + ' is unreadable.'
+         res = is_readable_file(rccm_files[i])
+         IF (res EQ 0) THEN BEGIN
+            error_code = 340
+            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+               rout_name + ': The input file ' + rccm_files[i] + $
+               ' is not readable.'
             RETURN, error_code
          ENDIF
       ENDFOR
@@ -457,11 +464,11 @@ FUNCTION find_rccm_files, $
    ENDFOR
    rccm_files = temp
 
-   IF (verbose GT 1) THEN BEGIN
+   IF (verbose GT 2) THEN BEGIN
       FOR cam = 0, n_cams - 1 DO PRINT, 'rccm_files[' + strstr(cam) + $
          '] = ' + rccm_files[cam]
    ENDIF
-   IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
+   IF (verbose GT 1) THEN PRINT, 'Exiting ' + rout_name + '.'
 
    RETURN, return_code
 

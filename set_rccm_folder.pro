@@ -46,11 +46,17 @@ FUNCTION set_rccm_folder, $
    ;      instead of the default value.
    ;
    ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
-   ;      (> 0) or skip (0) reporting progress on the console: 1 only
-   ;      reports exiting the routine; 2 reports entering and exiting the
-   ;      routine, as well as key milestones; 3 reports entering and
-   ;      exiting the routine, and provides detailed information on the
-   ;      intermediary results.
+   ;      (> 0) or skip (0) outputting messages on the console:
+   ;
+   ;      -   If verbose > 0, messages inform the user about progress in
+   ;          the execution of time-consuming routines, or the location of
+   ;          output files (e.g., log, map, plot, etc.);
+   ;
+   ;      -   If verbose > 1, messages record entering and exiting the
+   ;          routine; and
+   ;
+   ;      -   If verbose > 2, messages provide additional information
+   ;          about intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -96,12 +102,7 @@ FUNCTION set_rccm_folder, $
    ;
    ;  *   Error 300: The folder rccm_path exists but is unreadable.
    ;
-   ;  *   Error 310: An exception condition occurred in function
-   ;      is_readable.pro.
-   ;
-   ;  *   Error 320: The folder rccm_path does not exist.
-   ;
-   ;  *   Error 400: The folder rccm_path does not contain any RCCM files.
+   ;  *   Error 310: The folder rccm_path does not contain any RCCM files.
    ;
    ;  DEPENDENCIES:
    ;
@@ -111,7 +112,7 @@ FUNCTION set_rccm_folder, $
    ;
    ;  *   is_numeric.pro
    ;
-   ;  *   is_readable.pro
+   ;  *   is_readable_file.pro
    ;
    ;  *   path2str.pro
    ;
@@ -133,7 +134,15 @@ FUNCTION set_rccm_folder, $
    ;      IDL> PRINT, rc
    ;             0
    ;
-   ;  REFERENCES: None.
+   ;  REFERENCES:
+   ;
+   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
+   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;      available from
+   ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
+   ;      10.5194/essd-2019-77).
    ;
    ;  VERSIONING:
    ;
@@ -143,8 +152,12 @@ FUNCTION set_rccm_folder, $
    ;      implement stricter coding standards and improve documentation.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      paper entitled _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
+   ;      preprint published in ESSD Discussions mentioned above.
+   ;
+   ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
+   ;      documentation standards (in particular regarding the use of
+   ;      verbose and the assignment of numeric return codes), and switch
+   ;      to 3-parts version identifiers.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -262,8 +275,9 @@ FUNCTION set_rccm_folder, $
       IF ((rccm AND (~KEYWORD_SET(rccm_folder)))) THEN BEGIN
          error_code = 299
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-         ': ' + excpt_cond + '. And the optional input ' + $
-         'keyword parameters rccm_folder is not specified.'
+            ': Computer is unrecognized, function set_roots_vers.pro did ' + $
+            'not assign default folder values, and the optional keyword ' + $
+            'parameter rccm_folder is not specified.'
          RETURN, error_code
       ENDIF
    ENDIF
@@ -271,8 +285,9 @@ FUNCTION set_rccm_folder, $
    ;  Set the directory address of the folder containing the input RCCM files
    ;  if it has not been set previously:
    IF (KEYWORD_SET(rccm_folder)) THEN BEGIN
-      rccm_fpath = force_path_sep(rccm_folder, DEBUG = debug, $
+      rc = force_path_sep(rccm_folder, DEBUG = debug, $
          EXCPT_COND = excpt_cond)
+      rccm_fpath = rccm_folder
    ENDIF ELSE BEGIN
       rccm_fpath = root_dirs[1] + misr_path_str + PATH_SEP() + $
          'L1_RC' + PATH_SEP()
@@ -284,33 +299,14 @@ FUNCTION set_rccm_folder, $
 
    ;  Return to the calling routine with an error message if the input
    ;  directory 'rccm_fpath' does not exist or is unreadable:
-   rc = is_readable(rccm_fpath, DEBUG = debug, EXCPT_COND = excpt_cond)
-   CASE rc OF
-      1: BREAK
-      0: BEGIN
-            error_code = 300
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The input folder ' + rccm_fpath + $
-               ' exists but is unreadable.'
-            RETURN, error_code
-         END
-      -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 310
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
-               RETURN, error_code
-            ENDIF
-         END
-      -2: BEGIN
-            error_code = 320
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The input folder ' + rccm_fpath + $
-               ' does not exist.'
-            RETURN, error_code
-         END
-      ELSE: BREAK
-   ENDCASE
+   res = is_readable_dir(rccm_fpath)
+   IF (res EQ 0) THEN BEGIN
+      error_code = 300
+      excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+         rout_name + ': The input file ' + rccm_fpath + $
+         ' is not found, not a regular file or not readable.'
+      RETURN, error_code
+   ENDIF
 
    ;  Return to the calling routine with an error message if the input
    ;  directory 'rccm_fpath' does not contain RCCM files of the specified or
@@ -318,14 +314,14 @@ FUNCTION set_rccm_folder, $
    pattern = rccm_fpath + 'MISR*GRP_RCCM_GM*' + rccm_version + '.hdf'
    rccm_files = FILE_SEARCH(pattern, COUNT = n_rccm_files)
    IF (n_rccm_files EQ 0) THEN BEGIN
-      error_code = 400
+      error_code = 310
       excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
          ': The folder ' + rccm_fpath + ' does not contain any RCCM ' + $
          'files for Version ' + rccm_version + '.'
       RETURN, error_code
    ENDIF
 
-   IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
+   IF (verbose GT 1) THEN PRINT, 'Exiting ' + rout_name + '.'
 
    RETURN, return_code
 

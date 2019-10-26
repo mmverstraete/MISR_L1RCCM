@@ -4,6 +4,9 @@ FUNCTION fix_rccm, $
    rccm, $
    RCCM_FOLDER = rccm_folder, $
    RCCM_VERSION = rccm_version, $
+   TEST_ID = test_id, $
+   FIRST_LINE = first_line, $
+   LAST_LINE = last_line, $
    LOG_IT = log_it, $
    LOG_FOLDER = log_folder, $
    SAVE_IT = save_it, $
@@ -18,7 +21,8 @@ FUNCTION fix_rccm, $
    ;  PURPOSE: This function generates a clean version of the MISR L1B2
    ;  Georectified Radiance Product (GRP) Radiometric Camera-by-camera
    ;  Cloud Mask (RCCM) data product with edge and obscured pixels duly
-   ;  flagged and missing values replaced by reasonable estimates.
+   ;  flagged and missing values replaced by reasonable estimates. It also
+   ;  optionally permits to document the performance of the process.
    ;
    ;  ALGORITHM: This function replaces missing values in the MISR L1B2
    ;  Radiometric Camera-by-camera Cloud Mask (RCCM) data product by
@@ -43,8 +47,13 @@ FUNCTION fix_rccm, $
    ;      the basis of cloudiness conditions in their immediate
    ;      neighborhood.
    ;
+   ;  This function also allows the user to artificially introduce missing
+   ;  data for the purpose of documenting the performance of the
+   ;  replacement process.
+   ;
    ;  SYNTAX: rc = fix_rccm(misr_ptr, radrd_ptr, rccm_files, rccm, $
    ;  RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $
+   ;  TEST_ID = test_id, FIRST_LINE = first_line, LAST_LINE = last_line, $
    ;  LOG_IT = log_it, LOG_FOLDER = log_folder, $
    ;  SAVE_IT = save_it, SAVE_FOLDER = save_folder, $
    ;  MAP_IT = map_it, MAP_FOLDER = map_folder, $
@@ -77,6 +86,21 @@ FUNCTION fix_rccm, $
    ;      set_roots_vers.pro): The MISR RCCM version identifier to use
    ;      instead of the default value.
    ;
+   ;  *   TEST_ID = test_id {STRING} [I] (Default value: ”): Flag to
+   ;      activate (non-empty STRING) or skip (empty STRING) artificially
+   ;      introducing missing data in the RCCM data buffer; if set, this
+   ;      keyword is used in output file names to label experiments.
+   ;
+   ;  *   FIRST_LINE = first_line {INT array of 9 elements} [I] (Default value: 9 elements set to -1):
+   ;      The index (between 0 and 127) of the first line to be replaced
+   ;      by missing data, in each of the 9 cameras. Values outside that
+   ;      range are ignored.
+   ;
+   ;  *   LAST_LINE = last_line {INT array of 9 elements} [I] (Default value: 9 elements set to -1):
+   ;      The index (between 0 and 127) of the last line to be replaced by
+   ;      missing data, in each of the 9 cameras. Values outside that
+   ;      range are ignored.
+   ;
    ;  *   LOG_IT = log_it {INT} [I] (Default value: 0): Flag to activate
    ;      (1) or skip (0) generating a log file.
    ;
@@ -102,11 +126,17 @@ FUNCTION fix_rccm, $
    ;      containing the maps.
    ;
    ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
-   ;      (> 0) or skip (0) reporting progress on the console: 1 only
-   ;      reports exiting the routine; 2 reports entering and exiting the
-   ;      routine, as well as key milestones; 3 reports entering and
-   ;      exiting the routine, and provides detailed information on the
-   ;      intermediary results.
+   ;      (> 0) or skip (0) outputting messages on the console:
+   ;
+   ;      -   If verbose > 0, messages inform the user about progress in
+   ;          the execution of time-consuming routines, or the location of
+   ;          output files (e.g., log, map, plot, etc.);
+   ;
+   ;      -   If verbose > 1, messages record entering and exiting the
+   ;          routine; and
+   ;
+   ;      -   If verbose > 2, messages provide additional information
+   ;          about intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -143,6 +173,14 @@ FUNCTION fix_rccm, $
    ;
    ;      -   255B: Fill.
    ;
+   ;      If the optional input keyword parameter TEST_ID is set to a
+   ;      non-empty string, missing data are artificially introduced in
+   ;      the RCCM data between line first_line and last_line (inclusive),
+   ;      and a confusion matrix is assembled to document how the
+   ;      reconstructed values compare with the original data. The string
+   ;      test_id is used to label the results, as well as the output
+   ;      paths and file names.
+   ;
    ;  *   If an exception condition has been detected, this function
    ;      returns a non-zero error code, and the output keyword parameter
    ;      excpt_cond contains a message about the exception condition
@@ -162,6 +200,15 @@ FUNCTION fix_rccm, $
    ;
    ;  *   Error 120: The input positional parameter radrd_ptr is not a
    ;      pointer array.
+   ;
+   ;  *   Error 130: The optional keyword parameter test_id is not of type
+   ;      STRING.
+   ;
+   ;  *   Error 140: The optional input keyword parameter test_id is set
+   ;      but the keyword parameter first_line is not set or invalid.
+   ;
+   ;  *   Error 150: The optional input keyword parameter test_id is set
+   ;      but the keyword parameter last_line is not set or invalid.
    ;
    ;  *   Error 199: An exception condition occurred in the function
    ;      set_roots_vers.pro.
@@ -185,44 +232,38 @@ FUNCTION fix_rccm, $
    ;  *   Error 300: An exception condition occurred in the function
    ;      find_rccm_files.pro.
    ;
-   ;  *   Error 400: An exception condition occurred in the function
+   ;  *   Error 400: The output folder log_path is unwritable.
+   ;
+   ;  *   Error 410: The output folder save_path is unwritable.
+   ;
+   ;  *   Error 500: An exception condition occurred in the function
    ;      mk_rccm_0.pro.
    ;
-   ;  *   Error 410: An exception condition occurred in the function
-   ;      map_rccm_block.pro while attempting to map rccm_0.
+   ;  *   Error 510: An exception condition occurred in the function
+   ;      map_rccm_block.pro while attempting to map the original rccm_0
+   ;      data.
    ;
-   ;  *   Error 420: An exception condition occurred in the function
+   ;  *   Error 512: An exception condition occurred in the function
+   ;      map_rccm_block.pro while attempting to map the artificially
+   ;      modified rccm_0 data.
+   ;
+   ;  *   Error 520: An exception condition occurred in the function
    ;      mk_rccm_1.pro.
    ;
-   ;  *   Error 430: An exception condition occurred in the function
+   ;  *   Error 530: An exception condition occurred in the function
    ;      map_rccm_block.pro while attempting to map rccm_1.
    ;
-   ;  *   Error 440: An exception condition occurred in the function
+   ;  *   Error 540: An exception condition occurred in the function
    ;      mk_rccm_2.pro.
    ;
-   ;  *   Error 450: An exception condition occurred in the function
+   ;  *   Error 550: An exception condition occurred in the function
    ;      map_rccm_block.pro while attempting to map rccm_2.
    ;
-   ;  *   Error 460: An exception condition occurred in the function
+   ;  *   Error 560: An exception condition occurred in the function
    ;      mk_rccm_3.pro.
    ;
-   ;  *   Error 470: An exception condition occurred in the function
+   ;  *   Error 570: An exception condition occurred in the function
    ;      map_rccm_block.pro while attempting to map rccm_3.
-   ;
-   ;  *   Error 500: The output folder log_path is unwritable.
-   ;
-   ;  *   Error 510: An exception condition occurred in the function
-   ;      is_writable.pro.
-   ;
-   ;  *   Error 520: The output folder map_path is unwritable.
-   ;
-   ;  *   Error 530: An exception condition occurred in the function
-   ;      is_writable.pro.
-   ;
-   ;  *   Error 540: The output folder map_path is unwritable.
-   ;
-   ;  *   Error 550: An exception condition occurred in the function
-   ;      is_writable.pro.
    ;
    ;  DEPENDENCIES:
    ;
@@ -236,9 +277,11 @@ FUNCTION fix_rccm, $
    ;
    ;  *   is_pointer.pro
    ;
-   ;  *   is_writable.pro
+   ;  *   is_writable_dir.pro
    ;
    ;  *   make_bytemap.pro
+   ;
+   ;  *   map_rccm_block.pro
    ;
    ;  *   mk_rccm0.pro
    ;
@@ -263,6 +306,8 @@ FUNCTION fix_rccm, $
    ;  *   str2orbit.pro
    ;
    ;  *   str2path.pro
+   ;
+   ;  *   strcat.pro
    ;
    ;  *   strstr.pro
    ;
@@ -289,12 +334,11 @@ FUNCTION fix_rccm, $
    ;      IDL> misr_orbit = 68050
    ;      IDL> verbose = 0
    ;      IDL> debug = 1
-   ;      IDL> rc = find_l1b2_files(misr_mode, misr_path, $
-   ;         misr_orbit, l1b2_files, $
-   ;         L1B2_FOLDER = l1b2_folder, L1B2_VERSION = l1b2_version, $
+   ;      IDL> rc = find_l1b2gm_files(misr_path, misr_orbit, l1b2gm_files, $
+   ;         L1B2GM_FOLDER = l1b2gm_folder, L1B2GM_VERSION = l1b2gm_version, $
    ;         DEBUG = debug, EXCPT_COND = excpt_cond)
    ;      IDL> misr_block = 110
-   ;      IDL> rc = heap_l1b2_block(l1b2_files, misr_block, $
+   ;      IDL> rc = heap_l1b2_block(l1b2gm_files, misr_block, $
    ;         misr_ptr, radrd_ptr, brf_ptr, rdqi_ptr, $
    ;         DEBUG = debug, EXCPT_COND = excpt_cond)
    ;      IDL> log_it = 1
@@ -321,6 +365,14 @@ FUNCTION fix_rccm, $
    ;      1 Cloud Detection Algorithm Theoretical Basis_, Technical Report
    ;      JPL D-13397, REVISION B, Jet Propulsion Laboratory, California
    ;      Institute of Technology, Pasadena, CA, USA.
+   ;
+   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
+   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;      available from
+   ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
+   ;      10.5194/essd-2019-77).
    ;
    ;  VERSIONING:
    ;
@@ -366,8 +418,23 @@ FUNCTION fix_rccm, $
    ;      line 943.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      paper entitled _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
+   ;      preprint published in ESSD Discussions mentioned above.
+   ;
+   ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
+   ;      documentation standards (in particular regarding the use of
+   ;      verbose and the assignment of numeric return codes), and switch
+   ;      to 3-parts version identifiers.
+   ;
+   ;  *   2019–09–10: Version 2.1.1 — Add arguments and code to
+   ;      artificially insert missing data in the RCCM data buffer, and
+   ;      build a confusion matrix to document the performance of the
+   ;      replacement algorithm.
+   ;
+   ;  *   2019–09–24: Version 2.1.2 — Update the code (1) to map the
+   ;      original RCCM data before artificially inserting additional
+   ;      missing data, (2) to record the confusion matrices after
+   ;      mk_rccm2 and mk_rccm3 in the log file, and (3) to modify the
+   ;      default map output directory.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -417,6 +484,13 @@ FUNCTION fix_rccm, $
    return_code = 0
 
    ;  Set the default values of flags and essential output keyword parameters:
+   IF (~KEYWORD_SET(test_id)) THEN BEGIN
+      test_id = ''
+      IF (test_id EQ '') THEN BEGIN
+         first_line = MAKE_ARRAY(9, 4, /INTEGER, VALUE = -1)
+         last_line = MAKE_ARRAY(9, 4, /INTEGER, VALUE = -1)
+      ENDIF
+   ENDIF
    IF (KEYWORD_SET(log_it)) THEN log_it = 1 ELSE log_it = 0
    IF (KEYWORD_SET(save_it)) THEN save_it = 1 ELSE save_it = 0
    IF (KEYWORD_SET(map_it)) THEN map_it = 1 ELSE map_it = 0
@@ -464,6 +538,43 @@ FUNCTION fix_rccm, $
             'pointer array.'
          RETURN, error_code
       ENDIF
+
+   ;  Return to the calling routine with an error message if the optional input
+   ;  keyword parameter 'test_id' is set but not as a STRING:
+      IF (KEYWORD_SET(test_id) AND (is_string(test_id) NE 1)) THEN BEGIN
+         error_code = 130
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
+            ': The optional keyword parameter test_id is not of type STRING.'
+         RETURN, error_code
+      ENDIF
+
+   ;  Return to the calling routine with an error message if the optional input
+   ;  keyword parameter 'test_id' is set and the keyword parameter 'first_line'
+   ;  is not set, or not an INT array of 9 elements:
+      IF ((test_id NE '') AND $
+         ((is_integer(first_line) NE 1) OR $
+         (is_array(first_line) NE 1) OR $
+         (N_ELEMENTS(first_line) NE 9))) THEN BEGIN
+         error_code = 140
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
+            ': The optional input keyword parameter test_id is set but ' + $
+            'the keyword parameter first_line is not set or invalid.'
+         RETURN, error_code
+      ENDIF
+
+   ;  Return to the calling routine with an error message if the optional input
+   ;  keyword parameter 'test_id' is set and the keyword parameter 'last_line'
+   ;  is not set, or not an INT array of 9 elements:
+      IF ((test_id NE '') AND $
+         ((is_integer(last_line) NE 1) OR $
+         (is_array(last_line) NE 1) OR $
+         (N_ELEMENTS(last_line) NE 9))) THEN BEGIN
+         error_code = 150
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
+            ': The optional input keyword parameter test_id is set but ' + $
+            'the keyword parameter last_line is not set or invalid.'
+         RETURN, error_code
+      ENDIF
    ENDIF
 
    ;  Set the MISR specifications:
@@ -504,13 +615,14 @@ FUNCTION fix_rccm, $
    ;  Get today's date and time:
    date_time = today(FMT = 'nice')
 
-   ;  Retrieve the MISR Mode, Path, Orbit, Block and Version identifiers:
-   temp = *misr_ptr
-   misr_mode = temp[0]
-   misr_path_str = temp[1]
-   misr_orbit_str = temp[2]
-   misr_block_str = temp[3]
-   misr_version = temp[4]
+   ;  Retrieve the MISR Mode, Path, Orbit, Block and Version identifiers from
+   ;  the input positional parameter 'misr_ptr':
+   misr_meta = *misr_ptr
+   misr_mode = misr_meta[0]
+   misr_path_str = misr_meta[1]
+   misr_orbit_str = misr_meta[2]
+   misr_block_str = misr_meta[3]
+   misr_version = misr_meta[4]
 
    ;  Return to the calling routine with an error message if 'misr_mode' is
    ;  not 'GM', as all RCCM products are only available at the reduced
@@ -522,10 +634,10 @@ FUNCTION fix_rccm, $
       RETURN, error_code
    ENDIF
 
-   mpob_str = misr_mode + '-' + misr_path_str + '-' + $
-      misr_orbit_str + '-' + misr_block_str
+   pob_str = strcat([misr_path_str, misr_orbit_str, misr_block_str], '-')
+   mpob_str = strcat([misr_mode, pob_str], '-')
 
-   ;  Generate the MISR Path and Orbit numbers:
+   ;  Generate the MISR Path, Orbit and Block numbers:
    rc = str2path(misr_path_str, misr_path, $
       DEBUG = debug, EXCPT_COND = excpt_cond)
    rc = str2orbit(misr_orbit_str, misr_orbit, $
@@ -573,9 +685,10 @@ FUNCTION fix_rccm, $
          (map_it AND (~KEYWORD_SET(map_folder)))) THEN BEGIN
          error_code = 299
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-            ': ' + excpt_cond + ' And at least one of the optional ' + $
-            'input keyword parameters log_folder, save_folder ' + $
-            'or map_folder is not set.'
+            ': Computer is unrecognized, function set_roots_vers.pro did ' + $
+            'not assign default folder values, and at least one of the ' + $
+            'optional keyword parameters log_folder, save_folder, ' + $
+            'map_folder is not specified.'
          RETURN, error_code
       ENDIF
    ENDIF
@@ -584,7 +697,7 @@ FUNCTION fix_rccm, $
    ;  the native order: DF, CF, ..., AN, ..., CA, DA:
    rc = find_rccm_files(misr_path, misr_orbit, rccm_files, $
       RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $
-      DEBUG = debug, EXCPT_COND = excpt_cond)
+      VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
    IF (debug AND (rc NE 0)) THEN BEGIN
       error_code = 300
       excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
@@ -596,40 +709,32 @@ FUNCTION fix_rccm, $
    IF (log_it) THEN BEGIN
       IF (KEYWORD_SET(log_folder)) THEN BEGIN
          log_path = log_folder
-         log_path = force_path_sep(log_path, DEBUG = debug, $
-            EXCPT_COND = excpt_cond)
       ENDIF ELSE BEGIN
-         log_path = root_dirs[3] + mpob_str + '/RCCM' + PATH_SEP()
+         log_path = root_dirs[3] + pob_str + PATH_SEP() + $
+            'GM' + PATH_SEP() + 'RCCM'
+
+   ;  Update the log path if this is a test run:
+         IF (test_id NE '') THEN log_path = log_path + '_' + test_id
       ENDELSE
+      rc = force_path_sep(log_path)
 
-   ;  Return to the calling routine with an error message if the output
-   ;  directory 'log_path' is not writable, and create it if it does not
-   ;  exist:
-      rc = is_writable(log_path, DEBUG = debug, EXCPT_COND = excpt_cond)
-      CASE rc OF
-         0: BEGIN
-               error_code = 500
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': The output folder ' + log_path + $
-                  ' is unwritable.'
-               RETURN, error_code
-            END
-         -1: BEGIN
-               IF (debug) THEN BEGIN
-                  error_code = 510
-                  excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                     rout_name + ': ' + excpt_cond
-                  RETURN, error_code
-               ENDIF
-            END
-         -2: BEGIN
-               FILE_MKDIR, log_path
-            END
-         ELSE: BREAK
-      ENDCASE
+   ;  Create the output directory 'log_path' if it does not exist, and
+   ;  return to the calling routine with an error message if it is unwritable:
+      res = is_writable_dir(log_path, /CREATE)
+      IF (debug AND (res NE 1)) THEN BEGIN
+         error_code = 400
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+            rout_name + ': The directory log_path is unwritable.'
+         RETURN, error_code
+      ENDIF
 
-      log_name = 'Log_RCCM_cldm_' + mpob_str + '_' + acquis_date + '_' + $
-         date + '.txt'
+      IF (test_id EQ '') THEN BEGIN
+         log_name = 'Log_RCCM_cldm_' + mpob_str + '_' + acquis_date + '_' + $
+            date + '.txt'
+      ENDIF ELSE BEGIN
+         log_name = 'Log_RCCM_cldm_' + mpob_str + '_' + acquis_date + '_' + $
+            date + '_' + test_id + '.txt'
+      ENDELSE
       log_spec = log_path + log_name
 
       fmt1 = '(A30, A)'
@@ -646,63 +751,142 @@ FUNCTION fix_rccm, $
       PRINTF, log_unit, 'Saved on: ', date_time, FORMAT = fmt1
       PRINTF, log_unit
 
-      PRINTF, log_unit, 'Content: ', 'Log on the updating and upgrading', $
-         FORMAT = fmt1
-      PRINTF, log_unit, '', '   of the standard MISR RCCM product.', $
-         FORMAT = fmt1
+      PRINTF, log_unit, 'Content: ', 'Log on the updating and upgrading ' + $
+         'of the standard MISR RCCM product.', FORMAT = fmt1
       PRINTF, log_unit, 'MISR Path: ', strstr(misr_path), FORMAT = fmt1
       PRINTF, log_unit, 'MISR Orbit: ', strstr(misr_orbit), FORMAT = fmt1
       PRINTF, log_unit, 'MISR Block: ', strstr(misr_block), FORMAT = fmt1
       PRINTF, log_unit
    ENDIF
 
-   ;  === Step 0: Get the original data =======================================
+   ;  === Step 0a: Get the original data ======================================
    ;  Retrieve the original MISR RCCM data and store it in the array 'rccm_0':
    rc = mk_rccm0(rccm_files, misr_block, rccm_0, n_miss_0, $
       VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
    IF (debug AND (rc NE 0)) THEN BEGIN
-      error_code = 400
+      error_code = 500
       excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
          ': ' + excpt_cond
       RETURN, error_code
    ENDIF
 
-   ;  Record the outcome in the log if required:
-   IF (log_it) THEN BEGIN
-      PRINTF, log_unit, 'Outcome of mk_rccm0: ', '', FORMAT = fmt1
-      PRINTF, log_unit, '', 'Miss (0B)', 'Cld-Hi (1B)', $
-            'Cld-Lo (2B)', 'Clr-Lo (3B)', 'Clr-Hi (4B)', 'Fill (255B)', $
-            'Total', FORMAT = fmt2
-      FOR cam = 0, n_cams - 1 DO BEGIN
-         idx_0 = WHERE(rccm_0[cam, *, *] EQ 0B, count_0)
-         idx_1 = WHERE(rccm_0[cam, *, *] EQ 1B, count_1)
-         idx_2 = WHERE(rccm_0[cam, *, *] EQ 2B, count_2)
-         idx_3 = WHERE(rccm_0[cam, *, *] EQ 3B, count_3)
-         idx_4 = WHERE(rccm_0[cam, *, *] EQ 4B, count_4)
-         idx_255 = WHERE(rccm_0[cam, *, *] EQ 255B, count_255)
-         totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + count_255
-         PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
-            count_4, count_255, totcnt, FORMAT = fmt3
-      ENDFOR
-      PRINTF, log_unit
-   ENDIF
-
-   ;  Set the expected RCCM values and the colors in which they should be
-   ;  mapped:
-   good_vals = [0B, 1B, 2B, 3B, 4B, 253B, 254B, 255B]
-   good_vals_cols = ['red', 'white', 'gray', 'aqua', 'blue', 'gold', $
-      'black', 'red']
-
-   ;  Map the rccm_0 product if required:
+   ;  Map the original rccm_0 product if required:
    IF (map_it) THEN BEGIN
       rccm_logo = 'rccm0'
       rccm_lgnd = ''
       rc = map_rccm_block(misr_path, misr_orbit, misr_block, $
-         rccm_0, rccm_logo, rccm_lgnd, $
+         rccm_0, rccm_logo, rccm_lgnd, TEST_ID = test_id, $
          MAP_IT = map_it, MAP_FOLDER = map_folder, $
          DEBUG = debug, EXCPT_COND = excpt_cond)
       IF (debug AND (rc NE 0)) THEN BEGIN
-         error_code = 410
+         error_code = 510
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
+            ': ' + excpt_cond
+         RETURN, error_code
+      ENDIF
+   ENDIF
+
+   ;  === Step 0b: Optionally add missing data for testing purposes ===========
+   IF (test_id NE '') THEN BEGIN
+
+   ;  Set aside the original version of the data to allow comparison with the
+   ;  reconstructed version later:
+      ori_data = rccm_0
+
+   ;  Loop over the cameras that must be artificially contaminated with
+   ;  missing values:
+      FOR cam = 0, n_cams - 1 DO BEGIN
+
+   ;  Skip the current camera if either 'first_line' or 'last_line' lie outside
+   ;  the range [0, 127] (the number of lines in a Block of RCCM data):
+         IF ((first_line[cam] LT 0) OR (first_line[cam] GT 127) OR $
+            (last_line[cam] LT 0) OR (last_line[cam] GT 127)) $
+            THEN CONTINUE
+
+   ;  Skip the current camera if 'first_line' exceeds 'last_line':
+         IF (first_line[cam] GT last_line[cam]) THEN CONTINUE
+
+   ;  Insert missing data in the current data buffer:
+         FOR line = first_line[cam], last_line[cam] DO BEGIN
+            rccm_0[cam, *, line] = 0B
+         ENDFOR
+
+   ;  Recalculate the number of missing values in the current camera:
+         idx = WHERE(rccm_0 EQ 0B, cnt)
+         n_miss_0[cam] = cnt
+      ENDFOR
+
+      IF (log_it) THEN BEGIN
+         PRINTF, log_unit, 'TEST_ID: ', test_id, FORMAT = fmt1
+         PRINTF, log_unit, '', 'Missing data have been ' + $
+            'artificially added as follows:', FORMAT = fmt1
+         fl = strcat(strstr(first_line), ', ')
+         PRINTF, log_unit, 'First_line: ', fl, FORMAT = fmt1
+         ll = strcat(strstr(last_line), ', ')
+         PRINTF, log_unit, 'Last_line: ', ll, FORMAT = fmt1
+         PRINTF, log_unit
+      ENDIF
+   ENDIF
+
+   ;  Record the outcome in the log if required:
+   IF (log_it) THEN BEGIN
+
+   ;  Define category accumulators:
+      tot_miss = 0L
+      tot_cld_hi = 0L
+      tot_cld_lo = 0L
+      tot_clr_lo = 0L
+      tot_clr_hi = 0L
+      tot_fill = 0L
+      tot_tot = 0L
+
+      PRINTF, log_unit, 'Outcome of mk_rccm0: ', '', FORMAT = fmt1
+      PRINTF, log_unit, '', 'Miss (0B)', 'Cld-Hi (1B)', $
+         'Cld-Lo (2B)', 'Clr-Lo (3B)', 'Clr-Hi (4B)', 'Fill (255B)', $
+         'Total', FORMAT = fmt2
+      FOR cam = 0, n_cams - 1 DO BEGIN
+         idx_0 = WHERE(rccm_0[cam, *, *] EQ 0B, count_0)
+         IF (count_0 EQ -1) THEN count_0 = 0L
+         idx_1 = WHERE(rccm_0[cam, *, *] EQ 1B, count_1)
+         IF (count_1 EQ -1) THEN count_1 = 0L
+         idx_2 = WHERE(rccm_0[cam, *, *] EQ 2B, count_2)
+         IF (count_2 EQ -1) THEN count_2 = 0L
+         idx_3 = WHERE(rccm_0[cam, *, *] EQ 3B, count_3)
+         IF (count_3 EQ -1) THEN count_3 = 0L
+         idx_4 = WHERE(rccm_0[cam, *, *] EQ 4B, count_4)
+         IF (count_4 EQ -1) THEN count_4 = 0L
+         idx_255 = WHERE(rccm_0[cam, *, *] EQ 255B, count_255)
+         IF (count_255 EQ -1) THEN count_255 = 0L
+         totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + count_255
+         PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
+            count_4, count_255, totcnt, FORMAT = fmt3
+
+   ;  Update the individual accumulators:
+         tot_miss = tot_miss + count_0
+         tot_cld_hi = tot_cld_hi + count_1
+         tot_cld_lo = tot_cld_lo + count_2
+         tot_clr_lo = tot_clr_lo + count_3
+         tot_clr_hi = tot_clr_hi + count_4
+         tot_fill = tot_fill + count_255
+         tot_tot = tot_tot + count_0 + count_1 + count_2 + $
+            count_3 + count_4 + count_255
+      ENDFOR
+      PRINTF, log_unit, 'Totals', tot_miss, tot_cld_hi, tot_cld_lo, $
+         tot_clr_lo, tot_clr_hi, tot_fill, tot_tot, FORMAT = fmt3
+      PRINTF, log_unit
+   ENDIF
+
+   ;  Map the modified rccm_0 product if required:
+   IF (map_it AND (test_id NE '')) THEN BEGIN
+      rccm_logo = 'rccm0_test'
+      rccm_lgnd = ' Additional missing values have been artificially ' + $
+         'introduced for testing purposes. '
+      rc = map_rccm_block(misr_path, misr_orbit, misr_block, $
+         rccm_0, rccm_logo, rccm_lgnd, TEST_ID = test_id, $
+         MAP_IT = map_it, MAP_FOLDER = map_folder, $
+         DEBUG = debug, EXCPT_COND = excpt_cond)
+      IF (debug AND (rc NE 0)) THEN BEGIN
+         error_code = 512
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': ' + excpt_cond
          RETURN, error_code
@@ -714,7 +898,7 @@ FUNCTION fix_rccm, $
    rc = mk_rccm1(rccm_0, misr_ptr, radrd_ptr, rccm_1, n_miss_1, $
       VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
    IF (debug AND (rc NE 0)) THEN BEGIN
-      error_code = 420
+      error_code = 520
       excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
          ': ' + excpt_cond
       RETURN, error_code
@@ -722,24 +906,59 @@ FUNCTION fix_rccm, $
 
    ;  Record the outcome in the log if required:
    IF (log_it) THEN BEGIN
+
+   ;  Define category accumulators:
+      tot_miss = 0L
+      tot_cld_hi = 0L
+      tot_cld_lo = 0L
+      tot_clr_lo = 0L
+      tot_clr_hi = 0L
+      tot_obsc = 0L
+      tot_edge = 0L
+      tot_fill = 0L
+      tot_tot = 0L
+
       PRINTF, log_unit, 'Outcome of mk_rccm1: ', '', FORMAT = fmt1
       PRINTF, log_unit, '', 'Miss (0B)', 'Cld-Hi (1B)', $
          'Cld-Lo (2B)', 'Clr-Lo (3B)', 'Clr-Hi (4B)', 'Obsc (253B)', $
          'Edge (254B)', 'Fill (255B)', 'Total', FORMAT = fmt2
       FOR cam = 0, n_cams - 1 DO BEGIN
          idx_0 = WHERE(rccm_1[cam, *, *] EQ 0B, count_0)
+         IF (count_0 EQ -1) THEN count_0 = 0L
          idx_1 = WHERE(rccm_1[cam, *, *] EQ 1B, count_1)
+         IF (count_1 EQ -1) THEN count_1 = 0L
          idx_2 = WHERE(rccm_1[cam, *, *] EQ 2B, count_2)
+         IF (count_2 EQ -1) THEN count_2 = 0L
          idx_3 = WHERE(rccm_1[cam, *, *] EQ 3B, count_3)
+         IF (count_3 EQ -1) THEN count_3 = 0L
          idx_4 = WHERE(rccm_1[cam, *, *] EQ 4B, count_4)
+         IF (count_4 EQ -1) THEN count_4 = 0L
          idx_253 = WHERE(rccm_1[cam, *, *] EQ 253B, count_253)
+         IF (count_253 EQ -1) THEN count_253 = 0L
          idx_254 = WHERE(rccm_1[cam, *, *] EQ 254B, count_254)
+         IF (count_254 EQ -1) THEN count_254 = 0L
          idx_255 = WHERE(rccm_1[cam, *, *] EQ 255B, count_255)
+         IF (count_255 EQ -1) THEN count_255 = 0L
          totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + $
             count_253 + count_254 + count_255
          PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
             count_4, count_253, count_254, count_255, totcnt, FORMAT = fmt3
+
+   ;  Update the individual accumulators:
+         tot_miss = tot_miss + count_0
+         tot_cld_hi = tot_cld_hi + count_1
+         tot_cld_lo = tot_cld_lo + count_2
+         tot_clr_lo = tot_clr_lo + count_3
+         tot_clr_hi = tot_clr_hi + count_4
+         tot_obsc = tot_obsc + count_253
+         tot_edge = tot_edge + count_254
+         tot_fill = tot_fill + count_255
+         tot_tot = tot_tot + count_0 + count_1 + count_2 + $
+            count_3 + count_4 + count_253 + count_254 + count_255
       ENDFOR
+      PRINTF, log_unit, 'Totals', tot_miss, tot_cld_hi, tot_cld_lo, $
+         tot_clr_lo, tot_clr_hi, tot_obsc, tot_edge, tot_fill, tot_tot, $
+         FORMAT = fmt3
       PRINTF, log_unit
    ENDIF
 
@@ -749,11 +968,11 @@ FUNCTION fix_rccm, $
       rccm_lgnd = ' Obscured and edge have been flagged with ' + $
       'specific values to distinguish them from missing values. '
       rc = map_rccm_block(misr_path, misr_orbit, misr_block, $
-         rccm_1, rccm_logo, rccm_lgnd, $
+         rccm_1, rccm_logo, rccm_lgnd, TEST_ID = test_id, $
          MAP_IT = map_it, MAP_FOLDER = map_folder, $
          DEBUG = debug, EXCPT_COND = excpt_cond)
       IF (debug AND (rc NE 0)) THEN BEGIN
-         error_code = 430
+         error_code = 530
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': ' + excpt_cond
          RETURN, error_code
@@ -768,16 +987,18 @@ FUNCTION fix_rccm, $
             'any missing values.'
          CLOSE, log_unit
          FREE_LUN, log_unit
+         IF (verbose GT 0) THEN PRINT, 'Saved ' + log_spec
+         RETURN, return_code
       ENDIF
    ENDIF
 
-   ;  === Step 2: Replace missing values based on neighboring cameras =========
+   ;  === Step 2a: Replace missing values based on neighboring cameras ========
    ;  Call 'mk_rccm2' if there are missing values in 'rccm_1':
    IF (MAX(n_miss_1) GT 0) THEN BEGIN
       rc = mk_rccm2(rccm_1, n_miss_1, rccm_2, n_miss_2, $
          VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
       IF (debug AND (rc NE 0)) THEN BEGIN
-         error_code = 440
+         error_code = 540
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': ' + excpt_cond
          RETURN, error_code
@@ -788,24 +1009,60 @@ FUNCTION fix_rccm, $
 
    ;  Record the outcome in the log if required:
    IF (log_it) THEN BEGIN
+
+   ;  Define category accumulators:
+      tot_miss = 0L
+      tot_cld_hi = 0L
+      tot_cld_lo = 0L
+      tot_clr_lo = 0L
+      tot_clr_hi = 0L
+      tot_obsc = 0L
+      tot_edge = 0L
+      tot_fill = 0L
+      tot_tot = 0L
+
       PRINTF, log_unit, 'Outcome of mk_rccm2: ', '', FORMAT = fmt1
       PRINTF, log_unit, '', 'Miss (0B)', 'Cld-Hi (1B)', $
          'Cld-Lo (2B)', 'Clr-Lo (3B)', 'Clr-Hi (4B)', 'Obsc (253B)', $
          'Edge (254B)', 'Fill (255B)', 'Total', FORMAT = fmt2
       FOR cam = 0, n_cams - 1 DO BEGIN
          idx_0 = WHERE(rccm_2[cam, *, *] EQ 0B, count_0)
+         IF (count_0 EQ -1) THEN count_0 = 0L
          idx_1 = WHERE(rccm_2[cam, *, *] EQ 1B, count_1)
+         IF (count_1 EQ -1) THEN count_1 = 0L
          idx_2 = WHERE(rccm_2[cam, *, *] EQ 2B, count_2)
+         IF (count_2 EQ -1) THEN count_2 = 0L
          idx_3 = WHERE(rccm_2[cam, *, *] EQ 3B, count_3)
+         IF (count_3 EQ -1) THEN count_3 = 0L
          idx_4 = WHERE(rccm_2[cam, *, *] EQ 4B, count_4)
+         IF (count_4 EQ -1) THEN count_4 = 0L
          idx_253 = WHERE(rccm_2[cam, *, *] EQ 253B, count_253)
+         IF (count_253 EQ -1) THEN count_253 = 0L
          idx_254 = WHERE(rccm_2[cam, *, *] EQ 254B, count_254)
+         IF (count_254 EQ -1) THEN count_254 = 0L
          idx_255 = WHERE(rccm_2[cam, *, *] EQ 255B, count_255)
-         totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + $
-            count_253 + count_254 + count_255
+         IF (count_255 EQ -1) THEN count_255 = 0L
+         totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + count_255
          PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
             count_4, count_253, count_254, count_255, totcnt, FORMAT = fmt3
+         totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + $
+            count_253 + count_254 + count_255
+
+   ;  Update the individual accumulators:
+         tot_miss = tot_miss + count_0
+         tot_cld_hi = tot_cld_hi + count_1
+         tot_cld_lo = tot_cld_lo + count_2
+         tot_clr_lo = tot_clr_lo + count_3
+         tot_clr_hi = tot_clr_hi + count_4
+         tot_obsc = tot_obsc + count_253
+         tot_edge = tot_edge + count_254
+         tot_fill = tot_fill + count_255
+         tot_tot = tot_tot + count_0 + count_1 + count_2 + $
+            count_3 + count_4 + count_253 + count_254 + count_255
       ENDFOR
+      PRINTF, log_unit, 'Totals', tot_miss, tot_cld_hi, tot_cld_lo, $
+         tot_clr_lo, tot_clr_hi, tot_obsc, tot_edge, tot_fill, tot_tot, $
+         FORMAT = fmt3
       PRINTF, log_unit
    ENDIF
 
@@ -817,18 +1074,103 @@ FUNCTION fix_rccm, $
       'on the cloudiness level of the 2 neighboring cameras, wherever ' + $
       'they report identical values.'
       rc = map_rccm_block(misr_path, misr_orbit, misr_block, $
-         rccm_2, rccm_logo, rccm_lgnd, $
+         rccm_2, rccm_logo, rccm_lgnd, TEST_ID = test_id, $
          MAP_IT = map_it, MAP_FOLDER = map_folder, $
          DEBUG = debug, EXCPT_COND = excpt_cond)
       IF (debug AND (rc NE 0)) THEN BEGIN
-         error_code = 450
+         error_code = 550
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': ' + excpt_cond
          RETURN, error_code
       ENDIF
    ENDIF
 
-   ;  Return to the calling routine if there are no missing values:
+   ;  === Step 2b: Evaluate the mk_rccm2 replacement algorithm ================
+   IF (test_id NE '') THEN BEGIN
+
+      IF (log_it) THEN BEGIN
+         PRINTF, log_unit, 'Confusion matrix after: ', 'mk_rccm2', $
+            FORMAT = fmt1
+      ENDIF
+
+   ;  Define the confusion matrix:
+      conf_mat = MAKE_ARRAY(9, 5, 5, /LONG, VALUE = 0)
+
+   ;  Loop over the cameras that have been artificially modified:
+      FOR cam = 0, n_cams - 1 DO BEGIN
+         IF ((first_line[cam] LT 0) OR (first_line[cam] GT 127) OR $
+            (last_line[cam] LT 0) OR (last_line[cam] GT 127)) $
+            THEN CONTINUE
+
+   ;  Loop over the lines that have been artificially modified:
+         FOR line = first_line[cam], last_line[cam] DO BEGIN
+
+   ;  Loop over the samples in those lines:
+            FOR sample = 0, 511 DO BEGIN
+
+   ;  Retrieve the original and the reconstructed values:
+               ori = ori_data[cam, sample, line]
+               new = rccm_2[cam, sample, line]
+
+   ;  Accumulate the performance statistics (for locations that are observable
+   ;  in principle) in the confusion matrix:
+               IF ((new GT 0) AND (new LT 5)) $
+                  THEN conf_mat[cam, ori, new]++
+            ENDFOR
+         ENDFOR
+
+   ;  Record the number of processed values:
+         n_proc = LONG(TOTAL(conf_mat[cam, *, *]))
+
+   ;  Save the confusion matrix for the current camera in the log file:
+         IF (log_it) THEN BEGIN
+            fmt4 = '(5A12)'
+            fmt5 = '(A12, 4I12)'
+            PRINTF, log_unit, 'Test results for: ', 'Camera ' + cams[cam], $
+               FORMAT = fmt1
+            PRINTF, log_unit, 'N = ' + strstr(n_proc), 'Ori = 1', 'Ori = 2', $
+               'Ori = 3', 'Ori = 4', FORMAT = fmt4
+            PRINTF, log_unit, 'New = 1', conf_mat[cam, 1, 1], $
+               conf_mat[cam, 2, 1], conf_mat[cam, 3, 1], $
+               conf_mat[cam, 4, 1], FORMAT = fmt5
+            PRINTF, log_unit, 'New = 2', conf_mat[cam, 1, 2], $
+               conf_mat[cam, 2, 2], conf_mat[cam, 3, 2], $
+               conf_mat[cam, 4, 2], FORMAT = fmt5
+            PRINTF, log_unit, 'New = 3', conf_mat[cam, 1, 3], $
+               conf_mat[cam, 2, 3], conf_mat[cam, 3, 3], $
+               conf_mat[cam, 4, 3], FORMAT = fmt5
+            PRINTF, log_unit, 'New = 4', conf_mat[cam, 1, 4], $
+               conf_mat[cam, 2, 4], conf_mat[cam, 3, 4], $
+               conf_mat[cam, 4, 4], FORMAT = fmt5
+            PRINTF, log_unit
+            correct = conf_mat[cam, 1, 1] + conf_mat[cam, 2, 2] + $
+               conf_mat[cam, 3, 3] + conf_mat[cam, 4, 4]
+            PRINTF, log_unit, 'Correct assignments: ', strstr(correct) + $
+               ' [' + strstr(ROUND(100 * correct/n_proc)) + $
+               '% of missing values]'
+            approx_cld = conf_mat[cam, 1, 1] + conf_mat[cam, 1, 2] + $
+               conf_mat[cam, 2, 1] + conf_mat[cam, 2, 2]
+            PRINTF, log_unit, 'Cloudy assignments: ', strstr(approx_cld) + $
+               ' [' + strstr(ROUND(100 * approx_cld/n_proc)) + $
+               '% of missing values]'
+            approx_clr = conf_mat[cam, 3, 3] + conf_mat[cam, 3, 4] + $
+               conf_mat[cam, 4, 3] + conf_mat[cam, 4, 4]
+            PRINTF, log_unit, 'Clear assignments: ', strstr(approx_clr) + $
+               ' [' + strstr(ROUND(100 * approx_clr/n_proc)) + $
+               '% of missing values]'
+            wrong = conf_mat[cam, 1, 3] + conf_mat[cam, 1, 4] + $
+               conf_mat[cam, 2, 3] + conf_mat[cam, 2, 4] + $
+               conf_mat[cam, 3, 1] + conf_mat[cam, 3, 2] + $
+               conf_mat[cam, 4, 1] + conf_mat[cam, 4, 2]
+            PRINTF, log_unit, 'Wrong assignments: ', strstr(wrong) + $
+               ' [' + strstr(ROUND(100 * wrong/n_proc)) + $
+               '% of missing values]'
+            PRINTF, log_unit
+         ENDIF
+      ENDFOR
+   ENDIF
+
+   ;  Return to the calling routine if there are no more missing values:
    IF (TOTAL(n_miss_2) EQ 0) THEN BEGIN
       rccm = rccm_2
       IF (log_it) THEN BEGIN
@@ -836,16 +1178,18 @@ FUNCTION fix_rccm, $
             'any missing values.'
          CLOSE, log_unit
          FREE_LUN, log_unit
+         IF (verbose GT 0) THEN PRINT, 'Saved ' + log_spec
+         RETURN, return_code
       ENDIF
    ENDIF
 
-   ;  === Step 3: Replace missing values based on neighboring pixels ==========
+   ;  === Step 3a: Replace missing values based on neighboring pixels =========
    ;  Call 'mk_rccm3' if there are missing values in 'rccm_2':
    IF (MAX(n_miss_2) GT 0) THEN BEGIN
       rc = mk_rccm3(rccm_2, rccm_3, n_miss_3, VERBOSE = verbose, $
          DEBUG = debug, EXCPT_COND = excpt_cond)
       IF (debug AND (rc NE 0)) THEN BEGIN
-         error_code = 460
+         error_code = 560
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': ' + excpt_cond
          RETURN, error_code
@@ -857,24 +1201,59 @@ FUNCTION fix_rccm, $
 
    ;  Record the outcome in the log if required:
    IF (log_it) THEN BEGIN
+
+   ;  Define category accumulators:
+      tot_miss = 0L
+      tot_cld_hi = 0L
+      tot_cld_lo = 0L
+      tot_clr_lo = 0L
+      tot_clr_hi = 0L
+      tot_obsc = 0L
+      tot_edge = 0L
+      tot_fill = 0L
+      tot_tot = 0L
+
       PRINTF, log_unit, 'Outcome of mk_rccm3: ', '', FORMAT = fmt1
       PRINTF, log_unit, '', 'Miss (0B)', 'Cld-Hi (1B)', $
          'Cld-Lo (2B)', 'Clr-Lo (3B)', 'Clr-Hi (4B)', 'Obsc (253B)', $
          'Edge (254B)', 'Fill (255B)', 'Total', FORMAT = fmt2
       FOR cam = 0, n_cams - 1 DO BEGIN
          idx_0 = WHERE(rccm_3[cam, *, *] EQ 0B, count_0)
+         IF (count_0 EQ -1) THEN count_0 = 0L
          idx_1 = WHERE(rccm_3[cam, *, *] EQ 1B, count_1)
+         IF (count_1 EQ -1) THEN count_1 = 0L
          idx_2 = WHERE(rccm_3[cam, *, *] EQ 2B, count_2)
+         IF (count_2 EQ -1) THEN count_2 = 0L
          idx_3 = WHERE(rccm_3[cam, *, *] EQ 3B, count_3)
+         IF (count_3 EQ -1) THEN count_3 = 0L
          idx_4 = WHERE(rccm_3[cam, *, *] EQ 4B, count_4)
+         IF (count_4 EQ -1) THEN count_4 = 0L
          idx_253 = WHERE(rccm_3[cam, *, *] EQ 253B, count_253)
+         IF (count_253 EQ -1) THEN count_253 = 0L
          idx_254 = WHERE(rccm_3[cam, *, *] EQ 254B, count_254)
+         IF (count_254 EQ -1) THEN count_254 = 0L
          idx_255 = WHERE(rccm_3[cam, *, *] EQ 255B, count_255)
+         IF (count_255 EQ -1) THEN count_255 = 0L
          totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + $
             count_253 + count_254 + count_255
          PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
             count_4, count_253, count_254, count_255, totcnt, FORMAT = fmt3
+
+   ;  Update the individual accumulators:
+         tot_miss = tot_miss + count_0
+         tot_cld_hi = tot_cld_hi + count_1
+         tot_cld_lo = tot_cld_lo + count_2
+         tot_clr_lo = tot_clr_lo + count_3
+         tot_clr_hi = tot_clr_hi + count_4
+         tot_obsc = tot_obsc + count_253
+         tot_edge = tot_edge + count_254
+         tot_fill = tot_fill + count_255
+         tot_tot = tot_tot + count_0 + count_1 + count_2 + $
+            count_3 + count_4 + count_253 + count_254 + count_255
       ENDFOR
+      PRINTF, log_unit, 'Totals', tot_miss, tot_cld_hi, tot_cld_lo, $
+         tot_clr_lo, tot_clr_hi, tot_obsc, tot_edge, tot_fill, tot_tot, $
+         FORMAT = fmt3
       PRINTF, log_unit
    ENDIF
 
@@ -886,11 +1265,11 @@ FUNCTION fix_rccm, $
       'on the cloudiness level of neighboring pixels within small ' + $
       'sub-windows of the target camera.'
       rc = map_rccm_block(misr_path, misr_orbit, misr_block, $
-         rccm_3, rccm_logo, rccm_lgnd, $
+         rccm_3, rccm_logo, rccm_lgnd, TEST_ID = test_id, $
          MAP_IT = map_it, MAP_FOLDER = map_folder, $
          DEBUG = debug, EXCPT_COND = excpt_cond)
       IF (debug AND (rc NE 0)) THEN BEGIN
-         error_code = 470
+         error_code = 570
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': ' + excpt_cond
          RETURN, error_code
@@ -902,60 +1281,135 @@ FUNCTION fix_rccm, $
 
       IF (KEYWORD_SET(save_folder)) THEN BEGIN
          save_path = save_folder
-         save_path = force_path_sep(save_path, DEBUG = debug, $
-            EXCPT_COND = excpt_cond)
       ENDIF ELSE BEGIN
-         save_path = root_dirs[3] + mpob_str + '/RCCM' + PATH_SEP()
+         save_path = root_dirs[3] + pob_str + PATH_SEP() + $
+            'GM' + PATH_SEP() + 'RCCM'
+
+   ;  Update the save path if this is a test run:
+         IF (test_id NE '') THEN save_path = save_path + '_' + test_id
       ENDELSE
+      rc = force_path_sep(save_path)
 
-   ;  Return to the calling routine with an error message if the output
-   ;  directory 'save_path' is not writable, and create it if it does not
-   ;  exist:
-      rc = is_writable(save_path, DEBUG = debug, EXCPT_COND = excpt_cond)
-      CASE rc OF
-         0: BEGIN
-               error_code = 540
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': The output folder ' + save_path + $
-                  ' is unwritable.'
-               RETURN, error_code
-            END
-         -1: BEGIN
-               IF (debug) THEN BEGIN
-                  error_code = 550
-                  excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                     rout_name + ': ' + excpt_cond
-                  RETURN, error_code
-               ENDIF
-            END
-         -2: BEGIN
-               FILE_MKDIR, save_path
-            END
-         ELSE: BREAK
-      ENDCASE
+   ;  Create the output directory 'save_path' if it does not exist, and
+   ;  return to the calling routine with an error message if it is unwritable:
+      res = is_writable_dir(save_path, /CREATE)
+      IF (debug AND (res NE 1)) THEN BEGIN
+         error_code = 410
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+            rout_name + ': The directory save_path is unwritable.'
+         RETURN, error_code
+      ENDIF
 
-      save_fname = 'Save_RCCM_cldm_' + mpob_str + '_' + acquis_date + '_' + $
-         date + '.sav'
+      IF (test_id EQ '') THEN BEGIN
+         save_fname = 'Save_RCCM_cldm_' + mpob_str + '_' + acquis_date + '_' + $
+            date + '.sav'
+      ENDIF ELSE BEGIN
+         save_fname = 'Save_RCCM_cldm_' + mpob_str + '_' + acquis_date + '_' + $
+            date + '_' + test_id + '.sav'
+      ENDELSE
       save_fspec = save_path + save_fname
       SAVE, rccm, FILENAME = save_fspec
 
       IF (log_it) THEN BEGIN
-         PRINTF, log_unit, 'Final RCCM data saved in'
+         PRINTF, log_unit, 'Final updated and upgraded RCCM data saved in'
          PRINTF, log_unit, save_fspec
+         PRINTF, log_unit
       ENDIF
    ENDIF
 
+   ;  === Step 3b: Evaluate the overall replacement algorithm =================
+   IF (test_id NE '') THEN BEGIN
+
+      IF (log_it) THEN BEGIN
+         PRINTF, log_unit, 'Confusion matrix after: ', 'mk_rccm3', $
+            FORMAT = fmt1
+      ENDIF
+
+   ;  Define the confusion matrix:
+      conf_mat = MAKE_ARRAY(9, 5, 5, /LONG, VALUE = 0)
+
+   ;  Loop over the cameras that have been artificially modified:
+      FOR cam = 0, n_cams - 1 DO BEGIN
+         IF ((first_line[cam] LT 0) OR (first_line[cam] GT 127) OR $
+            (last_line[cam] LT 0) OR (last_line[cam] GT 127)) $
+            THEN CONTINUE
+
+   ;  Loop over the lines that have been artificially modified:
+         FOR line = first_line[cam], last_line[cam] DO BEGIN
+
+   ;  Loop over the samples in those lines:
+            FOR sample = 0, 511 DO BEGIN
+
+   ;  Retrieve the original and the reconstructed values:
+               ori = ori_data[cam, sample, line]
+               new = rccm_3[cam, sample, line]
+
+   ;  Accumulate the performance statistics (for locations that are observable
+   ;  in principle) in the confusion matrix:
+               IF ((new GT 0) AND (new LT 5)) $
+                  THEN conf_mat[cam, ori, new]++
+            ENDFOR
+         ENDFOR
+
+   ;  Record the number of processed values:
+         n_proc = LONG(TOTAL(conf_mat[cam, *, *]))
+
+   ;  Save the confusion matrix for the current camera in the log file:
+         IF (log_it) THEN BEGIN
+            fmt4 = '(5A12)'
+            fmt5 = '(A12, 4I12)'
+            PRINTF, log_unit, 'Test results for: ', 'Camera ' + cams[cam], $
+               FORMAT = fmt1
+            PRINTF, log_unit, 'N = ' + strstr(n_proc), 'Ori = 1', 'Ori = 2', $
+               'Ori = 3', 'Ori = 4', FORMAT = fmt4
+            PRINTF, log_unit, 'New = 1', conf_mat[cam, 1, 1], $
+               conf_mat[cam, 2, 1], conf_mat[cam, 3, 1], $
+               conf_mat[cam, 4, 1], FORMAT = fmt5
+            PRINTF, log_unit, 'New = 2', conf_mat[cam, 1, 2], $
+               conf_mat[cam, 2, 2], conf_mat[cam, 3, 2], $
+               conf_mat[cam, 4, 2], FORMAT = fmt5
+            PRINTF, log_unit, 'New = 3', conf_mat[cam, 1, 3], $
+               conf_mat[cam, 2, 3], conf_mat[cam, 3, 3], $
+               conf_mat[cam, 4, 3], FORMAT = fmt5
+            PRINTF, log_unit, 'New = 4', conf_mat[cam, 1, 4], $
+               conf_mat[cam, 2, 4], conf_mat[cam, 3, 4], $
+               conf_mat[cam, 4, 4], FORMAT = fmt5
+            PRINTF, log_unit
+            correct = conf_mat[cam, 1, 1] + conf_mat[cam, 2, 2] + $
+               conf_mat[cam, 3, 3] + conf_mat[cam, 4, 4]
+            PRINTF, log_unit, 'Correct assignments: ', strstr(correct) + $
+               ' [' + strstr(ROUND(100 * correct/n_proc)) + $
+               '% of missing values]'
+            approx_cld = conf_mat[cam, 1, 1] + conf_mat[cam, 1, 2] + $
+               conf_mat[cam, 2, 1] + conf_mat[cam, 2, 2]
+            PRINTF, log_unit, 'Cloudy assignments: ', strstr(approx_cld) + $
+               ' [' + strstr(ROUND(100 * approx_cld/n_proc)) + $
+               '% of missing values]'
+            approx_clr = conf_mat[cam, 3, 3] + conf_mat[cam, 3, 4] + $
+               conf_mat[cam, 4, 3] + conf_mat[cam, 4, 4]
+            PRINTF, log_unit, 'Clear assignments: ', strstr(approx_clr) + $
+               ' [' + strstr(ROUND(100 * approx_clr/n_proc)) + $
+               '% of missing values]'
+            wrong = conf_mat[cam, 1, 3] + conf_mat[cam, 1, 4] + $
+               conf_mat[cam, 2, 3] + conf_mat[cam, 2, 4] + $
+               conf_mat[cam, 3, 1] + conf_mat[cam, 3, 2] + $
+               conf_mat[cam, 4, 1] + conf_mat[cam, 4, 2]
+            PRINTF, log_unit, 'Wrong assignments: ', strstr(wrong) + $
+               ' [' + strstr(ROUND(100 * wrong/n_proc)) + $
+               '% of missing values]'
+            PRINTF, log_unit
+         ENDIF
+      ENDFOR
+   ENDIF
+
    IF (log_it) THEN BEGIN
-      PRINTF, log_unit, 'Saved ' + log_spec
-      IF (save_it) THEN PRINTF, log_unit, 'Saved ' + save_fspec
       CLOSE, log_unit
       FREE_LUN, log_unit
    ENDIF
 
-   IF (log_it AND (verbose GT 1)) THEN PRINT, 'Saved ' + log_spec
-   IF (save_it AND (verbose GT 1)) THEN PRINT, 'Saved ' + save_fspec
-
-   IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
+   IF (log_it AND (verbose GT 0)) THEN PRINT, 'Saved ' + log_spec
+   IF (save_it AND (verbose GT 0)) THEN PRINT, 'Saved ' + save_fspec
+   IF (verbose GT 1) THEN PRINT, 'Exiting ' + rout_name + '.'
 
    RETURN, return_code
 

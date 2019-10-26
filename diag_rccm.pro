@@ -68,11 +68,17 @@ FUNCTION diag_rccm, $
    ;      containing the savefile.
    ;
    ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
-   ;      (> 0) or skip (0) reporting progress on the console: 1 only
-   ;      reports exiting the routine; 2 reports entering and exiting the
-   ;      routine, as well as key milestones; 3 reports entering and
-   ;      exiting the routine, and provides detailed information on the
-   ;      intermediary results.
+   ;      (> 0) or skip (0) outputting messages on the console:
+   ;
+   ;      -   If verbose > 0, messages inform the user about progress in
+   ;          the execution of time-consuming routines, or the location of
+   ;          output files (e.g., log, map, plot, etc.);
+   ;
+   ;      -   If verbose > 1, messages record entering and exiting the
+   ;          routine; and
+   ;
+   ;      -   If verbose > 2, messages provide additional information
+   ;          about intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -101,6 +107,9 @@ FUNCTION diag_rccm, $
    ;      incomplete or incorrect.
    ;
    ;  EXCEPTION CONDITIONS:
+   ;
+   ;  *   Warning 98: The computer has not been recognized by the function
+   ;      get_host_info.pro.
    ;
    ;  *   Error 100: One or more positional parameter(s) are missing.
    ;
@@ -137,15 +146,9 @@ FUNCTION diag_rccm, $
    ;  *   Error 300: An exception condition occurred in function
    ;      find_rccm_files.
    ;
-   ;  *   Error 500: The output folder log_fpath is unwritable.
+   ;  *   Error 400: The output folder log_fpath is unwritable.
    ;
-   ;  *   Error 510: An exception condition occurred in function
-   ;      is_writable.
-   ;
-   ;  *   Error 520: The output folder save_fpath is unwritable.
-   ;
-   ;  *   Error 530: An exception condition occurred in function
-   ;      is_writable.
+   ;  *   Error 410: The output folder save_fpath is unwritable.
    ;
    ;  *   Error 600: An exception condition occurred in the MISR TOOLKIT
    ;      routine
@@ -189,7 +192,9 @@ FUNCTION diag_rccm, $
    ;
    ;  *   is_numeric.pro
    ;
-   ;  *   is_writable.pro
+   ;  *   is_writable_dir.pro
+   ;
+   ;  *   oom.pro
    ;
    ;  *   orbit2date.pro
    ;
@@ -208,17 +213,16 @@ FUNCTION diag_rccm, $
    ;  *   NOTE 1: The input keyword parameters log_it and save_it are
    ;      provided to generate the desired outputs selectively.
    ;      Deselecting some of them may accelerate the processing, but if
-   ;      none of them are set, then no output will be saved either.
+   ;      neither of them are set, then no output will be saved either.
    ;
    ;  EXAMPLES:
    ;
-   ;      IDL> misr_path = 168
    ;      IDL> misr_path = 168
    ;      IDL> misr_orbit = 65487
    ;      IDL> misr_block = 111
    ;      IDL> log_it = 1
    ;      IDL> save_it = 1
-   ;      IDL> verbose = 2
+   ;      IDL> verbose = 1
    ;      IDL> debug = 1
    ;      IDL> rc = diag_rccm(misr_path, misr_orbit, misr_block, $
    ;         LOG_IT = log_it, LOG_FOLDER = log_folder, $
@@ -234,7 +238,15 @@ FUNCTION diag_rccm, $
    ;      Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
    ;         Log_RCCM_diag_GM-P168-O065487-B111-DF_2012-04-10_2019-02-19.txt
    ;
-   ;  REFERENCES: None.
+   ;  REFERENCES:
+   ;
+   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
+   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;      available from
+   ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
+   ;      10.5194/essd-2019-77).
    ;
    ;  VERSIONING:
    ;
@@ -260,8 +272,12 @@ FUNCTION diag_rccm, $
    ;      specific error message of MTK routines.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      paper entitled _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
+   ;      preprint published in ESSD Discussions mentioned above.
+   ;
+   ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
+   ;      documentation standards (in particular regarding the use of
+   ;      verbose and the assignment of numeric return codes), and switch
+   ;      to 3-parts version identifiers.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -453,7 +469,8 @@ FUNCTION diag_rccm, $
          ': ' + excpt_cond
       RETURN, error_code
    ENDIF
-   mpob_str = 'GM-' + misr_path_str + '-' + misr_orbit_str + '-' + misr_block_str
+   mpob_str = strcat(['GM', misr_path_str, misr_orbit_str, misr_block_str], $
+      '-')
 
    ;  Get the date of acquisition of this MISR Orbit:
    acquis_date = orbit2date(LONG(misr_orbit), DEBUG = debug, $
@@ -473,11 +490,11 @@ FUNCTION diag_rccm, $
          (log_it AND (~KEYWORD_SET(log_folder))) OR $
          (save_it AND (~KEYWORD_SET(save_folder)))) THEN BEGIN
          error_code = 299
-         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-            rout_name + ': ' + excpt_cond + $
-            ' And at least one of the optional input keyword ' + $
-            'parameters rccm_folder, log_folder, save_folder, ' + $
-            'is not specified.'
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
+            ': Computer is unrecognized, function set_roots_vers.pro did ' + $
+            'not assign default folder values, and at least one of the ' + $
+            'optional keyword parameters rccm_folder, log_folder, ' + $
+            'save_folder is not specified.'
          RETURN, error_code
       ENDIF
    ENDIF
@@ -500,38 +517,22 @@ FUNCTION diag_rccm, $
    ;  Set the directory address of the folder containing the output log file
    ;  if it has not been set previously:
       IF (KEYWORD_SET(log_folder)) THEN BEGIN
-         log_fpath = force_path_sep(log_folder, DEBUG = debug, $
+         rc = force_path_sep(log_folder, DEBUG = debug, $
             EXCPT_COND = excpt_cond)
+         log_fpath = log_folder
       ENDIF ELSE BEGIN
          log_fpath = root_dirs[3] + mpob_str + PATH_SEP() + 'RCCM' + PATH_SEP()
       ENDELSE
 
-   ;  Return to the calling routine with an error message if the output
-   ;  directory 'log_fpath' is not writable, and create it if it does not
-   ;  exist:
-      rc = is_writable(log_fpath, DEBUG = debug, EXCPT_COND = excpt_cond)
-      CASE rc OF
-         1: BREAK
-         0: BEGIN
-               error_code = 500
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': The output folder ' + log_fpath + $
-                  ' is unwritable.'
-               RETURN, error_code
-            END
-         -1: BEGIN
-               IF (debug) THEN BEGIN
-                  error_code = 510
-                  excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                     rout_name + ': ' + excpt_cond
-                  RETURN, error_code
-               ENDIF
-            END
-         -2: BEGIN
-               FILE_MKDIR, log_fpath
-            END
-         ELSE: BREAK
-      ENDCASE
+   ;  Create the output directory 'log_fpath' if it does not exist, and
+   ;  return to the calling routine with an error message if it is unwritable:
+      res = is_writable_dir(log_fpath, /CREATE)
+      IF (debug AND (res NE 1)) THEN BEGIN
+         error_code = 400
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+            rout_name + ': The output folder log_fpath is unwritable.'
+         RETURN, error_code
+      ENDIF
    ENDIF
 
    IF (save_it) THEN BEGIN
@@ -539,38 +540,22 @@ FUNCTION diag_rccm, $
    ;  Set the directory address of the folder containing the output save file
    ;  if it has not been set previously:
       IF (KEYWORD_SET(save_folder)) THEN BEGIN
-         save_fpath = force_path_sep(save_folder, DEBUG = debug, $
+         rc = force_path_sep(save_folder, DEBUG = debug, $
             EXCPT_COND = excpt_cond)
+         save_fpath = save_folder
       ENDIF ELSE BEGIN
          save_fpath = root_dirs[3] + mpob_str + PATH_SEP() + 'RCCM' + PATH_SEP()
       ENDELSE
 
-   ;  Return to the calling routine with an error message if the output
-   ;  directory 'save_fpath' is not writable, and create it if it does not
-   ;  exist:
-      rc = is_writable(save_fpath, DEBUG = debug, EXCPT_COND = excpt_cond)
-      CASE rc OF
-         1: BREAK
-         0: BEGIN
-               error_code = 520
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': The output folder ' + save_fpath + $
-                  ' is unwritable.'
-               RETURN, error_code
-            END
-         -1: BEGIN
-               IF (debug) THEN BEGIN
-                  error_code = 530
-                  excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                     rout_name + ': ' + excpt_cond
-                  RETURN, error_code
-               ENDIF
-            END
-         -2: BEGIN
-               FILE_MKDIR, save_fpath
-            END
-         ELSE: BREAK
-      ENDCASE
+   ;  Create the output directory 'save_fpath' if it does not exist, and
+   ;  return to the calling routine with an error message if it is unwritable:
+      res = is_writable_dir(save_fpath, /CREATE)
+      IF (debug AND (res NE 1)) THEN BEGIN
+         error_code = 410
+         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+            rout_name + ': The output folder save_fpath is unwritable.'
+         RETURN, error_code
+      ENDIF
    ENDIF
 
    i_cams = STRARR(n_files)
@@ -852,11 +837,11 @@ FUNCTION diag_rccm, $
             CLOSE, log_unit
          ENDIF
 
-         IF ((verbose GT 1) AND save_it) THEN PRINT, 'Saved ' + save_fspec
-         IF ((verbose GT 1) AND log_it) THEN PRINT, 'Saved ' + log_fspecs[i]
+         IF ((verbose GT 0) AND save_it) THEN PRINT, 'Saved ' + save_fspec
+         IF ((verbose GT 0) AND log_it) THEN PRINT, 'Saved ' + log_fspecs[i]
       ENDIF
    ENDFOR   ;  End of loop on RCCM files
 
-   IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
+   IF (verbose GT 1) THEN PRINT, 'Exiting ' + rout_name + '.'
 
 END

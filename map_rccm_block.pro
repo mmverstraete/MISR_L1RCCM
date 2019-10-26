@@ -5,6 +5,7 @@ FUNCTION map_rccm_block, $
    rccm, $
    rccm_logo, $
    rccm_lgnd, $
+   TEST_ID = test_id, $
    MAP_IT = map_it, $
    MAP_FOLDER = map_folder, $
    VERBOSE = verbose, $
@@ -32,7 +33,7 @@ FUNCTION map_rccm_block, $
    ;  the specificity of this particular set of maps.
    ;
    ;  SYNTAX: rc = map_rccm_block(misr_path, misr_orbit, misr_block, $
-   ;  rccm, rccm_logo, rccm_lgnd, $
+   ;  rccm, rccm_logo, rccm_lgnd, TEST_ID = test_id, $
    ;  MAP_IT = map_it, MAP_FOLDER = map_folder, $
    ;  VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
    ;
@@ -55,6 +56,11 @@ FUNCTION map_rccm_block, $
    ;
    ;  KEYWORD PARAMETERS [INPUT/OUTPUT]:
    ;
+   ;  *   TEST_ID = test_id {STRING} [I] (Default value: ”): Flag to
+   ;      activate (non-empty STRING) or skip (empty STRING) artificially
+   ;      introducing missing data in the RCCM data buffer; if set, this
+   ;      keyword is used in output file names to label experiments.
+   ;
    ;  *   MAP_IT = map_it {INT} [I] (Default value: 0): Flag to activate
    ;      (1) or skip (0) generating maps of the numerical results.
    ;
@@ -64,11 +70,17 @@ FUNCTION map_rccm_block, $
    ;      containing the maps.
    ;
    ;  *   VERBOSE = verbose {INT} [I] (Default value: 0): Flag to enable
-   ;      (> 0) or skip (0) reporting progress on the console: 1 only
-   ;      reports exiting the routine; 2 reports entering and exiting the
-   ;      routine, as well as key milestones; 3 reports entering and
-   ;      exiting the routine, and provides detailed information on the
-   ;      intermediary results.
+   ;      (> 0) or skip (0) outputting messages on the console:
+   ;
+   ;      -   If verbose > 0, messages inform the user about progress in
+   ;          the execution of time-consuming routines, or the location of
+   ;          output files (e.g., log, map, plot, etc.);
+   ;
+   ;      -   If verbose > 1, messages record entering and exiting the
+   ;          routine; and
+   ;
+   ;      -   If verbose > 2, messages provide additional information
+   ;          about intermediary results.
    ;
    ;  *   DEBUG = debug {INT} [I] (Default value: 0): Flag to activate (1)
    ;      or skip (0) debugging tests.
@@ -135,15 +147,7 @@ FUNCTION map_rccm_block, $
    ;  *   Error 299: The computer is not recognized and the optional input
    ;      keyword parameter map_folder is not specified.
    ;
-   ;  *   Error 500: The output folder map_fpath exists but is unwritable.
-   ;
-   ;  *   Error 510: An exception condition occurred in function
-   ;      is_writable.pro.
-   ;
-   ;  *   Error 520: The output file map_fspec exists but is unwritable.
-   ;
-   ;  *   Error 530: An exception condition occurred in function
-   ;      is_writable.pro.
+   ;  *   Error 400: The output folder map_fpath is unwritable.
    ;
    ;  DEPENDENCIES:
    ;
@@ -181,6 +185,8 @@ FUNCTION map_rccm_block, $
    ;
    ;  *   set_roots_vers.pro
    ;
+   ;  *   strcat.pro
+   ;
    ;  *   strstr.pro
    ;
    ;  *   today.pro
@@ -205,7 +211,15 @@ FUNCTION map_rccm_block, $
    ;      IDL> PRINT, rc
    ;             0
    ;
-   ;  REFERENCES: None.
+   ;  REFERENCES:
+   ;
+   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
+   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;      available from
+   ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
+   ;      10.5194/essd-2019-77).
    ;
    ;  VERSIONING:
    ;
@@ -219,8 +233,18 @@ FUNCTION map_rccm_block, $
    ;      version consistent with the published documentation.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      paper entitled _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_.
+   ;      preprint published in ESSD Discussions mentioned above.
+   ;
+   ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
+   ;      documentation standards (in particular regarding the use of
+   ;      verbose and the assignment of numeric return codes), and switch
+   ;      to 3-parts version identifiers.
+   ;
+   ;  *   2019–09–10: Version 2.1.1 — Add the TEST_ID keyword to save the
+   ;      output maps in dedicated folders and files.
+   ;
+   ;  *   2019–09–25: Version 2.1.2 — Update the code to modify the
+   ;      default map output directory.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -270,6 +294,13 @@ FUNCTION map_rccm_block, $
    return_code = 0
 
    ;  Set the default values of flags and essential output keyword parameters:
+   IF (~KEYWORD_SET(test_id)) THEN BEGIN
+      test_id = ''
+      IF (test_id EQ '') THEN BEGIN
+         first_line = MAKE_ARRAY(9, 4, /INTEGER, VALUE = -1)
+         last_line = MAKE_ARRAY(9, 4, /INTEGER, VALUE = -1)
+      ENDIF
+   ENDIF
    IF (KEYWORD_SET(map_it)) THEN map_it = 1 ELSE map_it = 0
    IF (KEYWORD_SET(verbose)) THEN BEGIN
       IF (is_numeric(verbose)) THEN verbose = FIX(verbose) ELSE verbose = 0
@@ -439,8 +470,8 @@ FUNCTION map_rccm_block, $
       RETURN, error_code
    ENDIF
 
-   mpob_str = 'GM-' + misr_path_str + '-' + misr_orbit_str + $
-      '-' + misr_block_str
+   pob_str = strcat([misr_path_str, misr_orbit_str, misr_block_str], '-')
+   mpob_str = strcat(['GM', pob_str], '-')
 
    ;  Get the date of acquisition of this MISR Orbit:
    acquis_date = orbit2date(LONG(misr_orbit), DEBUG = debug, $
@@ -459,7 +490,8 @@ FUNCTION map_rccm_block, $
       IF (map_it AND (~KEYWORD_SET(map_folder))) THEN BEGIN
          error_code = 299
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-            ': ' + excpt_cond + ' And the optional input keyword ' + $
+            ': Computer is unrecognized, function set_roots_vers.pro did ' + $
+            'not assign default folder values, and the optional keyword ' + $
             'parameter map_folder is not specified.'
          RETURN, error_code
       ENDIF
@@ -467,39 +499,25 @@ FUNCTION map_rccm_block, $
 
    ;  Set the directory address of the folder containing the output map files:
    IF (KEYWORD_SET(map_folder)) THEN BEGIN
-      map_fpath = force_path_sep(map_folder, DEBUG = debug, $
-         EXCPT_COND = excpt_cond)
+      map_fpath = map_folder
    ENDIF ELSE BEGIN
-      map_fpath = root_dirs[3] + mpob_str + PATH_SEP() + $
-         'RCCM' + PATH_SEP()
-   ENDELSE
+      map_fpath = root_dirs[3] + pob_str + PATH_SEP() + $
+         'GM' + PATH_SEP() + 'RCCM'
 
-   ;  Return to the calling routine with an error message if the output
-   ;  directory 'map_fpath' is not writable, and create it if it does not
-   ;  exist:
-   rc = is_writable(map_fpath, DEBUG = debug, EXCPT_COND = excpt_cond)
-   CASE rc OF
-      1: BREAK
-      0: BEGIN
-            error_code = 500
-            excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-               rout_name + ': The output folder ' + map_fpath + $
-               ' is unwritable.'
-            RETURN, error_code
-         END
-      -1: BEGIN
-            IF (debug) THEN BEGIN
-               error_code = 510
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': ' + excpt_cond
-               RETURN, error_code
-            ENDIF
-         END
-      -2: BEGIN
-            FILE_MKDIR, map_fpath
-         END
-      ELSE: BREAK
-   ENDCASE
+   ;  Update the map path if this is a test run:
+      IF (test_id NE '') THEN map_fpath = map_fpath + '_' + test_id
+   ENDELSE
+   rc = force_path_sep(map_fpath)
+
+   ;  Create the output directory 'map_fpath' if it does not exist, and
+   ;  return to the calling routine with an error message if it is unwritable:
+   res = is_writable_dir(map_fpath, /CREATE)
+   IF (debug AND (res NE 1)) THEN BEGIN
+      error_code = 400
+      excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+         rout_name + ': The directory map_fpath is unwritable.'
+      RETURN, error_code
+   ENDIF
 
    ;  Set the color scheme for the expected RCCM pixel values:
    good_vals = [0B, 1B, 2B, 3B, 4B, 253B, 254B, 255B]
@@ -510,37 +528,20 @@ FUNCTION map_rccm_block, $
    FOR cam = 0, n_cams - 1 DO BEGIN
 
    ;  Generate the specification of the output map file:
-      map_fname = 'Map_RCCM_' + rccm_logo + '_' + mpob_str + '_' + $
-         misr_cams[cam] + '_' + acquis_date + '_' + date + '.png'
+      IF (test_id EQ '') THEN BEGIN
+         map_fname = 'Map_RCCM_' + rccm_logo + '_' + mpob_str + '_' + $
+            misr_cams[cam] + '_' + acquis_date + '_' + date + '.png'
+      ENDIF ELSE BEGIN
+         map_fname = 'Map_RCCM_' + rccm_logo + '_' + mpob_str + '_' + $
+            misr_cams[cam] + '_' + acquis_date + '_' + date + '_' + $
+            test_id + '.png'
+      ENDELSE
       map_fspec = map_fpath + map_fname
 
    ;  Generate the specification of the output legend file:
       legend_fname = map_fname.Replace('Map', 'Legend')
       legend_fname = legend_fname.Replace('png', 'txt')
       legend_fspec = map_fpath + legend_fname
-
-   ;  Return to the calling routine with an error message if the output
-   ;  file 'map_fspec' is not writable:
-      rc = is_writable(map_fspec, DEBUG = debug, EXCPT_COND = excpt_cond)
-      CASE rc OF
-         1: BREAK
-         0: BEGIN
-               error_code = 520
-               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                  rout_name + ': The output file ' + map_fspec + $
-                  ' is unwritable.'
-               RETURN, error_code
-            END
-         -1: BEGIN
-               IF (debug) THEN BEGIN
-                  error_code = 530
-                  excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
-                     rout_name + ': ' + excpt_cond
-                  RETURN, error_code
-               ENDIF
-            END
-         ELSE: BREAK
-      ENDCASE
 
    ;  Upscale the RCCM data to the full spatial resolution to ease comparisons
    ;  with other maps:
@@ -582,7 +583,10 @@ FUNCTION map_rccm_block, $
          FREE_LUN, legend_unit
    ENDFOR
 
-   IF (verbose GT 0) THEN PRINT, 'Exiting ' + rout_name + '.'
+   IF ((verbose GT 0) AND map_it) THEN BEGIN
+      PRINT, 'The RCCM maps have been saved in' + map_fspec + '.'
+   ENDIF
+   IF (verbose GT 1) THEN PRINT, 'Exiting ' + rout_name + '.'
 
    RETURN, return_code
 
