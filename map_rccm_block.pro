@@ -245,6 +245,10 @@ FUNCTION map_rccm_block, $
    ;
    ;  *   2019–09–25: Version 2.1.2 — Update the code to modify the
    ;      default map output directory.
+   ;
+   ;  *   2019–12–09: Version 2.1.3 — Update the code to output the path
+   ;      address of the folder containing the maps if the input keyword
+   ;      parameter verbose is set.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -576,15 +580,15 @@ FUNCTION map_rccm_block, $
          good_vals_cols[5] + ': pixels obscured by topography; and ' + $
          good_vals_cols[6] + ': pixels in the edges of the instrument swath.'
 
-         OPENW, legend_unit, legend_fspec, /GET_LUN
-         PRINTF, legend_unit, 'Legend for the similarly named map:'
-         PRINTF, legend_unit, map_legend_txt
-         CLOSE, legend_unit
-         FREE_LUN, legend_unit
+      OPENW, legend_unit, legend_fspec, /GET_LUN
+      PRINTF, legend_unit, 'Legend for the similarly named map:'
+      PRINTF, legend_unit, map_legend_txt
+      CLOSE, legend_unit
+      FREE_LUN, legend_unit
    ENDFOR
 
    IF ((verbose GT 0) AND map_it) THEN BEGIN
-      PRINT, 'The RCCM maps have been saved in' + map_fspec + '.'
+      PRINT, 'The RCCM maps have been saved in' + map_fpath + '.'
    ENDIF
    IF (verbose GT 1) THEN PRINT, 'Exiting ' + rout_name + '.'
 

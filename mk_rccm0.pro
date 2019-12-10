@@ -217,6 +217,9 @@ FUNCTION mk_rccm0, $
    ;      documentation standards (in particular regarding the use of
    ;      verbose and the assignment of numeric return codes), and switch
    ;      to 3-parts version identifiers.
+   ;
+   ;  *   2019–12–09: Version 2.1.1 — Update the code to use the current
+   ;      version of function fn2mpocbv.pro.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -325,9 +328,10 @@ FUNCTION mk_rccm0, $
    cams = misr_specs.CameraNames
 
    ;  Retrieve the MISR Path and Orbit numbers from the first RCCM filename:
-   rc = fn2mpocbv(rccm_files[0], misr_mode_id, misr_path_id, misr_orbit_id, $
-      misr_camera_id, misr_block_id, misr_version_id, misrhr_version_id, $
-      DEBUG = debug, EXCPT_COND = excpt_cond)
+   rc = fn2mpocbv(rccm_files[0], misr_cat_id, misr_mode_id, $
+      misr_path_id, misr_orbit_id, misr_camera_id, misr_block_id, $
+      misr_product_id, misr_version_id, misrhr_product_id, $
+      misrhr_version_id, DEBUG = debug, EXCPT_COND = excpt_cond)
    IF (debug AND (rc NE 0)) THEN BEGIN
       error_code = 200
       excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
