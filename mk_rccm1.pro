@@ -44,7 +44,8 @@ FUNCTION mk_rccm1, $
    ;      and obscured pixels.
    ;
    ;  *   n_miss_1 {LONG array} [O]: An array reporting how many missing
-   ;      values (0B) remain in each of these 9 cloud masks.
+   ;      values (0B) remain in each of these 9 cloud masks at the end of
+   ;      processing in mk_rccm1.pro.
    ;
    ;  KEYWORD PARAMETERS [INPUT/OUTPUT]:
    ;
@@ -197,6 +198,8 @@ FUNCTION mk_rccm1, $
    ;
    ;  *   2019–09–28: Version 2.1.1 — Update the code to use the current
    ;      version of the function hr2lr.pro.
+   ;
+   ;  *   2020–01–05: Version 2.1.2 — Update the documentation.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;

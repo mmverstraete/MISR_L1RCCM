@@ -26,7 +26,7 @@ FUNCTION mk_rccm3, $
    ;      product for the 9 camera files corresponding to the selected
    ;      MISR PATH, ORBIT and BLOCK, i.e., with non zero values for edge
    ;      and obscured pixels, and with some of the missing values already
-   ;      replaced by mk_rccm3.pro.
+   ;      replaced by mk_rccm2.pro.
    ;
    ;  *   rccm_3 {BYTE array} [O]: An array containing the upgraded RCCM
    ;      product for the 9 camera files where most if not all of the
@@ -34,7 +34,8 @@ FUNCTION mk_rccm3, $
    ;      cloudiness.
    ;
    ;  *   n_miss_3 {LONG array} [O]: An array reporting how many missing
-   ;      values (0B) remain in each of these 9 cloud masks.
+   ;      values (0B) remain in each of these 9 cloud masks at the end of
+   ;      processing in mk_rccm3.pro.
    ;
    ;  KEYWORD PARAMETERS [INPUT/OUTPUT]:
    ;
@@ -199,6 +200,9 @@ FUNCTION mk_rccm3, $
    ;      documentation standards (in particular regarding the use of
    ;      verbose and the assignment of numeric return codes), and switch
    ;      to 3-parts version identifiers.
+   ;
+   ;  *   2020–01–06: Version 2.1.1 — Update of the console output when
+   ;      verbose is set to 3, and the documentation.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -309,8 +313,9 @@ FUNCTION mk_rccm3, $
       IF (count EQ 0) THEN CONTINUE
 
       IF (verbose GT 2) THEN BEGIN
+         ini_miss = count
          PRINT, 'cam = ' + cams[cam] + $
-            ': initial # miss vals = ' + strstr(count)
+            ': remaining # missing values after rccm2 = ' + strstr(ini_miss)
       ENDIF
 
    ;  =========================================================================
@@ -377,11 +382,13 @@ FUNCTION mk_rccm3, $
       ENDREP UNTIL (n_proc EQ 0)
 
       IF (verbose GT 2) THEN BEGIN
-         PRINT, 'cam = ' + cams[cam] + ': after step 1 (' + $
+         PRINT, 'cam = ' + cams[cam] + ': after mk_rccm3 step 1 (' + $
             strstr(box_size) + 'x' + strstr(box_size) + $
             ' box, min valid: ' + strstr(min_num_required) + ', ' + $
             homhet + '), iter = ' + strstr(iter) + $
-            ', # miss vals = ' + strstr(n_miss_3[cam])
+            ', # replaced = ' + strstr(ini_miss - n_miss_3[cam]) + $
+            ', # remaining = ' + strstr(n_miss_3[cam])
+         previous_miss = n_miss_3[cam]
       ENDIF
 
    ;  =========================================================================
@@ -448,11 +455,13 @@ FUNCTION mk_rccm3, $
       ENDREP UNTIL (n_proc EQ 0)
 
       IF (verbose GT 2) THEN BEGIN
-         PRINT, 'cam = ' + cams[cam] + ': after step 2 (' + $
+         PRINT, 'cam = ' + cams[cam] + ': after mk_rccm3 step 2 (' + $
             strstr(box_size) + 'x' + strstr(box_size) + $
             ' box, min valid: ' + strstr(min_num_required) + ', ' + $
             homhet + '), iter = ' + strstr(iter) + $
-            ', # miss vals = ' + strstr(n_miss_3[cam])
+            ', # replaced = ' + strstr(previous_miss - n_miss_3[cam]) + $
+            ', # remaining = ' + strstr(n_miss_3[cam])
+         previous_miss = n_miss_3[cam]
       ENDIF
 
    ;  =========================================================================
@@ -519,11 +528,13 @@ FUNCTION mk_rccm3, $
       ENDREP UNTIL (n_proc EQ 0)
 
       IF (verbose GT 2) THEN BEGIN
-         PRINT, 'cam = ' + cams[cam] + ': after step 3 (' + $
+         PRINT, 'cam = ' + cams[cam] + ': after mk_rccm3 step 3 (' + $
             strstr(box_size) + 'x' + strstr(box_size) + $
             ' box, min valid: ' + strstr(min_num_required) + ', ' + $
             homhet + '), iter = ' + strstr(iter) + $
-            ', # miss vals = ' + strstr(n_miss_3[cam])
+            ', # replaced = ' + strstr(previous_miss - n_miss_3[cam]) + $
+            ', # remaining = ' + strstr(n_miss_3[cam])
+         previous_miss = n_miss_3[cam]
       ENDIF
 
    ; =========================================================================
@@ -590,12 +601,14 @@ FUNCTION mk_rccm3, $
       ENDREP UNTIL (n_proc EQ 0)
 
       IF (verbose GT 2) THEN BEGIN
-         PRINT, 'cam = ' + cams[cam] + ': after step 4 (' + $
+         PRINT, 'cam = ' + cams[cam] + ': after mk_rccm3 step 4 (' + $
             strstr(box_size) + 'x' + strstr(box_size) + $
             ' box, min valid: ' + strstr(min_num_required) + ', ' + $
             homhet + '), iter = ' + strstr(iter) + $
-            ', # miss vals = ' + strstr(n_miss_3[cam])
+            ', # replaced = ' + strstr(previous_miss - n_miss_3[cam]) + $
+            ', # remaining = ' + strstr(n_miss_3[cam])
          PRINT
+         previous_miss = n_miss_3[cam]
       ENDIF
    ENDFOR   ;  End of loop on cameras.
 

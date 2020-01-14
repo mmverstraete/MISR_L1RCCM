@@ -462,7 +462,8 @@ IDL&gt; PRINT, rccm_files
 <p>This function also allows the user to artificially introduce missing data for the purpose of documenting the performance of the replacement process.</p></li>
 <li><p><strong>Syntax:</strong> <code>rc = fix_rccm(misr_ptr, radrd_ptr, rccm_files, rccm, $</code><br />
 <code>RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $</code><br />
-<code>TEST_ID = test_id, FIRST_LINE = first_line, LAST_LINE = last_line, $</code><br />
+<code>EDGE = edge, TEST_ID = test_id, $</code><br />
+<code>FIRST_LINE = first_line, LAST_LINE = last_line, $</code><br />
 <code>LOG_IT = log_it, LOG_FOLDER = log_folder, $</code><br />
 <code>SAVE_IT = save_it, SAVE_FOLDER = save_folder, $</code><br />
 <code>MAP_IT = map_it, MAP_FOLDER = map_folder, $</code><br />
@@ -479,6 +480,7 @@ IDL&gt; PRINT, rccm_files
 <code>set_roots_vers.pro):</code> The directory address of the folder containing the <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> files, if they are not located in the default location.</p></li>
 <li><p><code>RCCM_VERSION = rccm_version {STRING} [I] (Default value:</code> Set by function<br />
 <code>set_roots_vers.pro):</code> The <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> version identifier to use instead of the default value.</p></li>
+<li><p><code>EDGE = edge {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) copying the cloud mask of the neighboring camera with the wider swath outside of the region where it overlaps with the cloud mask of the neighboring camera with the narrower swath.</p></li>
 <li><p><code>TEST_ID = test_id {STRING} [I] (Default value: &#8221;):</code> Flag to activate (<code>non-empty STRING</code>) or skip (<code>empty STRING</code>) artificially introducing missing data in the RCCM data buffer; if set, this keyword is used in output file names to label experiments.</p></li>
 <li><p><code>FIRST_LINE = first_line {INT array of 9 elements} [I] (Default value: 9 elements set to -1):</code> The index (between 0 and 127) of the first line to be replaced by missing data, in each of the 9 cameras. Values outside that range are ignored.</p></li>
 <li><p><code>LAST_LINE = last_line {INT array of 9 elements} [I] (Default value: 9 elements set to -1):</code> The index (between 0 and 127) of the last line to be replaced by missing data, in each of the 9 cameras. Values outside that range are ignored.</p></li>
@@ -626,6 +628,7 @@ rc =            0</code></pre></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
 <li><p>2019&#8211;09&#8211;10: Version 2.1.1 &#8212; Add arguments and code to artificially insert missing data in the RCCM data buffer, and build a confusion matrix to document the performance of the replacement algorithm.</p></li>
 <li><p>2019&#8211;09&#8211;24: Version 2.1.2 &#8212; Update the code (1) to map the original <span class="smallcaps">RCCM</span> data before artificially inserting additional missing data, (2) to record the confusion matrices after <code>mk_rccm2</code> and <code>mk_rccm3</code> in the log file, and (3) to modify the default map output directory.</p></li>
+<li><p>2020&#8211;01&#8211;10: Version 2.1.3 &#8212; Add version information and percentage of cloudiness statistics in the log file; fix bug in the computation of <code>totcnt</code> for rccm2; update the name of maps for tests involving artifically missing data; add the optional keyword parameter <code>EDGE</code> to match the latest version of <code>mk_rccm2</code> and update the directory name for the corresponding outputs to reflect its eventual use; and update the documentation.</p></li>
 </ul></li>
 </ul>
 <h2>map_rccm_block</h2>
@@ -743,6 +746,7 @@ IDL&gt; PRINT, rc
 <li><p>2019&#8211;09&#8211;10: Version 2.1.1 &#8212; Add the <code>TEST_ID</code> keyword to save the output maps in dedicated folders and files.</p></li>
 <li><p>2019&#8211;09&#8211;25: Version 2.1.2 &#8212; Update the code to modify the default map output directory.</p></li>
 <li><p>2019&#8211;12&#8211;09: Version 2.1.3 &#8212; Update the code to output the path address of the folder containing the maps if the input keyword parameter <code>verbose</code> is set.</p></li>
+<li><p>2019&#8211;12&#8211;31: Version 2.1.5 &#8212; Minor software update to generate properly formatted map legends; this code version is described in the final version of the paper by Verstraete et al. (2020) mentioned above.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm0</h2>
@@ -855,7 +859,7 @@ IDL&gt; PRINT, rc
 <li><p><code>misr_ptr {POINTER} [I]:</code> The pointer to a <code>STRING</code> array containing metadata on the <span class="smallcaps">MISR</span> <span class="smallcaps">Mode</span>, <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span> of the next pointer array.</p></li>
 <li><p><code>radrd_ptr {POINTER array} [I]:</code> The array of 36 pointers to the data buffers containing the <code>UINT</code> <span class="smallcaps">L1B2</span> scaled radiance values (with the <span class="smallcaps">RDQI</span> attached), in the native order (DF to DA).</p></li>
 <li><p><code>rccm_1 {BYTE array} [O]:</code> An array containing the updated <span class="smallcaps">RCCM</span> product for the 9 camera files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>, i.e., with non zero values for edge and obscured pixels.</p></li>
-<li><p><code>n_miss_1 {LONG array} [O]:</code> An array reporting how many missing values (<code>0B</code>) remain in each of these 9 cloud masks.</p></li>
+<li><p><code>n_miss_1 {LONG array} [O]:</code> An array reporting how many missing values (<code>0B</code>) remain in each of these 9 cloud masks at the end of processing in <code>mk_rccm1.pro</code>.</p></li>
 </ul></li>
 <li><p><strong>Keyword parameters [Input/Output]:</strong></p>
 <ul>
@@ -922,16 +926,26 @@ IDL&gt; PRINT, rc
 <li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
 <li><p>2019&#8211;09&#8211;28: Version 2.1.1 &#8212; Update the code to use the current version of the function <code>hr2lr.pro</code>.</p></li>
+<li><p>2020&#8211;01&#8211;05: Version 2.1.2 &#8212; Update the documentation.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm2</h2>
 <ul>
-<li><p><strong>Purpose:</strong> This function replaces missing values in the cloud mask <code>rccm_1</code> for one camera by the values found in its 2 immediate neighbors whenever the latter are identical.</p></li>
-<li><p><strong>Algorithm:</strong> For each camera-specific cloud mask containing missing values, this function inspects the 2 immediate neighboring cameras, replaces the missing values if both of them report the same cloud mask value, and updates the output cloud mask <code>rccm_2</code>.</p></li>
+<li><p><strong>Purpose:</strong> This function replaces missing values in the cloud mask <code>rccm_1</code> for one camera by the values found in its 2 immediate neighbors whenever the latter are identical, and optionally by the cloud mask in one of the neighbors where ever they do not overlap.</p></li>
+<li><p><strong>Algorithm:</strong> For each camera-specific cloud mask containing missing values, this function inspects the 2 immediate neighboring cameras, replaces the missing values if both of them report the same cloud mask value, and updates the output cloud mask <code>rccm_2</code>. If those neighboring cameras have different swath widths, the cloud mask of the camera with the wider swath may optionally be copied over to the camera being repaired, outside of this overlap zone.</p></li>
 <li><p><strong>Syntax:</strong> <code>rc = mk_rccm2(rccm_1, n_miss_1, rccm_2, n_miss_2, $</code><br />
-<code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
+<code>EDGE = edge, VERBOSE = verbose, $</code><br />
+<code>DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
 <li><p><strong>Positional parameters [Input/Output]:</strong></p>
 <ul>
+<li><p><code>rccm_1 {BYTE array} [O]:</code> An array containing the updated <span class="smallcaps">RCCM</span> product for the 9 camera files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>, i.e., with non zero values for edge and obscured pixels.</p></li>
+<li><p><code>n_miss_1 {LONG array} [O]:</code> An array reporting how many missing values (<code>0B</code>) remain in each of these 9 cloud masks at the end of processing in <code>mk_rccm1.pro</code>.</p></li>
+<li><p><code>rccm_2 {BYTE array} [O]:</code> An array containing the upgraded <span class="smallcaps">RCCM</span> product for the 9 camera files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>, i.e., with non zero values for edge and obscured pixels, and with some of the missing values already replaced by <code>mk_rccm2.pro</code>.</p></li>
+<li><p><code>n_miss_2 {LONG array} [O]:</code> An array reporting how many missing values (<code>0B</code>) remain in each of these 9 cloud masks at the end of processing in <code>mk_rccm2.pro</code>.</p></li>
+</ul></li>
+<li><p><strong>Keyword parameters [Input/Output]:</strong></p>
+<ul>
+<li><p><code>EDGE = edge {INT} [I] (Default value: 0):</code> Flag to activate (<code>1</code>) or skip (<code>0</code>) copying the cloud mask of the neighboring camera with the wider swath outside of the region where it overlaps with the cloud mask of the neighboring camera with the narrower swath.</p></li>
 <li><p><code>VERBOSE = verbose {INT} [I] (Default value: 0):</code> Flag to enable (&gt; 0) or skip (0) outputting messages on the console:</p>
 <ul>
 <li><p>If <code>verbose &gt; 0</code>, messages inform the user about progress in the execution of time-consuming routines, or the location of output files (e.g., log, map, plot, etc.);</p></li>
@@ -960,6 +974,7 @@ IDL&gt; PRINT, rc
 <li><p><strong>Exception conditions:</strong></p>
 <ul>
 <li><p>Error 100: One or more positional parameter(s) are missing.</p></li>
+<li><p>Error 110: Positional parameter <code>rccm_1</code> is invalid.</p></li>
 </ul></li>
 <li><p><strong>Dependencies:</strong></p>
 <ul>
@@ -970,6 +985,7 @@ IDL&gt; PRINT, rc
 <li><p><strong>Remarks:</strong></p>
 <ul>
 <li><p><strong>Note 1:</strong> This function only replaces missing values when both neighboring cameras report identical valid values. This assumes that the cloud fields are homogeneous over the range of observation angles encompassing the 3 cameras. Errors may occur with highly discontinuous cloud fields at high altitude. Ambiguous cases (i.e., where neighboring cameras report different values) are treated by function <code>mk_rccm3</code>.</p></li>
+<li><p><strong>Note 2:</strong> If the optional keyword parameter <code>EDGE</code> is set, the cloud mask of the neighboring camera with the widest swath is copied to the cloud mask in the camera being updated, wherever the latter has missing values, and outside of the overlap between the two neighboring cameras. This optional step generates more accurate results than letting the <code>mk_rccm3</code> function fill the remaining missing values.</p></li>
 </ul></li>
 <li><p><strong>Examples:</strong></p>
 <pre><code>[See the outcome(s) generated by fix_rccm.pro]</code></pre></li>
@@ -985,6 +1001,7 @@ IDL&gt; PRINT, rc
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
 <li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
+<li><p>2020&#8211;01&#8211;12: Version 2.1.1 &#8212; Add the optional keyword parameter <code>EDGE</code> to control the use of the cloud mask of one of the two neighboring cameras wherever they do not overlap; update the code to process the cameras in the order of increasing number of missing values; update the documentation.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm3</h2>
@@ -995,9 +1012,9 @@ IDL&gt; PRINT, rc
 <code>VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)</code></p></li>
 <li><p><strong>Positional parameters [Input/Output]:</strong></p>
 <ul>
-<li><p><code>rccm_2 {BYTE array} [I]:</code> An array containing the upgraded <span class="smallcaps">RCCM</span> product for the 9 camera files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>, i.e., with non zero values for edge and obscured pixels, and with some of the missing values already replaced by <code>mk_rccm3.pro</code>.</p></li>
+<li><p><code>rccm_2 {BYTE array} [I]:</code> An array containing the upgraded <span class="smallcaps">RCCM</span> product for the 9 camera files corresponding to the selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span>, <span class="smallcaps">Orbit</span> and <span class="smallcaps">Block</span>, i.e., with non zero values for edge and obscured pixels, and with some of the missing values already replaced by <code>mk_rccm2.pro</code>.</p></li>
 <li><p><code>rccm_3 {BYTE array} [O]:</code> An array containing the upgraded <span class="smallcaps">RCCM</span> product for the 9 camera files where most if not all of the missing values are replaced by reasonable estimates of the local cloudiness.</p></li>
-<li><p><code>n_miss_3 {LONG array} [O]:</code> An array reporting how many missing values (<code>0B</code>) remain in each of these 9 cloud masks.</p></li>
+<li><p><code>n_miss_3 {LONG array} [O]:</code> An array reporting how many missing values (<code>0B</code>) remain in each of these 9 cloud masks at the end of processing in <code>mk_rccm3.pro</code>.</p></li>
 </ul></li>
 <li><p><strong>Keyword parameters [Input/Output]:</strong></p>
 <ul>
@@ -1071,6 +1088,7 @@ IDL&gt; PRINT, rc
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
 <li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
+<li><p>2020&#8211;01&#8211;06: Version 2.1.1 &#8212; Update of the console output when <code>verbose</code> is set to 3, and the documentation.</p></li>
 </ul></li>
 </ul>
 <h2>plot_rccm_miss</h2>
@@ -1203,8 +1221,8 @@ The return code of the function indicates which decision rule has been applied, 
 <li><p><strong>Returned value type:</strong> <code>INT</code>.</p></li>
 <li><p><strong>Outcome:</strong></p>
 <ul>
-<li><p>If no exception condition has been detected, this function returns a value in the range <code>[0, 16]</code>, indicating which decision rule has been applied, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameter <code>value</code> contains the suggested replacement value for the missing pixel, if one could be determined. Negative return codes indicate that no replacement value can be suggested.</p></li>
-<li><p>If an exception condition has been detected, this function returns a non-zero error code larger than <code>99</code>, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameter <code>value</code> may be inexistent, incomplete or incorrect.</p></li>
+<li><p>If no exception condition has been detected, this function returns an integer in the range <code>[-3, 16]</code>, indicating which decision rule has been applied, and the output keyword parameter <code>excpt_cond</code> is set to a null string, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided in the call. The output positional parameter <code>value</code> contains the suggested replacement value for the missing pixel, if one could be determined. Negative return codes indicate that no replacement value can be suggested.</p></li>
+<li><p>If an exception condition has been detected, this function returns an integer larger than <code>99</code>, and the output keyword parameter <code>excpt_cond</code> contains a message about the exception condition encountered, if the optional input keyword parameter <code>DEBUG</code> is set and if the optional output keyword parameter <code>EXCPT_COND</code> is provided. The output positional parameter <code>value</code> may be inexistent, incomplete or incorrect.</p></li>
 </ul></li>
 <li><p><strong>Exception conditions:</strong></p>
 <ul>
@@ -1243,6 +1261,7 @@ The return code of the function indicates which decision rule has been applied, 
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
 <li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
+<li><p>2020&#8211;01&#8211;02: Version 2.1.1 &#8212; Update the documentation.</p></li>
 </ul></li>
 </ul>
 <h2>set_rccm_folder</h2>

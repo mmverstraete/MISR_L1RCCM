@@ -161,8 +161,8 @@ FUNCTION repl_box, $
    ;  OUTCOME:
    ;
    ;  *   If no exception condition has been detected, this function
-   ;      returns a value in the range [0, 16], indicating which decision
-   ;      rule has been applied, and the output keyword parameter
+   ;      returns an integer in the range [-3, 16], indicating which
+   ;      decision rule has been applied, and the output keyword parameter
    ;      excpt_cond is set to a null string, if the optional input
    ;      keyword parameter DEBUG is set and if the optional output
    ;      keyword parameter EXCPT_COND is provided in the call. The output
@@ -172,12 +172,12 @@ FUNCTION repl_box, $
    ;      suggested.
    ;
    ;  *   If an exception condition has been detected, this function
-   ;      returns a non-zero error code larger than 99, and the output
-   ;      keyword parameter excpt_cond contains a message about the
-   ;      exception condition encountered, if the optional input keyword
-   ;      parameter DEBUG is set and if the optional output keyword
-   ;      parameter EXCPT_COND is provided. The output positional
-   ;      parameter value may be inexistent, incomplete or incorrect.
+   ;      returns an integer larger than 99, and the output keyword
+   ;      parameter excpt_cond contains a message about the exception
+   ;      condition encountered, if the optional input keyword parameter
+   ;      DEBUG is set and if the optional output keyword parameter
+   ;      EXCPT_COND is provided. The output positional parameter value
+   ;      may be inexistent, incomplete or incorrect.
    ;
    ;  EXCEPTION CONDITIONS:
    ;
@@ -263,6 +263,8 @@ FUNCTION repl_box, $
    ;      documentation standards (in particular regarding the use of
    ;      verbose and the assignment of numeric return codes), and switch
    ;      to 3-parts version identifiers.
+   ;
+   ;  *   2020–01–02: Version 2.1.1 — Update the documentation.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;

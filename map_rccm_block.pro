@@ -249,6 +249,11 @@ FUNCTION map_rccm_block, $
    ;  *   2019–12–09: Version 2.1.3 — Update the code to output the path
    ;      address of the folder containing the maps if the input keyword
    ;      parameter verbose is set.
+   ;
+   ;  *   2019–12–31: Version 2.1.5 — Minor software update to generate
+   ;      properly formatted map legends; this code version is described
+   ;      in the final version of the paper by Verstraete et al. (2020)
+   ;      mentioned above.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -561,9 +566,9 @@ FUNCTION map_rccm_block, $
          'Path ' + strstr(misr_path) + $
          ', Orbit ' + strstr(misr_orbit) + $
          ', Block ' + strstr(misr_block) + $
-         ' and Camera ' + misr_cams[cam] + '.' + $
+         ' and Camera ' + misr_cams[cam] + '. ' + $
          rccm_lgnd + $
-         ' All RCCM products are generated at the spatial resolution ' + $
+         'All RCCM products are generated at the spatial resolution ' + $
          'of 1100 m and provided as arrays of 512 by 128 pixels. This ' + $
          'map has been enlarged (4x in each direction) by duplication ' + $
          'for viewing convenience and to facilitate comparisons with ' + $

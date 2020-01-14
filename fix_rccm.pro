@@ -4,6 +4,7 @@ FUNCTION fix_rccm, $
    rccm, $
    RCCM_FOLDER = rccm_folder, $
    RCCM_VERSION = rccm_version, $
+   EDGE = edge, $
    TEST_ID = test_id, $
    FIRST_LINE = first_line, $
    LAST_LINE = last_line, $
@@ -53,7 +54,8 @@ FUNCTION fix_rccm, $
    ;
    ;  SYNTAX: rc = fix_rccm(misr_ptr, radrd_ptr, rccm_files, rccm, $
    ;  RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $
-   ;  TEST_ID = test_id, FIRST_LINE = first_line, LAST_LINE = last_line, $
+   ;  EDGE = edge, TEST_ID = test_id, $
+   ;  FIRST_LINE = first_line, LAST_LINE = last_line, $
    ;  LOG_IT = log_it, LOG_FOLDER = log_folder, $
    ;  SAVE_IT = save_it, SAVE_FOLDER = save_folder, $
    ;  MAP_IT = map_it, MAP_FOLDER = map_folder, $
@@ -85,6 +87,12 @@ FUNCTION fix_rccm, $
    ;      function
    ;      set_roots_vers.pro): The MISR RCCM version identifier to use
    ;      instead of the default value.
+   ;
+   ;  *   EDGE = edge {INT} [I] (Default value: 0): Flag to activate (1)
+   ;      or skip (0) copying the cloud mask of the neighboring camera
+   ;      with the wider swath outside of the region where it overlaps
+   ;      with the cloud mask of the neighboring camera with the narrower
+   ;      swath.
    ;
    ;  *   TEST_ID = test_id {STRING} [I] (Default value: ”): Flag to
    ;      activate (non-empty STRING) or skip (empty STRING) artificially
@@ -435,6 +443,14 @@ FUNCTION fix_rccm, $
    ;      missing data, (2) to record the confusion matrices after
    ;      mk_rccm2 and mk_rccm3 in the log file, and (3) to modify the
    ;      default map output directory.
+   ;
+   ;  *   2020–01–10: Version 2.1.3 — Add version information and
+   ;      percentage of cloudiness statistics in the log file; fix bug in
+   ;      the computation of totcnt for rccm2; update the name of maps for
+   ;      tests involving artifically missing data; add the optional
+   ;      keyword parameter EDGE to match the latest version of mk_rccm2
+   ;      and update the directory name for the corresponding outputs to
+   ;      reflect its eventual use; and update the documentation.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -484,6 +500,7 @@ FUNCTION fix_rccm, $
    return_code = 0
 
    ;  Set the default values of flags and essential output keyword parameters:
+   IF (~KEYWORD_SET(edge)) THEN edge = 0 ELSE edge = 1
    IF (~KEYWORD_SET(test_id)) THEN BEGIN
       test_id = ''
       IF (test_id EQ '') THEN BEGIN
@@ -716,6 +733,8 @@ FUNCTION fix_rccm, $
    ;  Update the log path if this is a test run:
          IF (test_id NE '') THEN log_path = log_path + '_' + test_id
       ENDELSE
+      rc = remove_path_sep(log_path)
+      IF (edge) THEN log_path = log_path + '_edge'
       rc = force_path_sep(log_path)
 
    ;  Create the output directory 'log_path' if it does not exist, and
@@ -738,8 +757,8 @@ FUNCTION fix_rccm, $
       log_spec = log_path + log_name
 
       fmt1 = '(A30, A)'
-      fmt2 = '(12A14)'
-      fmt3 = '(A14, 11I14)'
+      fmt2 = '(16A14)'
+      fmt3 = '(A14, 9I14, 4F14.2)'
 
       OPENW, log_unit, log_spec, /GET_LUN
       PRINTF, log_unit, 'File name: ', FILE_BASENAME(log_spec), $
@@ -756,6 +775,9 @@ FUNCTION fix_rccm, $
       PRINTF, log_unit, 'MISR Path: ', strstr(misr_path), FORMAT = fmt1
       PRINTF, log_unit, 'MISR Orbit: ', strstr(misr_orbit), FORMAT = fmt1
       PRINTF, log_unit, 'MISR Block: ', strstr(misr_block), FORMAT = fmt1
+      PRINTF, log_unit, 'MISR RCCM Version: ', rccm_version, FORMAT = fmt1
+      PRINTF, log_unit, 'Edge option: ', strstr(edge), FORMAT = fmt1
+      PRINTF, log_unit, 'MISR Toolkit version: ', MTK_VERSION(), FORMAT = fmt1
       PRINTF, log_unit
    ENDIF
 
@@ -921,7 +943,9 @@ FUNCTION fix_rccm, $
       PRINTF, log_unit, 'Outcome of mk_rccm1: ', '', FORMAT = fmt1
       PRINTF, log_unit, '', 'Miss (0B)', 'Cld-Hi (1B)', $
          'Cld-Lo (2B)', 'Clr-Lo (3B)', 'Clr-Hi (4B)', 'Obsc (253B)', $
-         'Edge (254B)', 'Fill (255B)', 'Total', FORMAT = fmt2
+         'Edge (254B)', 'Fill (255B)', 'Total', $
+         'Cld-Hi (%)', 'Cld-Lo (%)', 'Clr-Lo (%)', 'Clr-Hi (%)', $
+         FORMAT = fmt2
       FOR cam = 0, n_cams - 1 DO BEGIN
          idx_0 = WHERE(rccm_1[cam, *, *] EQ 0B, count_0)
          IF (count_0 EQ -1) THEN count_0 = 0L
@@ -941,8 +965,14 @@ FUNCTION fix_rccm, $
          IF (count_255 EQ -1) THEN count_255 = 0L
          totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + $
             count_253 + count_254 + count_255
+         totval = totcnt - count_253 - count_254 - count_255
          PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
-            count_4, count_253, count_254, count_255, totcnt, FORMAT = fmt3
+            count_4, count_253, count_254, count_255, totcnt, $
+            (FLOAT(count_1) / FLOAT(totval)) * 100.0, $
+            (FLOAT(count_2) / FLOAT(totval)) * 100.0, $
+            (FLOAT(count_3) / FLOAT(totval)) * 100.0, $
+            (FLOAT(count_4) / FLOAT(totval)) * 100.0, $
+            FORMAT = fmt3
 
    ;  Update the individual accumulators:
          tot_miss = tot_miss + count_0
@@ -964,7 +994,7 @@ FUNCTION fix_rccm, $
 
    ;  Map the rccm_1 product if required:
    IF (map_it) THEN BEGIN
-      rccm_logo = 'rccm1'
+      IF (test_id NE '') THEN rccm_logo = 'rccm1_test' ELSE rccm_logo = 'rccm1'
       rccm_lgnd = ' Obscured and edge have been flagged with ' + $
       'specific values to distinguish them from missing values. '
       rc = map_rccm_block(misr_path, misr_orbit, misr_block, $
@@ -995,7 +1025,7 @@ FUNCTION fix_rccm, $
    ;  === Step 2a: Replace missing values based on neighboring cameras ========
    ;  Call 'mk_rccm2' if there are missing values in 'rccm_1':
    IF (MAX(n_miss_1) GT 0) THEN BEGIN
-      rc = mk_rccm2(rccm_1, n_miss_1, rccm_2, n_miss_2, $
+      rc = mk_rccm2(rccm_1, n_miss_1, rccm_2, n_miss_2, EDGE = edge, $
          VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
       IF (debug AND (rc NE 0)) THEN BEGIN
          error_code = 540
@@ -1024,7 +1054,9 @@ FUNCTION fix_rccm, $
       PRINTF, log_unit, 'Outcome of mk_rccm2: ', '', FORMAT = fmt1
       PRINTF, log_unit, '', 'Miss (0B)', 'Cld-Hi (1B)', $
          'Cld-Lo (2B)', 'Clr-Lo (3B)', 'Clr-Hi (4B)', 'Obsc (253B)', $
-         'Edge (254B)', 'Fill (255B)', 'Total', FORMAT = fmt2
+         'Edge (254B)', 'Fill (255B)', 'Total', $
+         'Cld-Hi (%)', 'Cld-Lo (%)', 'Clr-Lo (%)', 'Clr-Hi (%)', $
+         FORMAT = fmt2
       FOR cam = 0, n_cams - 1 DO BEGIN
          idx_0 = WHERE(rccm_2[cam, *, *] EQ 0B, count_0)
          IF (count_0 EQ -1) THEN count_0 = 0L
@@ -1042,11 +1074,16 @@ FUNCTION fix_rccm, $
          IF (count_254 EQ -1) THEN count_254 = 0L
          idx_255 = WHERE(rccm_2[cam, *, *] EQ 255B, count_255)
          IF (count_255 EQ -1) THEN count_255 = 0L
-         totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + count_255
-         PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
-            count_4, count_253, count_254, count_255, totcnt, FORMAT = fmt3
          totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + $
             count_253 + count_254 + count_255
+         totval = totcnt - count_253 - count_254 - count_255
+         PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
+            count_4, count_253, count_254, count_255, totcnt, $
+            (FLOAT(count_1) / FLOAT(totval)) * 100.0, $
+            (FLOAT(count_2) / FLOAT(totval)) * 100.0, $
+            (FLOAT(count_3) / FLOAT(totval)) * 100.0, $
+            (FLOAT(count_4) / FLOAT(totval)) * 100.0, $
+            FORMAT = fmt3
 
    ;  Update the individual accumulators:
          tot_miss = tot_miss + count_0
@@ -1068,11 +1105,11 @@ FUNCTION fix_rccm, $
 
    ;  Map the rccm_2 product if required:
    IF (map_it) THEN BEGIN
-      rccm_logo = 'rccm2'
+      IF (test_id NE '') THEN rccm_logo = 'rccm2_test' ELSE rccm_logo = 'rccm2'
       rccm_lgnd = ' Missing pixels have been replaced by estimates ' + $
       'of the cloud or clear status of the observed areas, based ' + $
       'on the cloudiness level of the 2 neighboring cameras, wherever ' + $
-      'they report identical values.'
+      'they report identical values. '
       rc = map_rccm_block(misr_path, misr_orbit, misr_block, $
          rccm_2, rccm_logo, rccm_lgnd, TEST_ID = test_id, $
          MAP_IT = map_it, MAP_FOLDER = map_folder, $
@@ -1216,7 +1253,9 @@ FUNCTION fix_rccm, $
       PRINTF, log_unit, 'Outcome of mk_rccm3: ', '', FORMAT = fmt1
       PRINTF, log_unit, '', 'Miss (0B)', 'Cld-Hi (1B)', $
          'Cld-Lo (2B)', 'Clr-Lo (3B)', 'Clr-Hi (4B)', 'Obsc (253B)', $
-         'Edge (254B)', 'Fill (255B)', 'Total', FORMAT = fmt2
+         'Edge (254B)', 'Fill (255B)', 'Total', $
+         'Cld-Hi (%)', 'Cld-Lo (%)', 'Clr-Lo (%)', 'Clr-Hi (%)', $
+         FORMAT = fmt2
       FOR cam = 0, n_cams - 1 DO BEGIN
          idx_0 = WHERE(rccm_3[cam, *, *] EQ 0B, count_0)
          IF (count_0 EQ -1) THEN count_0 = 0L
@@ -1237,7 +1276,12 @@ FUNCTION fix_rccm, $
          totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + $
             count_253 + count_254 + count_255
          PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
-            count_4, count_253, count_254, count_255, totcnt, FORMAT = fmt3
+            count_4, count_253, count_254, count_255, totcnt, $
+            (FLOAT(count_1) / FLOAT(totval)) * 100.0, $
+            (FLOAT(count_2) / FLOAT(totval)) * 100.0, $
+            (FLOAT(count_3) / FLOAT(totval)) * 100.0, $
+            (FLOAT(count_4) / FLOAT(totval)) * 100.0, $
+            FORMAT = fmt3
 
    ;  Update the individual accumulators:
          tot_miss = tot_miss + count_0
@@ -1259,11 +1303,11 @@ FUNCTION fix_rccm, $
 
    ;  Map the rccm_3 product if required:
    IF (map_it) THEN BEGIN
-      rccm_logo = 'rccm3'
+      IF (test_id NE '') THEN rccm_logo = 'rccm3_test' ELSE rccm_logo = 'rccm3'
       rccm_lgnd = ' Missing pixels have been replaced by estimates ' + $
       'of the cloud or clear status of the observed areas, based ' + $
       'on the cloudiness level of neighboring pixels within small ' + $
-      'sub-windows of the target camera.'
+      'sub-windows of the target camera. '
       rc = map_rccm_block(misr_path, misr_orbit, misr_block, $
          rccm_3, rccm_logo, rccm_lgnd, TEST_ID = test_id, $
          MAP_IT = map_it, MAP_FOLDER = map_folder, $
@@ -1288,6 +1332,8 @@ FUNCTION fix_rccm, $
    ;  Update the save path if this is a test run:
          IF (test_id NE '') THEN save_path = save_path + '_' + test_id
       ENDELSE
+      rc = remove_path_sep(save_path)
+      IF (edge) THEN save_path = save_path + '_edge'
       rc = force_path_sep(save_path)
 
    ;  Create the output directory 'save_path' if it does not exist, and
