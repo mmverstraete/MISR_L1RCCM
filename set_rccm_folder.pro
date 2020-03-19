@@ -100,9 +100,14 @@ FUNCTION set_rccm_folder, $
    ;  *   Error 299: The computer is not recognized and the optional input
    ;      keyword parameter rccm_folder is not specified.
    ;
-   ;  *   Error 300: The folder rccm_path exists but is unreadable.
+   ;  *   Error 300: The input folder rccm_path does not exist.
    ;
-   ;  *   Error 310: The folder rccm_path does not contain any RCCM files.
+   ;  *   Error 310: The input folder rccm_path points to multiple
+   ;      directories.
+   ;
+   ;  *   Error 320: The folder rccm_path exists but is unreadable.
+   ;
+   ;  *   Error 330: The folder rccm_path does not contain any RCCM files.
    ;
    ;  DEPENDENCIES:
    ;
@@ -136,13 +141,20 @@ FUNCTION set_rccm_folder, $
    ;
    ;  REFERENCES:
    ;
-   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
-   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
-   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;  *   Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product,
+   ;      _Earth System Science Data Discussions_, Vol. 2019, p. 1–18,
    ;      available from
    ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
    ;      10.5194/essd-2019-77).
+   ;
+   ;  *   Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2020) Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product,
+   ;      _Earth System Science Data_, Vol. 12, p. 611–628, available from
+   ;      https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html
+   ;      (DOI: 10.5194/essd-12-611-2020).
    ;
    ;  VERSIONING:
    ;
@@ -152,16 +164,22 @@ FUNCTION set_rccm_folder, $
    ;      implement stricter coding standards and improve documentation.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      preprint published in ESSD Discussions mentioned above.
+   ;      preprint published in _ESSD Discussions_ mentioned above.
    ;
    ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
    ;      documentation standards (in particular regarding the use of
    ;      verbose and the assignment of numeric return codes), and switch
    ;      to 3-parts version identifiers.
+   ;
+   ;  *   2020–03–06: Version 2.1.1 — Update the code to handle input path
+   ;      names with wildcard characters.
+   ;
+   ;  *   2020–03–19: Version 2.2.0 — Software version described in the
+   ;      peer-reviewed paper published in _ESSD_ referenced above.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
-   ;  *   Copyright (C) 2017-2019 Michel M. Verstraete.
+   ;  *   Copyright (C) 2017-2020 Michel M. Verstraete.
    ;
    ;      Permission is hereby granted, free of charge, to any person
    ;      obtaining a copy of this software and associated documentation
@@ -173,7 +191,7 @@ FUNCTION set_rccm_folder, $
    ;      conditions:
    ;
    ;      1. The above copyright notice and this permission notice shall
-   ;      be included in its entirety in all copies or substantial
+   ;      be included in their entirety in all copies or substantial
    ;      portions of the Software.
    ;
    ;      2. THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY
@@ -293,15 +311,38 @@ FUNCTION set_rccm_folder, $
          'L1_RC' + PATH_SEP()
    ENDELSE
 
-   ;  Eliminate metacharacters of regular expressions, if any:
-   tst = FILE_SEARCH(rccm_fpath, COUNT = cnt, /MARK_DIRECTORY)
-   rccm_fpath = tst[0]
+   ;  Convert wildcard characters if any are present:
+   tst1 = STRPOS(rccm_fpath, '*')
+   tst2 = STRPOS(rccm_fpath, '?')
+   IF ((tst1 GE 0) OR (tst2 GE 0)) THEN BEGIN
+      fp = FILE_SEARCH(rccm_fpath, COUNT = n_fp)
+      IF (debug AND (n_fp NE 1)) THEN BEGIN
+         CASE n_fp OF
+            0: BEGIN
+               error_code = 300
+               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                  rout_name + ': The input folder ' + rccm_fpath + $
+                  ' does not exist.'
+               RETURN, error_code
+            END
+            ELSE: BEGIN
+               error_code = 310
+               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                  rout_name + ': The input folder ' + rccm_fpath + $
+                  ' points to multiple directories.'
+               RETURN, error_code
+            END
+         ENDCASE
+      ENDIF
+      rccm_fpath = fp[0]
+      rc = force_path_sep(rccm_fpath)
+   ENDIF
 
    ;  Return to the calling routine with an error message if the input
    ;  directory 'rccm_fpath' does not exist or is unreadable:
    res = is_readable_dir(rccm_fpath)
    IF (res EQ 0) THEN BEGIN
-      error_code = 300
+      error_code = 320
       excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
          rout_name + ': The input file ' + rccm_fpath + $
          ' is not found, not a regular file or not readable.'
@@ -314,7 +355,7 @@ FUNCTION set_rccm_folder, $
    pattern = rccm_fpath + 'MISR*GRP_RCCM_GM*' + rccm_version + '.hdf'
    rccm_files = FILE_SEARCH(pattern, COUNT = n_rccm_files)
    IF (n_rccm_files EQ 0) THEN BEGIN
-      error_code = 310
+      error_code = 330
       excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
          ': The folder ' + rccm_fpath + ' does not contain any RCCM ' + $
          'files for Version ' + rccm_version + '.'

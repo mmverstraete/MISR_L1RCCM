@@ -328,8 +328,8 @@ FUNCTION fix_rccm, $
    ;      matching names to describe the contents of these maps.
    ;
    ;  *   NOTE 2: The MISR RCCM product is only available at the reduced
-   ;      spatial resolution of 128 line by 512 samples per BLOCK, for all
-   ;      9 cameras.
+   ;      spatial resolution of 1100 m (128 lines by 512 samples per
+   ;      BLOCK), for all 9 cameras.
    ;
    ;  *   NOTE 3: The MISR RCCM product is provided on a per-camera basis,
    ;      and the cloud mask for a given camera applies to all 4 spectral
@@ -374,13 +374,20 @@ FUNCTION fix_rccm, $
    ;      JPL D-13397, REVISION B, Jet Propulsion Laboratory, California
    ;      Institute of Technology, Pasadena, CA, USA.
    ;
-   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
-   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
-   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;  *   Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product,
+   ;      _Earth System Science Data Discussions_, Vol. 2019, p. 1–18,
    ;      available from
    ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
    ;      10.5194/essd-2019-77).
+   ;
+   ;  *   Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2020) Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product,
+   ;      _Earth System Science Data_, Vol. 12, p. 611–628, available from
+   ;      https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html
+   ;      (DOI: 10.5194/essd-12-611-2020).
    ;
    ;  VERSIONING:
    ;
@@ -426,7 +433,7 @@ FUNCTION fix_rccm, $
    ;      line 943.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      preprint published in ESSD Discussions mentioned above.
+   ;      preprint published in _ESSD Discussions_ mentioned above.
    ;
    ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
    ;      documentation standards (in particular regarding the use of
@@ -451,10 +458,13 @@ FUNCTION fix_rccm, $
    ;      keyword parameter EDGE to match the latest version of mk_rccm2
    ;      and update the directory name for the corresponding outputs to
    ;      reflect its eventual use; and update the documentation.
+   ;
+   ;  *   2020–03–19: Version 2.2.0 — Software version described in the
+   ;      peer-reviewed paper published in _ESSD_ referenced above.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
-   ;  *   Copyright (C) 2017-2019 Michel M. Verstraete.
+   ;  *   Copyright (C) 2017-2020 Michel M. Verstraete.
    ;
    ;      Permission is hereby granted, free of charge, to any person
    ;      obtaining a copy of this software and associated documentation
@@ -466,7 +476,7 @@ FUNCTION fix_rccm, $
    ;      conditions:
    ;
    ;      1. The above copyright notice and this permission notice shall
-   ;      be included in its entirety in all copies or substantial
+   ;      be included in their entirety in all copies or substantial
    ;      portions of the Software.
    ;
    ;      2. THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY

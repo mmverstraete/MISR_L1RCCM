@@ -107,19 +107,24 @@ FUNCTION find_rccm_files, $
    ;  *   Error 210: An exception condition occurred in function
    ;      orbit2str.pro.
    ;
-   ;  *   Error 300: The input folder rccm_path is not found, not a
+   ;  *   Error 300: The input folder rccm_path does not exist.
+   ;
+   ;  *   Error 310: The input folder rccm_path points to multiple
+   ;      directories.
+   ;
+   ;  *   Error 320: The input folder rccm_path is not found, not a
    ;      directory or not readable.
    ;
-   ;  *   Error 310: The input folder rccm_path does not contain any L1
+   ;  *   Error 330: The input folder rccm_path does not contain any L1
    ;      RCCM files for selected MISR PATH and ORBIT.
    ;
-   ;  *   Error 320: The input folder rccm_path contains fewer than 9 L1
+   ;  *   Error 340: The input folder rccm_path contains fewer than 9 L1
    ;      RCCM files for selected MISR PATH and ORBIT.
    ;
-   ;  *   Error 330: The input folder rccm_path contains more than 9 L1
+   ;  *   Error 350: The input folder rccm_path contains more than 9 L1
    ;      RCCM files for selected MISR PATH and ORBIT.
    ;
-   ;  *   Error 340: One of the MISR L1 RCCM files in the input folder
+   ;  *   Error 360: One of the MISR L1 RCCM files in the input folder
    ;      rccm_path is not readable.
    ;
    ;  DEPENDENCIES:
@@ -183,13 +188,20 @@ FUNCTION find_rccm_files, $
    ;
    ;  REFERENCES:
    ;
-   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
-   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
-   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;  *   Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product,
+   ;      _Earth System Science Data Discussions_, Vol. 2019, p. 1–18,
    ;      available from
    ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
    ;      10.5194/essd-2019-77).
+   ;
+   ;  *   Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2020) Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product,
+   ;      _Earth System Science Data_, Vol. 12, p. 611–628, available from
+   ;      https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html
+   ;      (DOI: 10.5194/essd-12-611-2020).
    ;
    ;  VERSIONING:
    ;
@@ -214,16 +226,22 @@ FUNCTION find_rccm_files, $
    ;      consistent with the published documentation.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      preprint published in ESSD Discussions mentioned above.
+   ;      preprint published in _ESSD Discussions_ mentioned above.
    ;
    ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
    ;      documentation standards (in particular regarding the use of
    ;      verbose and the assignment of numeric return codes), and switch
    ;      to 3-parts version identifiers.
+   ;
+   ;  *   2020–03–06: Version 2.1.1 — Update the code to handle input path
+   ;      names with wildcard characters.
+   ;
+   ;  *   2020–03–19: Version 2.2.0 — Software version described in the
+   ;      peer-reviewed paper published in _ESSD_ referenced above.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
-   ;  *   Copyright (C) 2017-2019 Michel M. Verstraete.
+   ;  *   Copyright (C) 2017-2020 Michel M. Verstraete.
    ;
    ;      Permission is hereby granted, free of charge, to any person
    ;      obtaining a copy of this software and associated documentation
@@ -235,7 +253,7 @@ FUNCTION find_rccm_files, $
    ;      conditions:
    ;
    ;      1. The above copyright notice and this permission notice shall
-   ;      be included in its entirety in all copies or substantial
+   ;      be included in their entirety in all copies or substantial
    ;      portions of the Software.
    ;
    ;      2. THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY
@@ -393,12 +411,39 @@ FUNCTION find_rccm_files, $
          'L1_RC' + PATH_SEP()
    ENDELSE
 
+   ;  Convert wildcard characters if any are present:
+   tst1 = STRPOS(rccm_path, '*')
+   tst2 = STRPOS(rccm_path, '?')
+   IF ((tst1 GE 0) OR (tst2 GE 0)) THEN BEGIN
+      fp = FILE_SEARCH(rccm_path, COUNT = n_fp)
+      IF (debug AND (n_fp NE 1)) THEN BEGIN
+         CASE n_fp OF
+            0: BEGIN
+               error_code = 300
+               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                  rout_name + ': The input folder ' + rccm_path + $
+                  ' does not exist.'
+               RETURN, error_code
+            END
+            ELSE: BEGIN
+               error_code = 310
+               excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
+                  rout_name + ': The input folder ' + rccm_path + $
+                  ' points to multiple directories.'
+               RETURN, error_code
+            END
+         ENDCASE
+      ENDIF
+      rccm_path = fp[0]
+      rc = force_path_sep(rccm_path)
+   ENDIF
+
    ;  Return to the calling routine with an error message if the input
    ;  directory 'rccm_path' does not exist or is unreadable:
    IF (debug) THEN BEGIN
       res = is_readable_dir(rccm_path)
       IF (res EQ 0) THEN BEGIN
-         error_code = 300
+         error_code = 320
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
             rout_name + ': The input file ' + rccm_path + $
             ' is not found, not a directory or not readable.'
@@ -417,7 +462,7 @@ FUNCTION find_rccm_files, $
 
    ;  Manage exception conditions:
       IF (num_files EQ 0) THEN BEGIN
-         error_code = 310
+         error_code = 330
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': Directory ' + rccm_path + $
             ' does not contain any RCCM files for MISR Path ' + $
@@ -426,7 +471,7 @@ FUNCTION find_rccm_files, $
       ENDIF
 
       IF (num_files LT 9) THEN BEGIN
-         error_code = 320
+         error_code = 340
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': Directory ' + rccm_path + ' contains fewer than 9 RCCM ' + $
             'files for MISR Path ' + misr_path_str + ' and Orbit ' + $
@@ -434,7 +479,7 @@ FUNCTION find_rccm_files, $
          RETURN, error_code
       ENDIF
       IF (num_files GT 9) THEN BEGIN
-         error_code = 330
+         error_code = 350
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
             ': Directory ' + rccm_path + 'contains more than 9 RCCM ' + $
             'files for MISR Path ' + misr_path_str + ' and Orbit ' + $
@@ -446,7 +491,7 @@ FUNCTION find_rccm_files, $
       FOR i = 0, num_files - 1 DO BEGIN
          res = is_readable_file(rccm_files[i])
          IF (res EQ 0) THEN BEGIN
-            error_code = 340
+            error_code = 360
             excpt_cond = 'Error ' + strstr(error_code) + ' in ' + $
                rout_name + ': The input file ' + rccm_files[i] + $
                ' is not readable.'

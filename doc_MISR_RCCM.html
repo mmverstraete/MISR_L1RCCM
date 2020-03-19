@@ -7,6 +7,21 @@
    </head>
 <body>
 <h1>Documentation for the IDL routines in project MISR_RCCM</h1>
+<ul>
+<li><p><strong>Intellectual property rights</strong></p>
+<ul>
+<li><p>Copyright (C) 2017-2020 Michel M. Verstraete.</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following three conditions:</p>
+<p>1. The above copyright notice and this permission notice shall be included in their entirety in all copies or substantial portions of the Software.</p>
+<p>2. THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+<p>See: <a href="https://opensource.org/licenses/MIT" class="uri">https://opensource.org/licenses/MIT</a>.</p>
+<p>3. The current version of this Software is freely available from</p>
+<p><a href="https://github.com/mmverstraete" class="uri">https://github.com/mmverstraete</a>.</p></li>
+<li><p>Feedback</p>
+<p>Please send comments and suggestions to the author at<br />
+<a href="mailto:MMVerstraete@gmail.com">MMVerstraete@gmail.com</a></p></li>
+</ul></li>
+</ul>
 <h2>count_rccm_miss</h2>
 <ul>
 <li><p><strong>Purpose:</strong> This function counts the number of missing <span class="smallcaps">RCCM</span> pixel values found in each of the 9 cameras of all available <span class="smallcaps">Orbits</span> for the specified <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Block</span>, and saves the results in a plain <code>ASCII</code> text file.</p></li>
@@ -100,15 +115,18 @@ IDL&gt; PRINT, rc
        0</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
 <li><p>2019&#8211;04&#8211;30: Version 1.0 &#8212; Initial release.</p></li>
 <li><p>2019&#8211;05&#8211;01: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
 <li><p>2019&#8211;05&#8211;04: Version 2.01 &#8212; Update the code to report the specific error message of MTK routines.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
+<li><p>2020&#8211;02&#8211;18: Version 2.1.1 &#8212; Update the code to use the current version of the function <code>heap_l1b2_block.pro</code>.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>diag_rccm</h2>
@@ -231,7 +249,8 @@ Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
    Log_RCCM_diag_GM-P168-O065487-B111-DF_2012-04-10_2019-02-19.txt</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
@@ -242,8 +261,9 @@ Saved ~/MISR_HR/Outcomes/GM-P168-O065487-B111/RCCM/
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
 <li><p>2019&#8211;05&#8211;02: Version 2.11 &#8212; Bug fix: Encapsulate folder and file creation in <code>IF</code> statements.</p></li>
 <li><p>2019&#8211;05&#8211;04: Version 2.12 &#8212; Update the code to report the specific error message of MTK routines.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>find_missing_rccm_files</h2>
@@ -332,14 +352,16 @@ IDL&gt; PRINT, rc
       0</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
 <li><p>2019&#8211;05&#8211;10: Version 1.0 &#8212; Initial public release.</p></li>
 <li><p>2019&#8211;05&#8211;12: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>find_rccm_files</h2>
@@ -386,11 +408,13 @@ IDL&gt; PRINT, rc
 <li><p>Error 199: An exception condition occurred in <code>set_roots_vers.pro</code>.</p></li>
 <li><p>Error 200: An exception condition occurred in function <code>path2str.pro</code>.</p></li>
 <li><p>Error 210: An exception condition occurred in function <code>orbit2str.pro</code>.</p></li>
-<li><p>Error 300: The input folder <code>rccm_path</code> is not found, not a directory or not readable.</p></li>
-<li><p>Error 310: The input folder <code>rccm_path</code> does not contain any <span class="smallcaps">L1</span> RCCM files for selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
-<li><p>Error 320: The input folder <code>rccm_path</code> contains fewer than 9 <span class="smallcaps">L1</span> RCCM files for selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
-<li><p>Error 330: The input folder <code>rccm_path</code> contains more than 9 <span class="smallcaps">L1</span> RCCM files for selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
-<li><p>Error 340: One of the <span class="smallcaps">MISR</span> <span class="smallcaps">L1</span> RCCM files in the input folder <code>rccm_path</code> is not readable.</p></li>
+<li><p>Error 300: The input folder <code>rccm_path</code> does not exist.</p></li>
+<li><p>Error 310: The input folder <code>rccm_path</code> points to multiple directories.</p></li>
+<li><p>Error 320: The input folder <code>rccm_path</code> is not found, not a directory or not readable.</p></li>
+<li><p>Error 330: The input folder <code>rccm_path</code> does not contain any <span class="smallcaps">L1</span> RCCM files for selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
+<li><p>Error 340: The input folder <code>rccm_path</code> contains fewer than 9 <span class="smallcaps">L1</span> RCCM files for selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
+<li><p>Error 350: The input folder <code>rccm_path</code> contains more than 9 <span class="smallcaps">L1</span> RCCM files for selected <span class="smallcaps">MISR</span> <span class="smallcaps">Path</span> and <span class="smallcaps">Orbit</span>.</p></li>
+<li><p>Error 360: One of the <span class="smallcaps">MISR</span> <span class="smallcaps">L1</span> RCCM files in the input folder <code>rccm_path</code> is not readable.</p></li>
 </ul></li>
 <li><p><strong>Dependencies:</strong></p>
 <ul>
@@ -434,7 +458,8 @@ IDL&gt; PRINT, rccm_files
 /Volumes/.../MISR_AM1_GRP_RCCM_GM_P168_O068050_DA_F04_0025.hdf</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
@@ -445,8 +470,10 @@ IDL&gt; PRINT, rccm_files
 <li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;02&#8211;24: Version 2.01 &#8212; Documentation update.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Sort the <span class="smallcaps">RCCM</span> files in the native <span class="smallcaps">MISR</span> order on output; update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
+<li><p>2020&#8211;03&#8211;06: Version 2.1.1 &#8212; Update the code to handle input path names with wildcard characters.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>fix_rccm</h2>
@@ -576,7 +603,7 @@ IDL&gt; PRINT, rccm_files
 <li><p><strong>Remarks:</strong></p>
 <ul>
 <li><p><strong>Note 1:</strong> If maps are requested by setting the input keyword parameter <code>map_it</code>, map legends are also saved as text files with matching names to describe the contents of these maps.</p></li>
-<li><p><strong>Note 2:</strong> The <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> product is only available at the reduced spatial resolution of 128 line by 512 samples per <span class="smallcaps">Block</span>, for all 9 cameras.</p></li>
+<li><p><strong>Note 2:</strong> The <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> product is only available at the reduced spatial resolution of 1100 m (128 lines by 512 samples per <span class="smallcaps">Block</span>), for all 9 cameras.</p></li>
 <li><p><strong>Note 3:</strong> The <span class="smallcaps">MISR</span> <span class="smallcaps">RCCM</span> product is provided on a per-camera basis, and the cloud mask for a given camera applies to all 4 spectral bands of that camera.</p></li>
 </ul></li>
 <li><p><strong>Examples:</strong></p>
@@ -607,7 +634,8 @@ rc =            0</code></pre></li>
 <ul>
 <li><p>Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies, Catherine Moroney, Kevin Mueller, Susan Paradise, Mike Smyth (2011) <em>MISR Data Products Specifications</em>, <strong>JPL D-13963</strong>, <strong>Revision S</strong>, Jet Propulsion Laboratory, California Institute of Technology, Pasadena, CA, USA.</p></li>
 <li><p>Diner, D. J., Di Girolamo, L. and Clothiaux, E. E. (1999) <em>Level 1 Cloud Detection Algorithm Theoretical Basis</em>, Technical Report <strong>JPL D-13397, Revision B</strong>, Jet Propulsion Laboratory, California Institute of Technology, Pasadena, CA, USA.</p></li>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
@@ -624,11 +652,12 @@ rc =            0</code></pre></li>
 <li><p>2019&#8211;02&#8211;27: Version 2.02 &#8212; Implement an improved algorithm, capable of effectively dealing with cases where most values are missing within a <span class="smallcaps">Block</span>, as long as values are not missing in neighboring cameras, take advantage of the new functions <code>find_rccm_files.pro</code> and <code>map_rccm_block.pro</code>, and update the documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
 <li><p>2019&#8211;04&#8211;08: Version 2.11 &#8212; Bug fix: Add <code>IF</code> statement on line 943.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
 <li><p>2019&#8211;09&#8211;10: Version 2.1.1 &#8212; Add arguments and code to artificially insert missing data in the RCCM data buffer, and build a confusion matrix to document the performance of the replacement algorithm.</p></li>
 <li><p>2019&#8211;09&#8211;24: Version 2.1.2 &#8212; Update the code (1) to map the original <span class="smallcaps">RCCM</span> data before artificially inserting additional missing data, (2) to record the confusion matrices after <code>mk_rccm2</code> and <code>mk_rccm3</code> in the log file, and (3) to modify the default map output directory.</p></li>
 <li><p>2020&#8211;01&#8211;10: Version 2.1.3 &#8212; Add version information and percentage of cloudiness statistics in the log file; fix bug in the computation of <code>totcnt</code> for rccm2; update the name of maps for tests involving artifically missing data; add the optional keyword parameter <code>EDGE</code> to match the latest version of <code>mk_rccm2</code> and update the directory name for the corresponding outputs to reflect its eventual use; and update the documentation.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>map_rccm_block</h2>
@@ -734,19 +763,21 @@ IDL&gt; PRINT, rc
        0</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
 <li><p>2019&#8211;02&#8211;27: Version 0.9 &#8212; Initial release.</p></li>
 <li><p>2019&#8211;03&#8211;01: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
 <li><p>2019&#8211;09&#8211;10: Version 2.1.1 &#8212; Add the <code>TEST_ID</code> keyword to save the output maps in dedicated folders and files.</p></li>
 <li><p>2019&#8211;09&#8211;25: Version 2.1.2 &#8212; Update the code to modify the default map output directory.</p></li>
 <li><p>2019&#8211;12&#8211;09: Version 2.1.3 &#8212; Update the code to output the path address of the folder containing the maps if the input keyword parameter <code>verbose</code> is set.</p></li>
-<li><p>2019&#8211;12&#8211;31: Version 2.1.5 &#8212; Minor software update to generate properly formatted map legends; this code version is described in the final version of the paper by Verstraete et al. (2020) mentioned above.</p></li>
+<li><p>2019&#8211;12&#8211;31: Version 2.1.4 &#8212; Minor software update to generate properly formatted map legends.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm0</h2>
@@ -827,7 +858,8 @@ IDL&gt; PRINT, rc
 <li><p><strong>References:</strong></p>
 <ul>
 <li><p>Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies, Catherine Moroney, Kevin Mueller, Susan Paradise, Mike Smyth (2011) <em>MISR Data Products Specifications</em>, <strong>JPL D-13963</strong>, <strong>Revision S</strong>, Section 6.7.6, p. 85, Jet Propulsion Laboratory, California Institute of Technology, Pasadena, CA, USA.</p></li>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
@@ -841,9 +873,10 @@ IDL&gt; PRINT, rc
 <li><p>2019&#8211;02&#8211;27: Version 2.01 &#8212; New improved algorithm, capable of dealing with cases where most values are missing within a <span class="smallcaps">Block</span>, as long as values are not missing in neighboring cameras, rename this function from <code>mk_rccm_0</code> to <code>mk_rccm0</code>, and update the documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
 <li><p>2019&#8211;05&#8211;04: Version 2.11 &#8212; Update the code to report the specific error message of MTK routines.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
 <li><p>2019&#8211;12&#8211;09: Version 2.1.1 &#8212; Update the code to use the current version of function <code>fn2mpocbv.pro</code>.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm1</h2>
@@ -910,7 +943,8 @@ IDL&gt; PRINT, rc
 <li><p><strong>References:</strong></p>
 <ul>
 <li><p>Mike Bull, Jason Matthews, Duncan McDonald, Alexander Menzies, Catherine Moroney, Kevin Mueller, Susan Paradise, Mike Smyth (2011) <em>MISR Data Products Specifications</em>, <strong>JPL D-13963</strong>, <strong>Revision S</strong>, Section 6.7.6, p. 85, Jet Propulsion Laboratory, California Institute of Technology, Pasadena, CA, USA.</p></li>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
@@ -923,10 +957,11 @@ IDL&gt; PRINT, rc
 <li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;02&#8211;27: Version 2.01 &#8212; New improved algorithm, capable of dealing with cases where most values are missing within a <span class="smallcaps">Block</span>, as long as values are not missing in neighboring cameras, access <span class="smallcaps">MISR</span> <span class="smallcaps">L1B2</span> data through pointers to heap variables rather than by reading data files, rename this function from <code>mk_rccm_1</code> to <code>mk_rccm1</code>, and update the documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
 <li><p>2019&#8211;09&#8211;28: Version 2.1.1 &#8212; Update the code to use the current version of the function <code>hr2lr.pro</code>.</p></li>
 <li><p>2020&#8211;01&#8211;05: Version 2.1.2 &#8212; Update the documentation.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm2</h2>
@@ -991,7 +1026,8 @@ IDL&gt; PRINT, rc
 <pre><code>[See the outcome(s) generated by fix_rccm.pro]</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
@@ -999,9 +1035,10 @@ IDL&gt; PRINT, rc
 <li><p>2019&#8211;02&#8211;27: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
 <li><p>2019&#8211;02&#8211;27: Version 2.01 &#8212; New improved algorithm, capable of dealing with cases where most values are missing within a <span class="smallcaps">Block</span>, as long as values are not missing in neighboring cameras, and update the documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
 <li><p>2020&#8211;01&#8211;12: Version 2.1.1 &#8212; Add the optional keyword parameter <code>EDGE</code> to control the use of the cloud mask of one of the two neighboring cameras wherever they do not overlap; update the code to process the cameras in the order of increasing number of missing values; update the documentation.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>mk_rccm3</h2>
@@ -1073,7 +1110,8 @@ IDL&gt; PRINT, rc
 <pre><code>[See the outcome(s) generated by fix_rccm.pro]</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
@@ -1086,9 +1124,10 @@ IDL&gt; PRINT, rc
 <li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;02&#8211;27: Version 2.01 &#8212; New improved algorithm, capable of dealing with cases where most values are missing within a <span class="smallcaps">Block</span>, as long as values are not missing in neighboring cameras, rename this function from <code>mk_rccm_3</code> to <code>mk_rccm3</code>, and update the documentation.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
 <li><p>2020&#8211;01&#8211;06: Version 2.1.1 &#8212; Update of the console output when <code>verbose</code> is set to 3, and the documentation.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>plot_rccm_miss</h2>
@@ -1155,14 +1194,16 @@ The semi-logarithmic time series plot has been saved in
    Num_RCCM_miss_P168-B110_2000-03-24_2018-05-29_slog.png</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
 <li><p>2019&#8211;05&#8211;01: Version 1.0 &#8212; Initial release.</p></li>
 <li><p>2019&#8211;05&#8211;06: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>repl_box</h2>
@@ -1251,7 +1292,8 @@ The return code of the function indicates which decision rule has been applied, 
 <pre><code>[See the outcome(s) generated by fix_rccm.pro]</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
@@ -1259,9 +1301,10 @@ The return code of the function indicates which decision rule has been applied, 
 <li><p>2019&#8211;02&#8211;05: Version 1.1 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;02&#8211;18: Version 2.00 &#8212; Implement new algorithm (multiple scans of the input cloud mask) to minimize artifacts in the filled areas.</p></li>
 <li><p>2019&#8211;03&#8211;28: Version 2.10 &#8212; Update the handling of the optional input keyword parameter <code>VERBOSE</code> and generate the software version consistent with the published documentation.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
 <li><p>2020&#8211;01&#8211;02: Version 2.1.1 &#8212; Update the documentation.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 <h2>set_rccm_folder</h2>
@@ -1305,8 +1348,10 @@ The return code of the function indicates which decision rule has been applied, 
 <li><p>Error 199: An exception condition occurred in <code>set_roots_vers.pro</code>.</p></li>
 <li><p>Error 200: An exception condition occurred in function <code>path2str.pro</code>.</p></li>
 <li><p>Error 299: The computer is not recognized and the optional input keyword parameter <code>rccm_folder</code> is not specified.</p></li>
-<li><p>Error 300: The folder <code>rccm_path</code> exists but is unreadable.</p></li>
-<li><p>Error 310: The folder <code>rccm_path</code> does not contain any <span class="smallcaps">RCCM</span> files.</p></li>
+<li><p>Error 300: The input folder <code>rccm_path</code> does not exist.</p></li>
+<li><p>Error 310: The input folder <code>rccm_path</code> points to multiple directories.</p></li>
+<li><p>Error 320: The folder <code>rccm_path</code> exists but is unreadable.</p></li>
+<li><p>Error 330: The folder <code>rccm_path</code> does not contain any <span class="smallcaps">RCCM</span> files.</p></li>
 </ul></li>
 <li><p><strong>Dependencies:</strong></p>
 <ul>
@@ -1331,14 +1376,17 @@ IDL&gt; PRINT, rc
        0</code></pre></li>
 <li><p><strong>References:</strong></p>
 <ul>
-<li><p>Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di Girolamo (2019) <em>Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product</em>, <code>Earth System Science Data Discussions</code>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2019) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data Discussions</em>, Vol. 2019, p. 1&#8211;18, available from <a href="https://www.earth-syst-sci-data-discuss.net/essd-2019-77/" class="uri">https://www.earth-syst-sci-data-discuss.net/essd-2019-77/</a> (DOI: 10.5194/essd-2019-77).</p></li>
+<li><p>Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di Girolamo (2020) Replacing Missing Values in the Standard MISR Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product, <em>Earth System Science Data</em>, Vol. 12, p. 611&#8211;628, available from <a href="https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html" class="uri">https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html</a> (DOI: 10.5194/essd-12-611-2020).</p></li>
 </ul></li>
 <li><p><strong>Versioning:</strong></p>
 <ul>
 <li><p>2019&#8211;05&#8211;05: Version 1.0 &#8212; Initial release.</p></li>
 <li><p>2019&#8211;05&#8211;06: Version 2.00 &#8212; Systematic update of all routines to implement stricter coding standards and improve documentation.</p></li>
-<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in ESSD Discussions mentioned above.</p></li>
+<li><p>2019&#8211;05&#8211;07: Version 2.15 &#8212; Software version described in the preprint published in <em>ESSD Discussions</em> mentioned above.</p></li>
 <li><p>2019&#8211;08&#8211;20: Version 2.1.0 &#8212; Adopt revised coding and documentation standards (in particular regarding the use of <code>verbose</code> and the assignment of numeric return codes), and switch to 3-parts version identifiers.</p></li>
+<li><p>2020&#8211;03&#8211;06: Version 2.1.1 &#8212; Update the code to handle input path names with wildcard characters.</p></li>
+<li><p>2020&#8211;03&#8211;19: Version 2.2.0 &#8212; Software version described in the peer-reviewed paper published in <em>ESSD</em> referenced above.</p></li>
 </ul></li>
 </ul>
 </body>

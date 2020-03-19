@@ -203,13 +203,20 @@ FUNCTION count_rccm_miss, $
    ;
    ;  REFERENCES:
    ;
-   ;  *   Michel Verstraete, Linda Hunt, Hugo De Lemos and Larry Di
-   ;      Girolamo (2019) _Replacing Missing Values in the Standard MISR
-   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product_,
-   ;      Earth System Science Data Discussions, Vol. 2019, p. 1–18,
+   ;  *   Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2019) Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product,
+   ;      _Earth System Science Data Discussions_, Vol. 2019, p. 1–18,
    ;      available from
    ;      https://www.earth-syst-sci-data-discuss.net/essd-2019-77/ (DOI:
    ;      10.5194/essd-2019-77).
+   ;
+   ;  *   Michel M. Verstraete, Linda A. Hunt, Hugo De Lemos and Larry Di
+   ;      Girolamo (2020) Replacing Missing Values in the Standard MISR
+   ;      Radiometric Camera-by-Camera Cloud Mask (RCCM) Data Product,
+   ;      _Earth System Science Data_, Vol. 12, p. 611–628, available from
+   ;      https://www.earth-syst-sci-data.net/12/611/2020/essd-12-611-2020.html
+   ;      (DOI: 10.5194/essd-12-611-2020).
    ;
    ;  VERSIONING:
    ;
@@ -222,16 +229,22 @@ FUNCTION count_rccm_miss, $
    ;      specific error message of MTK routines.
    ;
    ;  *   2019–05–07: Version 2.15 — Software version described in the
-   ;      preprint published in ESSD Discussions mentioned above.
+   ;      preprint published in _ESSD Discussions_ mentioned above.
    ;
    ;  *   2019–08–20: Version 2.1.0 — Adopt revised coding and
    ;      documentation standards (in particular regarding the use of
    ;      verbose and the assignment of numeric return codes), and switch
    ;      to 3-parts version identifiers.
+   ;
+   ;  *   2020–02–18: Version 2.1.1 — Update the code to use the current
+   ;      version of the function heap_l1b2_block.pro.
+   ;
+   ;  *   2020–03–19: Version 2.2.0 — Software version described in the
+   ;      peer-reviewed paper published in _ESSD_ referenced above.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
-   ;  *   Copyright (C) 2017-2019 Michel M. Verstraete.
+   ;  *   Copyright (C) 2017-2020 Michel M. Verstraete.
    ;
    ;      Permission is hereby granted, free of charge, to any person
    ;      obtaining a copy of this software and associated documentation
@@ -243,7 +256,7 @@ FUNCTION count_rccm_miss, $
    ;      conditions:
    ;
    ;      1. The above copyright notice and this permission notice shall
-   ;      be included in its entirety in all copies or substantial
+   ;      be included in their entirety in all copies or substantial
    ;      portions of the Software.
    ;
    ;      2. THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY
@@ -502,12 +515,16 @@ FUNCTION count_rccm_miss, $
    ENDIF
 
    IF (verbose GT 0) THEN BEGIN
-      PRINT, 'Ready to process ' + strstr(n_com_orbit) + ' Orbits.'
+      PRINT, 'Ready to process ' + strstr(n_com_orbits) + ' Orbits.'
    ENDIF
+
+   misr_mode = 'GM'
+
    ;  Loop over all available Orbits for which the L1B2 and the RCCM files
    ;  are both available:
    FOR i_com_orbit = 0, n_com_orbits - 1 DO BEGIN
       com_orbit = com_orbits[i_com_orbit]
+      misr_orbit = LONG(com_orbit)
 
    ;  Get the date and the Julian date of acquisition of the current Orbit:
       res = orbit2date(LONG(com_orbit))
@@ -515,36 +532,16 @@ FUNCTION count_rccm_miss, $
       res = orbit2date(LONG(com_orbit), /JULIAN)
       com_jul[i_com_orbit] = res
 
-   ;  Generate the expected file names of the 9 L1B2 GRP camera files:
-      gm_files = STRARR(9)
-      status = MTK_MAKE_FILENAME(l1b2_fpath, 'GRP_TERRAIN_GM', 'DF', $
-         STRING(misr_path), com_orbit, l1b2_version, out_filename)
-      IF (debug AND (status NE 0)) THEN BEGIN
-         error_code = 610
-         excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
-            ': Error message from MTK_MAKE_FILENAME: ' + $
-            MTK_ERROR_MESSAGE(status)
-         RETURN, error_code
-      ENDIF
-
-   ;  Ensure that this initial filename does not include wild characters:
-      f = FILE_SEARCH(out_filename, COUNT = n_f)
-      out_filename = f[0]
-
-      gm_files[0] = out_filename
-      gm_files[1] = out_filename.Replace('DF', 'CF')
-      gm_files[2] = out_filename.Replace('DF', 'BF')
-      gm_files[3] = out_filename.Replace('DF', 'AF')
-      gm_files[4] = out_filename.Replace('DF', 'AN')
-      gm_files[5] = out_filename.Replace('DF', 'AA')
-      gm_files[6] = out_filename.Replace('DF', 'BA')
-      gm_files[7] = out_filename.Replace('DF', 'CA')
-      gm_files[8] = out_filename.Replace('DF', 'DA')
-
    ;  Load the 36 L1B2 data channels for the current Orbit on the heap:
-      rc = heap_l1b2_block(gm_files, misr_block, misr_ptr, radrd_ptr, $
-         rad_ptr, brf_ptr, rdqi_ptr, scalf_ptr, convf_ptr, DEBUG = debug, $
-         EXCPT_COND = excpt_cond)
+      rc = heap_l1b2_block(misr_mode, misr_path, misr_orbit, misr_block, $
+         misr_ptr, radrd_ptr, rad_ptr, brf_ptr, rdqi_ptr, scalf_ptr, $
+         convf_ptr, L1B2GM_FOLDER = l1b2gm_folder, $
+         L1B2GM_VERSION = l1b2gm_version, $
+         L1B2LM_FOLDER = l1b2lm_folder, L1B2LM_VERSION = l1b2lm_version, $
+         MISR_SITE = misr_site, TEST_ID = test_id, $
+         FIRST_LINE = first_line, LAST_LINE = last_line, $
+         VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
+
       IF (debug AND (rc NE 0)) THEN BEGIN
          error_code = 510
          excpt_cond = 'Error ' + strstr(error_code) + ' in ' + rout_name + $
@@ -553,7 +550,7 @@ FUNCTION count_rccm_miss, $
       ENDIF
 
    ;  Locate the corresponding RCCM files for the current Orbit:
-      rc = find_rccm_files(misr_path, LONG(com_orbit), rccm_files, $
+      rc = find_rccm_files(misr_path, misr_orbit, rccm_files, $
          RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $
          DEBUG = debug, EXCPT_COND = excpt_cond)
 
