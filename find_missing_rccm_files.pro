@@ -213,6 +213,12 @@ FUNCTION find_missing_rccm_files, $
    ;
    ;  *   2020–03–19: Version 2.2.0 — Software version described in the
    ;      peer-reviewed paper published in _ESSD_ referenced above.
+   ;
+   ;  *   2020–03–23: Version 2.2.1 — Simplify the code since there is
+   ;      only one RCCM file per ORBIT, update the code to save the log
+   ;      file in misr_path/GM rather than GM-misr_path, return the
+   ;      correct number of missing files in the output parameter
+   ;      n_missing_rccm_files, and update the documentation.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -349,7 +355,7 @@ FUNCTION find_missing_rccm_files, $
          ': ' + excpt_cond
       RETURN, error_code
    ENDIF
-   mp_str = 'GM-' + misr_path_str
+   pm_str = misr_path_str + PATH_SEP() + 'GM'
 
    ;  Set the date range to inspect:
    IF (KEYWORD_SET(from_date)) THEN BEGIN
@@ -422,7 +428,7 @@ FUNCTION find_missing_rccm_files, $
             EXCPT_COND = excpt_cond)
          log_fpath = log_folder
       ENDIF ELSE BEGIN
-         log_fpath = root_dirs[3] + mp_str + PATH_SEP()
+         log_fpath = root_dirs[3] + pm_str + PATH_SEP()
       ENDELSE
 
    ;  Create the output directory 'log_fpath' if it does not exist, and
@@ -456,7 +462,6 @@ FUNCTION find_missing_rccm_files, $
          FORMAT = fmt1
       PRINTF, log_unit, 'RCCM path: ', rccm_fpath, FORMAT = fmt1
       PRINTF, log_unit
-      PRINTF, log_unit, 'MISR Mode: ', 'GM', FORMAT = fmt1
       PRINTF, log_unit, 'MISR Path: ', strstr(misr_path), FORMAT = fmt1
       PRINTF, log_unit, 'From: ', from_date, FORMAT = fmt1
       PRINTF, log_unit, 'Until: ', until_date, FORMAT = fmt1
@@ -472,21 +477,19 @@ FUNCTION find_missing_rccm_files, $
 
    ;  Generate the array of unique available Orbits:
    avail_orbits = LONG(avail_rccm_files.Extract('[0-9]{6}'))
-   avail_unique_orbits = avail_orbits[UNIQ(avail_orbits, SORT(avail_orbits))]
-   n_avail_unique_orbits = N_ELEMENTS(avail_unique_orbits)
 
    ;  Generate the array of missing Orbits, using the IDL Astro library program
-   ;  'match2', which returns an index -1 when no match is found:
+   ;  'match2', which returns an index -1 when no match is found between the
+   ;  array of accomplished Orbits and the array of available Orbits:
    match2, orbits, avail_orbits, suba, subb
-   idx_miss = WHERE(suba EQ -1, n_missing_orbits)
+   idx_miss = WHERE(suba EQ -1, n_missing_rccm_files)
    missing_orbits = orbits[idx_miss]
-   n_missing_rccm_files = n_missing_orbits * 9
 
    ;  Record the results in the log file:
    IF (log_it) THEN BEGIN
-      PRINTF, log_unit, '# Orbits missing: ', strstr(n_missing_orbits), $
+      PRINTF, log_unit, '# Orbits missing: ', strstr(n_missing_rccm_files), $
          FORMAT = fmt1
-      FOR i = 0, n_missing_orbits - 1 DO BEGIN
+      FOR i = 0, n_missing_rccm_files - 1 DO BEGIN
          orbit = missing_orbits[i]
          acquis_date = orbit2date(orbit, DEBUG = debug, EXCPT_COND = excpt_cond)
          IF (excpt_cond NE '') THEN STOP
