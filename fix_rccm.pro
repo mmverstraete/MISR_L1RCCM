@@ -461,6 +461,11 @@ FUNCTION fix_rccm, $
    ;
    ;  *   2020–03–19: Version 2.2.0 — Software version described in the
    ;      peer-reviewed paper published in _ESSD_ referenced above.
+   ;
+   ;  *   2020–04–17: Version 2.2.1 — Update the code to compute more
+   ;      directly the number of valid pixel values and add missing
+   ;      statement to evaluate that total in the reporting of the final
+   ;      results.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
@@ -975,7 +980,7 @@ FUNCTION fix_rccm, $
          IF (count_255 EQ -1) THEN count_255 = 0L
          totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + $
             count_253 + count_254 + count_255
-         totval = totcnt - count_253 - count_254 - count_255
+         totval = count_1 + count_2 + count_3 + count_4
          PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
             count_4, count_253, count_254, count_255, totcnt, $
             (FLOAT(count_1) / FLOAT(totval)) * 100.0, $
@@ -1086,7 +1091,7 @@ FUNCTION fix_rccm, $
          IF (count_255 EQ -1) THEN count_255 = 0L
          totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + $
             count_253 + count_254 + count_255
-         totval = totcnt - count_253 - count_254 - count_255
+         totval = count_1 + count_2 + count_3 + count_4
          PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
             count_4, count_253, count_254, count_255, totcnt, $
             (FLOAT(count_1) / FLOAT(totval)) * 100.0, $
@@ -1285,6 +1290,7 @@ FUNCTION fix_rccm, $
          IF (count_255 EQ -1) THEN count_255 = 0L
          totcnt = count_0 + count_1 + count_2 + count_3 + count_4 + $
             count_253 + count_254 + count_255
+         totval = count_1 + count_2 + count_3 + count_4
          PRINTF, log_unit, cams[cam], count_0, count_1, count_2, count_3, $
             count_4, count_253, count_254, count_255, totcnt, $
             (FLOAT(count_1) / FLOAT(totval)) * 100.0, $
