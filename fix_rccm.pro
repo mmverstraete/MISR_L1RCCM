@@ -339,25 +339,39 @@ FUNCTION fix_rccm, $
    ;
    ;      IDL> misr_mode = 'GM'
    ;      IDL> misr_path = 168
-   ;      IDL> misr_orbit = 68050
-   ;      IDL> verbose = 0
-   ;      IDL> debug = 1
-   ;      IDL> rc = find_l1b2gm_files(misr_path, misr_orbit, l1b2gm_files, $
-   ;         L1B2GM_FOLDER = l1b2gm_folder, L1B2GM_VERSION = l1b2gm_version, $
-   ;         DEBUG = debug, EXCPT_COND = excpt_cond)
+   ;      IDL> misr_orbit = 68050L
    ;      IDL> misr_block = 110
-   ;      IDL> rc = heap_l1b2_block(l1b2gm_files, misr_block, $
-   ;         misr_ptr, radrd_ptr, brf_ptr, rdqi_ptr, $
-   ;         DEBUG = debug, EXCPT_COND = excpt_cond)
+   ;      IDL> verbose = 1
+   ;      IDL> debug = 1
+   ;      IDL> rc = heap_l1b2_block(misr_mode, misr_path, $
+   ;         misr_orbit, misr_block, misr_ptr, radrd_ptr, $
+   ;         rad_ptr, brf_ptr, rdqi_ptr, scalf_ptr, convf_ptr, $
+   ;         L1B2GM_FOLDER = l1b2gm_folder, L1B2GM_VERSION = l1b2gm_version, $
+   ;         L1B2LM_FOLDER = l1b2lm_folder, L1B2LM_VERSION = l1b2lm_version, $
+   ;         MISR_SITE = misr_site, TEST_ID = test_id, $
+   ;         FIRST_LINE = first_line, LAST_LINE = last_line, $
+   ;         VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
+   ;      IDL> rccm_folder = ''
+   ;      IDL> rccm_version = ''
+   ;      IDL> edge = 0
    ;      IDL> log_it = 1
+   ;      IDL> log_folder = ''
    ;      IDL> save_it = 1
+   ;      IDL> save_folder = ''
    ;      IDL> map_it = 1
+   ;      IDL> map_folder = ''
    ;      IDL> rc = fix_rccm(misr_ptr, radrd_ptr, rccm, $
    ;         RCCM_FOLDER = rccm_folder, RCCM_VERSION = rccm_version, $
+   ;         EDGE = edge, TEST_ID = test_id, $
+   ;         FIRST_LINE = first_line, LAST_LINE = last_line, $
    ;         LOG_IT = log_it, LOG_FOLDER = log_folder, $
    ;         SAVE_IT = save_it, SAVE_FOLDER = save_folder, $
    ;         MAP_IT = map_it, MAP_FOLDER = map_folder, $
    ;         VERBOSE = verbose, DEBUG = debug, EXCPT_COND = excpt_cond)
+   ;      Saved /Users/michel/MISR_HR/Outcomes/P168-O068050-B110/
+   ;         GM/RCCM/Log_RCCM_cldm_GM-P168-O068050-B110_2012-10-03_2020-05-02.txt
+   ;      Saved /Users/michel/MISR_HR/Outcomes/P168-O068050-B110/GM/RCCM/
+   ;         Save_RCCM_cldm_GM-P168-O068050-B110_2012-10-03_2020-05-02.sav
    ;      IDL> PRINT, 'rc = ', rc
    ;      rc =            0
    ;
@@ -466,6 +480,9 @@ FUNCTION fix_rccm, $
    ;      directly the number of valid pixel values and add missing
    ;      statement to evaluate that total in the reporting of the final
    ;      results.
+   ;
+   ;  *   2020–05–02: Version 2.2.2 — Update the example in the in-line
+   ;      documentation.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
