@@ -40,6 +40,12 @@ FUNCTION find_missing_rccm_files, $
    ;
    ;  KEYWORD PARAMETERS [INPUT/OUTPUT]:
    ;
+   ;  *   FROM_DATE = from_date {STRING} [I]: The date of the start of the
+   ;      period to be processed.
+   ;
+   ;  *   UNTIL_DATE = until_date {STRING} [I]: The date of the end of the
+   ;      period to be processed.
+   ;
    ;  *   RCCM_FOLDER = rccm_folder {STRING} [I] (Default value: Set by
    ;      function
    ;      set_roots_vers.pro): The directory address of the folder
@@ -219,6 +225,8 @@ FUNCTION find_missing_rccm_files, $
    ;      file in misr_path/GM rather than GM-misr_path, return the
    ;      correct number of missing files in the output parameter
    ;      n_missing_rccm_files, and update the documentation.
+   ;
+   ;  *   2020–04–18: Version 2.2.2 — Update the documentation.
    ;Sec-Lic
    ;  INTELLECTUAL PROPERTY RIGHTS
    ;
